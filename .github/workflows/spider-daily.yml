@@ -1,0 +1,33 @@
+name: Daily Coffee Spider
+
+on:
+  schedule:
+    - cron: "0 0 * * *"  # 每天 UTC 0:00 (北京时间 8:00)
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r scripts/taobao-coffee-spider/requirements.txt
+
+      - name: Run spider
+        run: |
+          python scripts/taobao-coffee-spider/main.py --keyword "咖啡豆" --pages 3
+
+      - name: Commit and push data
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: 更新咖啡豆数据 $(date +'%Y-%m-%d')"
+          file_pattern: "data/*.json data/*.csv"

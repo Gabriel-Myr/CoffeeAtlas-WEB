@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@theme {
+  --color-coffee-dark: #3E2A1E;
+  --color-coffee-light: #8B7355;
+  --color-bg-warm: #f5f5f0;
+  --color-card-bg: #ffffff;
+  --color-accent-olive: #5A5A40;
+  --color-coffee-medium: #6b5344;
+  --color-coffee-pale: #d4c4b5;
+  --color-bg-cream: #fdfaf4;
+  --color-accent-rust: #c85c3d;
+  --color-accent-soft: #e89a7f;
+  --color-surface: #ffffff;
+  --color-border: rgba(107, 83, 68, 0.15);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.03);
+  --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* 深色主题 */
+[data-theme="dark"] {
+  --color-coffee-dark: #e8e0d8;
+  --color-coffee-light: #8a7b6b;
+  --color-bg-warm: #1a1614;
+  --color-card-bg: #2d2926;
+  --color-accent-olive: #7a8b72;
+  --color-coffee-medium: #c4b5a5;
+  --color-coffee-pale: #5a4f47;
+  --color-bg-cream: #252220;
+  --color-accent-rust: #e89a7f;
+  --color-accent-soft: #c85c3d;
+  --color-surface: #2d2926;
+  --color-border: rgba(232, 224, 216, 0.1);
+}
+
+/* 清新绿茶主题 */
+[data-theme="green"] {
+  --color-coffee-dark: #2d4a3a;
+  --color-coffee-light: #7a9a8a;
+  --color-bg-warm: #f0f5f2;
+  --color-card-bg: #ffffff;
+  --color-accent-olive: #c85c3d;
+  --color-coffee-medium: #4a6a5a;
+  --color-coffee-pale: #b5c9bf;
+  --color-bg-cream: #f8faf8;
+  --color-accent-rust: #e89a7f;
+  --color-accent-soft: #c85c3d;
+  --color-surface: #ffffff;
+  --color-border: rgba(45, 74, 58, 0.12);
+}
+
+/* 极简白咖啡主题 */
+[data-theme="minimal"] {
+  --color-coffee-dark: #1a1a1a;
+  --color-coffee-light: #737373;
+  --color-bg-warm: #fafafa;
+  --color-card-bg: #ffffff;
+  --color-accent-olive: #2d4a3a;
+  --color-coffee-medium: #404040;
+  --color-coffee-pale: #d9d9d9;
+  --color-bg-cream: #ffffff;
+  --color-accent-rust: #c85c3d;
+  --color-accent-soft: #e89a7f;
+  --color-surface: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.08);
+}
+
+/* 日式和风主题 */
+[data-theme="japanese"] {
+  --color-coffee-dark: #2c2c2c;
+  --color-coffee-light: #8c8c8c;
+  --color-bg-warm: #f4f1ee;
+  --color-card-bg: #ffffff;
+  --color-accent-olive: #8b4513;
+  --color-coffee-medium: #5c5c5c;
+  --color-coffee-pale: #d4d4d4;
+  --color-bg-cream: #faf8f5;
+  --color-accent-rust: #a0522d;
+  --color-accent-soft: #c85c3d;
+  --color-surface: #ffffff;
+  --color-border: rgba(44, 44, 44, 0.1);
+}
+
+body {
+  background-color: var(--color-bg-warm);
+  color: var(--color-coffee-dark);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-coffee-dark);
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 115, 85, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 115, 85, 0.5);
+}
