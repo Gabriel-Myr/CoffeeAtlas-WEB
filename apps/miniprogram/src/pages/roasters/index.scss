@@ -1,0 +1,103 @@
+.roasters-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(245, 240, 232, 0.96), rgba(253, 250, 244, 0.98) 44%),
+    linear-gradient(180deg, #f7f1e8 0%, #fdfaf4 42%, #fffdf8 100%);
+  padding: 24px 0 40px;
+
+  &__hero {
+    padding: 44px 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  &__title-en {
+    font-size: 32rpx;
+    font-weight: 700;
+    color: var(--color-coffee-dark, #3E2A1E);
+    letter-spacing: 0.08em;
+    line-height: 1;
+  }
+
+  &__title-atlas {
+    margin-top: -4px;
+    font-size: 40rpx;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--color-accent-rust, #c85c3d);
+    line-height: 1;
+  }
+
+  &__subtitle {
+    margin-top: 18px;
+    font-size: 12px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--color-coffee-light, #8B7355);
+  }
+
+  &__count {
+    margin-top: 12px;
+    font-size: 15px;
+    color: var(--color-coffee-light, #8B7355);
+  }
+
+  &__city-bar {
+    margin: -12px 32px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12rpx;
+  }
+
+  &__city-chip {
+    padding: 12rpx 22rpx;
+    border-radius: 999rpx;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1rpx solid rgba(107, 83, 68, 0.1);
+    font-size: 22rpx;
+    color: var(--color-coffee-light, #8B7355);
+
+    &--active {
+      background: var(--color-coffee-dark, #3E2A1E);
+      border-color: var(--color-coffee-dark, #3E2A1E);
+      color: #fff;
+    }
+  }
+
+  &__query-bar {
+    margin: 0 32px 18px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  &__query-text {
+    font-size: 13px;
+    color: var(--color-coffee-light, #8B7355);
+  }
+
+  &__query-clear {
+    font-size: 13px;
+    color: var(--color-accent-rust, #c85c3d);
+  }
+
+  &__list {
+    padding: 0 32px;
+  }
+
+  &__loading,
+  &__end {
+    text-align: center;
+    padding: 28px 0 8px;
+  }
+
+  &__loading-text,
+  &__end-text {
+    font-size: 13px;
+    color: var(--color-coffee-pale, #d4c4b5);
+  }
+}

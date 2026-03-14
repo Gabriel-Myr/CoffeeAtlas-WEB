@@ -1,0 +1,4 @@
+
+> @coffee-atlas/shared-types@0.1.0 build /Users/gabi/CoffeeAtlas-Web/packages/shared-types
+> tsc -b
+

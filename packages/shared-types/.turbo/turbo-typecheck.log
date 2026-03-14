@@ -1,0 +1,4 @@
+
+> @coffee-atlas/shared-types@0.1.0 typecheck /Users/gabi/CoffeeAtlas-Web/packages/shared-types
+> tsc -p tsconfig.json --noEmit
+

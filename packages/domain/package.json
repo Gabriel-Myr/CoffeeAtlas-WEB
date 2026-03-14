@@ -1,0 +1,25 @@
+{
+  "name": "@coffee-atlas/domain",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo \"No lint configured yet\""
+  },
+  "dependencies": {
+    "@coffee-atlas/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "5.8.2"
+  }
+}

@@ -1,0 +1,4 @@
+
+> @coffee-atlas/domain@0.1.0 typecheck /Users/gabi/CoffeeAtlas-Web/packages/domain
+> tsc -p tsconfig.json --noEmit
+
