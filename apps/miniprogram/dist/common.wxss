@@ -1,1 +1,317 @@
-.search-bar{align-items:center;background:hsla(0,0%,100%,.96);border:2rpx solid var(--color-border,rgba(107,83,68,.15));border-radius:var(--radius-pill,1998rpx);box-shadow:0 24rpx 48rpx rgba(62,42,30,.04);display:flex;height:112rpx;margin:0 var(--page-gutter) 48rpx;padding:0 36rpx}.search-bar__icon{flex-shrink:0;margin-right:24rpx}.search-bar__input{color:var(--color-coffee-dark,#3e2a1e);flex:1;font-size:32rpx;height:112rpx;line-height:112rpx}.search-bar__placeholder{color:rgba(139,115,85,.52);font-size:30rpx}.bean-card{animation:fade-in-up .45s ease forwards;background:hsla(0,0%,100%,.96);border:2rpx solid rgba(107,83,68,.08);border-radius:var(--radius-card-lg,56rpx);box-shadow:var(--shadow-card,0 24rpx 60rpx rgba(62,42,30,.06));display:flex;flex-direction:column;margin-bottom:40rpx;opacity:0;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease,opacity .2s ease}.bean-card__image{background:linear-gradient(180deg,hsla(37,39%,94%,.98),hsla(33,36%,90%,.92));overflow:hidden;padding-top:100%;position:relative;width:100%}.bean-card__img{height:100%;left:0;position:absolute;top:0;width:100%}.bean-card__placeholder{align-items:center;display:flex;height:100%;justify-content:center;left:0;position:absolute;top:0;width:100%}.bean-card__badge{background:hsla(0,0%,100%,.92);border-radius:var(--radius-pill,1998rpx);box-shadow:0 16rpx 40rpx rgba(62,42,30,.08);color:var(--color-coffee-dark,#3e2a1e);font-size:22rpx;font-weight:700;left:24rpx;letter-spacing:.18em;padding:14rpx 24rpx;position:absolute;text-transform:uppercase;top:24rpx}.bean-card__body{display:flex;flex-direction:column;flex-grow:1;min-width:0;padding:32rpx 36rpx 36rpx}.bean-card__meta{align-items:flex-start;display:flex;gap:24rpx;justify-content:space-between}.bean-card__titles{flex:1;min-width:0}.bean-card__line1,.bean-card__line2{color:var(--color-coffee-dark,#3e2a1e);display:block;font-family:var(--font-serif,Georgia,serif);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bean-card__line1{font-size:32rpx;font-weight:600;line-height:1.3}.bean-card__line2{color:rgba(62,42,30,.72);font-size:30rpx;line-height:1.35;margin-top:8rpx}.bean-card__tags{align-items:flex-end;display:flex;flex-direction:column;flex-shrink:0;gap:12rpx}.bean-card__tag{border-radius:var(--radius-pill,1998rpx);color:#fff;font-size:22rpx;font-weight:700;letter-spacing:.08em;padding:12rpx 20rpx}.bean-card__tag--sales{background:var(--color-accent-olive,#5a5a40)}.bean-card__tag--price{background:var(--color-accent-rust,#c85c3d)}.bean-card__footer{border-top:2rpx solid rgba(107,83,68,.1);display:flex;flex-direction:column;gap:8rpx;margin-top:32rpx;padding-top:24rpx}.bean-card__label{color:rgba(139,115,85,.88);font-size:22rpx;font-weight:600;letter-spacing:.18em;text-transform:uppercase}.bean-card__value{color:var(--color-coffee-dark,#3e2a1e);font-size:28rpx;font-weight:600}.bean-card-active{box-shadow:var(--shadow-card-hover,0 36rpx 80rpx rgba(62,42,30,.1));opacity:.94;transform:scale(.98)}.empty-state{align-items:center;display:flex;flex-direction:column;justify-content:center;padding:144rpx 64rpx}.empty-state__icon{margin-bottom:24rpx}.empty-state__text{color:rgba(139,115,85,.82);font-size:30rpx;letter-spacing:.04em;text-align:center}
+/*!***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/.pnpm/css-loader@6.11.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[1]!../../node_modules/.pnpm/postcss-loader@7.3.4_postcss@8.5.8_typescript@5.8.2_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[2]!../../node_modules/.pnpm/resolve-url-loader@5.0.0/node_modules/resolve-url-loader/index.js!../../node_modules/.pnpm/sass-loader@12.4.0_sass@1.50.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[4]!./src/components/RoasterCard/index.scss ***!
+  \***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.roaster-card {
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+  padding: 28rpx;
+  margin-bottom: 18rpx;
+  border-radius: 28rpx;
+  border: 1rpx solid rgba(107, 83, 68, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(253, 250, 244, 0.92)), var(--color-card-bg, #fff);
+  box-shadow: 0 18rpx 36rpx rgba(62, 42, 30, 0.04), inset 0 1rpx 0 rgba(255, 255, 255, 0.85);
+  animation: fade-in-up 0.45s ease forwards;
+  opacity: 0;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.roaster-card__media {
+  width: 96rpx;
+  height: 96rpx;
+  flex-shrink: 0;
+  border-radius: 28rpx;
+  border: 1rpx solid rgba(107, 83, 68, 0.08);
+  background: radial-gradient(circle at top, rgba(245, 240, 232, 0.95), rgba(255, 255, 255, 0.92) 70%), #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.roaster-card__logo {
+  width: 100%;
+  height: 100%;
+}
+.roaster-card__seal {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  border: 1.5rpx solid rgba(62, 42, 30, 0.16);
+  background: rgba(245, 240, 232, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.8);
+}
+.roaster-card__initial {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--color-coffee-dark, #3E2A1E);
+  letter-spacing: 0.04em;
+}
+.roaster-card__body {
+  flex: 1;
+  min-width: 0;
+}
+.roaster-card__eyebrow {
+  display: block;
+  font-size: 18rpx;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(139, 115, 85, 0.72);
+}
+.roaster-card__name {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-coffee-dark, #3E2A1E);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.roaster-card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 12rpx;
+}
+.roaster-card__city {
+  font-size: 22rpx;
+  color: var(--color-coffee-light, #8B7355);
+  max-width: 240rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.roaster-card__count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6rpx;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(245, 240, 232, 0.96);
+  border: 1rpx solid rgba(107, 83, 68, 0.08);
+}
+.roaster-card__count-num {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--color-accent-rust, #c85c3d);
+}
+.roaster-card__count-label {
+  font-size: 20rpx;
+  color: var(--color-coffee-light, #8B7355);
+}
+.roaster-card__desc {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 23rpx;
+  line-height: 1.45;
+  color: rgba(107, 83, 68, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.roaster-card__desc--muted {
+  color: rgba(139, 115, 85, 0.78);
+}
+.roaster-card__trailing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.roaster-card__arrow {
+  font-size: 30rpx;
+  color: rgba(139, 115, 85, 0.42);
+  flex-shrink: 0;
+}
+.roaster-card--active {
+  transform: translateY(-2rpx);
+  box-shadow: 0 22rpx 42rpx rgba(62, 42, 30, 0.08), inset 0 1rpx 0 rgba(255, 255, 255, 0.86);
+  border-color: rgba(107, 83, 68, 0.12);
+}
+/*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/.pnpm/css-loader@6.11.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[1]!../../node_modules/.pnpm/postcss-loader@7.3.4_postcss@8.5.8_typescript@5.8.2_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[2]!../../node_modules/.pnpm/resolve-url-loader@5.0.0/node_modules/resolve-url-loader/index.js!../../node_modules/.pnpm/sass-loader@12.4.0_sass@1.50.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[4]!./src/components/SearchBar/index.scss ***!
+  \*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.search-bar {
+  display: flex;
+  align-items: center;
+  height: 112rpx;
+  margin: 0 var(--page-gutter) 48rpx;
+  padding: 0 36rpx;
+  background: rgba(255, 255, 255, 0.96);
+  border: 2rpx solid var(--color-border, rgba(107, 83, 68, 0.15));
+  border-radius: var(--radius-pill, 1998rpx);
+  box-shadow: 0 24rpx 48rpx rgba(62, 42, 30, 0.04);
+}
+.search-bar__icon {
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+.search-bar__input {
+  flex: 1;
+  height: 112rpx;
+  font-size: 32rpx;
+  line-height: 112rpx;
+  color: var(--color-coffee-dark, #3e2a1e);
+}
+.search-bar__placeholder {
+  font-size: 30rpx;
+  color: rgba(139, 115, 85, 0.52);
+}
+/*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/.pnpm/css-loader@6.11.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[1]!../../node_modules/.pnpm/postcss-loader@7.3.4_postcss@8.5.8_typescript@5.8.2_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[2]!../../node_modules/.pnpm/resolve-url-loader@5.0.0/node_modules/resolve-url-loader/index.js!../../node_modules/.pnpm/sass-loader@12.4.0_sass@1.50.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[4]!./src/components/BeanCard/index.scss ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.bean-card {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 40rpx;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.96);
+  border: 2rpx solid rgba(107, 83, 68, 0.08);
+  border-radius: var(--radius-card-lg, 56rpx);
+  box-shadow: var(--shadow-card, 0 24rpx 60rpx rgba(62, 42, 30, 0.06));
+  animation: fade-in-up 0.45s ease forwards;
+  opacity: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+.bean-card__image {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.98), rgba(239, 231, 221, 0.92));
+}
+.bean-card__img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.bean-card__placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.bean-card__badge {
+  position: absolute;
+  top: 24rpx;
+  left: 24rpx;
+  padding: 14rpx 24rpx;
+  color: var(--color-coffee-dark, #3e2a1e);
+  font-size: 22rpx;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--radius-pill, 1998rpx);
+  box-shadow: 0 16rpx 40rpx rgba(62, 42, 30, 0.08);
+}
+.bean-card__body {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+  padding: 32rpx 36rpx 36rpx;
+}
+.bean-card__meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+.bean-card__titles {
+  flex: 1;
+  min-width: 0;
+}
+.bean-card__line1, .bean-card__line2 {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-serif, Georgia, serif);
+  color: var(--color-coffee-dark, #3e2a1e);
+}
+.bean-card__line1 {
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.bean-card__line2 {
+  margin-top: 8rpx;
+  font-size: 30rpx;
+  line-height: 1.35;
+  color: rgba(62, 42, 30, 0.72);
+}
+.bean-card__tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12rpx;
+  flex-shrink: 0;
+}
+.bean-card__tag {
+  padding: 12rpx 20rpx;
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border-radius: var(--radius-pill, 1998rpx);
+}
+.bean-card__tag--sales {
+  background: var(--color-accent-olive, #5a5a40);
+}
+.bean-card__tag--price {
+  background: var(--color-accent-rust, #c85c3d);
+}
+.bean-card__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  margin-top: 32rpx;
+  padding-top: 24rpx;
+  border-top: 2rpx solid rgba(107, 83, 68, 0.1);
+}
+.bean-card__label {
+  font-size: 22rpx;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(139, 115, 85, 0.88);
+}
+.bean-card__value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-coffee-dark, #3e2a1e);
+}
+.bean-card-active {
+  opacity: 0.94;
+  transform: scale(0.98);
+  box-shadow: var(--shadow-card-hover, 0 36rpx 80rpx rgba(62, 42, 30, 0.1));
+}
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/.pnpm/css-loader@6.11.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[1]!../../node_modules/.pnpm/postcss-loader@7.3.4_postcss@8.5.8_typescript@5.8.2_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[2]!../../node_modules/.pnpm/resolve-url-loader@5.0.0/node_modules/resolve-url-loader/index.js!../../node_modules/.pnpm/sass-loader@12.4.0_sass@1.50.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[4]!./src/components/EmptyState/index.scss ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 144rpx 64rpx;
+}
+.empty-state__icon {
+  margin-bottom: 24rpx;
+}
+.empty-state__text {
+  color: rgba(139, 115, 85, 0.82);
+  font-size: 30rpx;
+  letter-spacing: 0.04em;
+  text-align: center;
+}

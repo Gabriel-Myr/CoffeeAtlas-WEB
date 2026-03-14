@@ -1,1 +1,268 @@
-"use strict";(wx["webpackJsonp"]=wx["webpackJsonp"]||[]).push([[366],{3308:function(e,n,a){var s=a(9141),t=a(6209),l=a(8337),r=a(7394),c=a(2761),u=a(1855),i=a(9021),o=a(8432),f=a.n(o),h=a(644),d=a(9833),x=a(3423),g=a(8262),_=a(3159),m=20,b=250;function j(){var e=(0,u.useState)([]),n=(0,c.A)(e,2),a=n[0],s=n[1],j=(0,u.useState)(!1),p=(0,c.A)(j,2),A=p[0],v=p[1],N=(0,u.useState)(1),S=(0,c.A)(N,2),E=S[0],w=S[1],Y=(0,u.useState)(!0),k=(0,c.A)(Y,2),y=k[0],T=k[1],q=(0,u.useState)(null),C=(0,c.A)(q,2),I=C[0],O=C[1],P=(0,u.useState)(""),R=(0,c.A)(P,2),B=R[0],F=R[1],J=(0,u.useState)(""),L=(0,c.A)(J,2),z=L[0],D=L[1],G=(0,u.useRef)(!1),H=(0,u.useRef)(0),K=B.trim();(0,u.useEffect)(function(){var e=setTimeout(function(){Q()},b);return function(){return clearTimeout(e)}},[K]);var M=function(e){G.current=e,v(e)},Q=function(){H.current+=1,s([]),w(1),T(!0),O(null),U(1,{reset:!0,ignoreLoading:!0})},U=function(){var e=(0,r.A)((0,t.A)().m(function e(n,a){var r,c,u,i,o,h;return(0,t.A)().w(function(e){while(1)switch(e.p=e.n){case 0:if(!G.current||null!==a&&void 0!==a&&a.ignoreLoading){e.n=1;break}return e.a(2);case 1:return r=H.current+1,H.current=r,M(!0),D(""),e.p=2,e.n=3,(0,g.y7)({pageSize:m,page:n,q:K||void 0});case 3:if(u=e.v,r===H.current){e.n=4;break}return e.a(2);case 4:i=null!==(c=u.items)&&void 0!==c?c:[],s(function(e){return 1===n||null!==a&&void 0!==a&&a.reset?i:[].concat((0,l.A)(e),(0,l.A)(i))}),O(u.pageInfo.total),w(n+1),T(u.pageInfo.hasNextPage),e.n=7;break;case 5:if(e.p=5,h=e.v,r===H.current){e.n=6;break}return e.a(2);case 6:o=h instanceof Error?h.message:"\u52a0\u8f7d\u5931\u8d25",D(o),f().showToast({title:"\u52a0\u8f7d\u5931\u8d25",icon:"none"});case 7:return e.p=7,r===H.current&&M(!1),e.f(7);case 8:return e.a(2)}},e,null,[[2,5,7,8]])}));return function(n,a){return e.apply(this,arguments)}}();(0,o.useReachBottom)(function(){!G.current&&y&&U(E)});var V=null!==I?"\u5171 ".concat(I," \u6b3e\u5496\u5561\u8c46"):A?"\u6b63\u5728\u540c\u6b65\u76ee\u5f55...":a.length>0?"\u5df2\u52a0\u8f7d ".concat(a.length," \u6b3e\u5496\u5561\u8c46"):"";return(0,_.jsxs)(i.Ss,{className:"all-beans",children:[(0,_.jsxs)(i.Ss,{className:"all-beans__hero",children:[(0,_.jsx)(i.EY,{className:"all-beans__title-en",children:"COFFEE"}),(0,_.jsx)(i.EY,{className:"all-beans__title-atlas",children:"Atlas"}),(0,_.jsx)(i.EY,{className:"all-beans__subtitle",children:"\u5168\u90e8\u5496\u5561\u8c46"}),V?(0,_.jsx)(i.EY,{className:"all-beans__count",children:V}):null]}),(0,_.jsx)(h.A,{value:B,placeholder:"\u6309\u70d8\u7119\u5546\u3001\u4ea7\u5730\u6216\u8c46\u79cd\u641c\u7d22...",onInput:F}),K?(0,_.jsxs)(i.Ss,{className:"all-beans__query-bar",children:[(0,_.jsx)(i.EY,{className:"all-beans__query-text",children:"\u641c\u7d22 \u201c".concat(K,"\u201d")}),(0,_.jsx)(i.EY,{className:"all-beans__query-clear",onClick:function(){return F("")},children:"\u6e05\u9664"})]}):null,(0,_.jsxs)(i.Ss,{className:"all-beans__list",children:[z?(0,_.jsx)(x.A,{message:z}):A&&0===a.length?(0,_.jsx)(x.A,{message:"\u52a0\u8f7d\u4e2d..."}):0===a.length?(0,_.jsx)(x.A,{message:"\u672a\u627e\u5230\u5496\u5561\u8c46"}):a.map(function(e,n){return(0,_.jsx)(d.A,{bean:e,index:n},e.id)}),A&&a.length>0&&(0,_.jsx)(i.Ss,{className:"all-beans__loading",children:(0,_.jsx)(i.EY,{className:"all-beans__loading-text",children:"\u52a0\u8f7d\u4e2d..."})}),!y&&a.length>0&&(0,_.jsx)(i.Ss,{className:"all-beans__end",children:(0,_.jsx)(i.EY,{className:"all-beans__end-text",children:"\u2014 \u5df2\u52a0\u8f7d\u5168\u90e8 \u2014"})})]})]})}var p={navigationBarTitleText:"\u5168\u90e8\u5496\u5561\u8c46"};Page((0,s.createPageConfig)(j,"pages/all-beans/index",{root:{cn:[]}},p||{}))}},function(e){var n=function(n){return e(e.s=n)};e.O(0,[907,96,76],function(){return n(3308)});e.O()}]);
+"use strict";
+(wx["webpackJsonp"] = wx["webpackJsonp"] || []).push([["pages/all-beans/index"],{
+
+/***/ "../../node_modules/.pnpm/@tarojs+taro-loader@3.6.30_@swc+helpers@0.5.15_@tarojs+runtime@3.6.30_@tarojs+shared@3.6.30___zvk4cn4bol7pc6swockffza6ja/node_modules/@tarojs/taro-loader/lib/entry-cache.js?name=pages/all-beans/index!./src/pages/all-beans/index.tsx":
+/*!************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ../../node_modules/.pnpm/@tarojs+taro-loader@3.6.30_@swc+helpers@0.5.15_@tarojs+runtime@3.6.30_@tarojs+shared@3.6.30___zvk4cn4bol7pc6swockffza6ja/node_modules/@tarojs/taro-loader/lib/entry-cache.js?name=pages/all-beans/index!./src/pages/all-beans/index.tsx ***!
+  \************************************************************************************************************************************************************************************************************************************************************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": function() { return /* binding */ AllBeans; }
+/* harmony export */ });
+/* harmony import */ var _Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_regenerator_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../node_modules/.pnpm/@babel+runtime@7.28.6/node_modules/@babel/runtime/helpers/esm/regenerator.js */ "../../node_modules/.pnpm/@babel+runtime@7.28.6/node_modules/@babel/runtime/helpers/esm/regenerator.js");
+/* harmony import */ var _Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_toConsumableArray_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../node_modules/.pnpm/@babel+runtime@7.28.6/node_modules/@babel/runtime/helpers/esm/toConsumableArray.js */ "../../node_modules/.pnpm/@babel+runtime@7.28.6/node_modules/@babel/runtime/helpers/esm/toConsumableArray.js");
+/* harmony import */ var _Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../node_modules/.pnpm/@babel+runtime@7.28.6/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js */ "../../node_modules/.pnpm/@babel+runtime@7.28.6/node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js");
+/* harmony import */ var _Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_slicedToArray_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../node_modules/.pnpm/@babel+runtime@7.28.6/node_modules/@babel/runtime/helpers/esm/slicedToArray.js */ "../../node_modules/.pnpm/@babel+runtime@7.28.6/node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react */ "webpack/container/remote/react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _tarojs_components__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @tarojs/components */ "../../node_modules/.pnpm/@tarojs+plugin-platform-weapp@3.6.30_@swc+helpers@0.5.15_@tarojs+components@3.6.30_@tarojs+he_ylqvpfizk55ntz3dpgxvqjkpiy/node_modules/@tarojs/plugin-platform-weapp/dist/components-react.js");
+/* harmony import */ var _tarojs_taro__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @tarojs/taro */ "webpack/container/remote/@tarojs/taro");
+/* harmony import */ var _tarojs_taro__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_tarojs_taro__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var _components_SearchBar__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../components/SearchBar */ "./src/components/SearchBar/index.tsx");
+/* harmony import */ var _components_BeanCard__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../components/BeanCard */ "./src/components/BeanCard/index.tsx");
+/* harmony import */ var _components_EmptyState__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../components/EmptyState */ "./src/components/EmptyState/index.tsx");
+/* harmony import */ var _services_api__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../services/api */ "./src/services/api.ts");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! react/jsx-runtime */ "webpack/container/remote/react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__);
+
+
+
+
+
+
+
+
+
+
+
+
+
+var PAGE_SIZE = 20;
+var SEARCH_DEBOUNCE_MS = 250;
+function AllBeans() {
+  var _useState = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)([]),
+    _useState2 = (0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_slicedToArray_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_useState, 2),
+    beans = _useState2[0],
+    setBeans = _useState2[1];
+  var _useState3 = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)(false),
+    _useState4 = (0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_slicedToArray_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_useState3, 2),
+    loading = _useState4[0],
+    setLoading = _useState4[1];
+  var _useState5 = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)(1),
+    _useState6 = (0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_slicedToArray_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_useState5, 2),
+    page = _useState6[0],
+    setPage = _useState6[1];
+  var _useState7 = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)(true),
+    _useState8 = (0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_slicedToArray_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_useState7, 2),
+    hasMore = _useState8[0],
+    setHasMore = _useState8[1];
+  var _useState9 = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)(null),
+    _useState0 = (0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_slicedToArray_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_useState9, 2),
+    total = _useState0[0],
+    setTotal = _useState0[1];
+  var _useState1 = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)(''),
+    _useState10 = (0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_slicedToArray_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_useState1, 2),
+    searchQuery = _useState10[0],
+    setSearchQuery = _useState10[1];
+  var _useState11 = (0,react__WEBPACK_IMPORTED_MODULE_4__.useState)(''),
+    _useState12 = (0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_slicedToArray_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_useState11, 2),
+    errorMessage = _useState12[0],
+    setErrorMessage = _useState12[1];
+  var loadingRef = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)(false);
+  var requestVersionRef = (0,react__WEBPACK_IMPORTED_MODULE_4__.useRef)(0);
+  var normalizedQuery = searchQuery.trim();
+  (0,react__WEBPACK_IMPORTED_MODULE_4__.useEffect)(function () {
+    var timer = setTimeout(function () {
+      reload();
+    }, SEARCH_DEBOUNCE_MS);
+    return function () {
+      return clearTimeout(timer);
+    };
+  }, [normalizedQuery]);
+  var setLoadingState = function setLoadingState(value) {
+    loadingRef.current = value;
+    setLoading(value);
+  };
+  var reload = function reload() {
+    requestVersionRef.current += 1;
+    setBeans([]);
+    setPage(1);
+    setHasMore(true);
+    setTotal(null);
+    void loadPage(1, {
+      reset: true,
+      ignoreLoading: true
+    });
+  };
+  var loadPage = /*#__PURE__*/function () {
+    var _ref = (0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_asyncToGenerator_js__WEBPACK_IMPORTED_MODULE_2__["default"])(/*#__PURE__*/(0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_regenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])().m(function _callee(currentPage, options) {
+      var requestVersion, _res$items, res, newBeans, message, _t;
+      return (0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_regenerator_js__WEBPACK_IMPORTED_MODULE_0__["default"])().w(function (_context) {
+        while (1) switch (_context.p = _context.n) {
+          case 0:
+            if (!(loadingRef.current && !(options !== null && options !== void 0 && options.ignoreLoading))) {
+              _context.n = 1;
+              break;
+            }
+            return _context.a(2);
+          case 1:
+            requestVersion = requestVersionRef.current + 1;
+            requestVersionRef.current = requestVersion;
+            setLoadingState(true);
+            setErrorMessage('');
+            _context.p = 2;
+            _context.n = 3;
+            return (0,_services_api__WEBPACK_IMPORTED_MODULE_10__.getBeans)({
+              pageSize: PAGE_SIZE,
+              page: currentPage,
+              q: normalizedQuery || undefined
+            });
+          case 3:
+            res = _context.v;
+            if (!(requestVersion !== requestVersionRef.current)) {
+              _context.n = 4;
+              break;
+            }
+            return _context.a(2);
+          case 4:
+            newBeans = (_res$items = res.items) !== null && _res$items !== void 0 ? _res$items : [];
+            setBeans(function (prev) {
+              return currentPage === 1 || options !== null && options !== void 0 && options.reset ? newBeans : [].concat((0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_toConsumableArray_js__WEBPACK_IMPORTED_MODULE_1__["default"])(prev), (0,_Users_gabi_CoffeeAtlas_Web_node_modules_pnpm_babel_runtime_7_28_6_node_modules_babel_runtime_helpers_esm_toConsumableArray_js__WEBPACK_IMPORTED_MODULE_1__["default"])(newBeans));
+            });
+            setTotal(res.pageInfo.total);
+            setPage(currentPage + 1);
+            setHasMore(res.pageInfo.hasNextPage);
+            _context.n = 7;
+            break;
+          case 5:
+            _context.p = 5;
+            _t = _context.v;
+            if (!(requestVersion !== requestVersionRef.current)) {
+              _context.n = 6;
+              break;
+            }
+            return _context.a(2);
+          case 6:
+            message = _t instanceof Error ? _t.message : '加载失败';
+            setErrorMessage(message);
+            _tarojs_taro__WEBPACK_IMPORTED_MODULE_6___default().showToast({
+              title: '加载失败',
+              icon: 'none'
+            });
+          case 7:
+            _context.p = 7;
+            if (requestVersion === requestVersionRef.current) {
+              setLoadingState(false);
+            }
+            return _context.f(7);
+          case 8:
+            return _context.a(2);
+        }
+      }, _callee, null, [[2, 5, 7, 8]]);
+    }));
+    return function loadPage(_x, _x2) {
+      return _ref.apply(this, arguments);
+    };
+  }();
+  (0,_tarojs_taro__WEBPACK_IMPORTED_MODULE_6__.useReachBottom)(function () {
+    if (!loadingRef.current && hasMore) {
+      void loadPage(page);
+    }
+  });
+  var countLabel = total !== null ? "\u5171 ".concat(total, " \u6B3E\u5496\u5561\u8C46") : loading ? '正在同步目录...' : beans.length > 0 ? "\u5DF2\u52A0\u8F7D ".concat(beans.length, " \u6B3E\u5496\u5561\u8C46") : '';
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsxs)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.View, {
+    className: "all-beans",
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsxs)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.View, {
+      className: "all-beans__hero",
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.Text, {
+        className: "all-beans__title-en",
+        children: "COFFEE"
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.Text, {
+        className: "all-beans__title-atlas",
+        children: "Atlas"
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.Text, {
+        className: "all-beans__subtitle",
+        children: "\u5168\u90E8\u5496\u5561\u8C46"
+      }), countLabel ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.Text, {
+        className: "all-beans__count",
+        children: countLabel
+      }) : null]
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_components_SearchBar__WEBPACK_IMPORTED_MODULE_7__["default"], {
+      value: searchQuery,
+      placeholder: "\u6309\u70D8\u7119\u5546\u3001\u4EA7\u5730\u6216\u8C46\u79CD\u641C\u7D22...",
+      onInput: setSearchQuery
+    }), normalizedQuery ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsxs)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.View, {
+      className: "all-beans__query-bar",
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.Text, {
+        className: "all-beans__query-text",
+        children: "\u641C\u7D22 \u201C".concat(normalizedQuery, "\u201D")
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.Text, {
+        className: "all-beans__query-clear",
+        onClick: function onClick() {
+          return setSearchQuery('');
+        },
+        children: "\u6E05\u9664"
+      })]
+    }) : null, /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsxs)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.View, {
+      className: "all-beans__list",
+      children: [errorMessage ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_components_EmptyState__WEBPACK_IMPORTED_MODULE_9__["default"], {
+        message: errorMessage
+      }) : loading && beans.length === 0 ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_components_EmptyState__WEBPACK_IMPORTED_MODULE_9__["default"], {
+        message: "\u52A0\u8F7D\u4E2D..."
+      }) : beans.length === 0 ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_components_EmptyState__WEBPACK_IMPORTED_MODULE_9__["default"], {
+        message: "\u672A\u627E\u5230\u5496\u5561\u8C46"
+      }) : beans.map(function (bean, index) {
+        return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_components_BeanCard__WEBPACK_IMPORTED_MODULE_8__["default"], {
+          bean: bean,
+          index: index
+        }, bean.id);
+      }), loading && beans.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.View, {
+        className: "all-beans__loading",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.Text, {
+          className: "all-beans__loading-text",
+          children: "\u52A0\u8F7D\u4E2D..."
+        })
+      }), !hasMore && beans.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.View, {
+        className: "all-beans__end",
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_tarojs_components__WEBPACK_IMPORTED_MODULE_5__.Text, {
+          className: "all-beans__end-text",
+          children: "\u2014 \u5DF2\u52A0\u8F7D\u5168\u90E8 \u2014"
+        })
+      })]
+    })]
+  });
+}
+
+/***/ }),
+
+/***/ "./src/pages/all-beans/index.tsx":
+/*!***************************************!*\
+  !*** ./src/pages/all-beans/index.tsx ***!
+  \***************************************/
+/***/ (function(__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) {
+
+/* harmony import */ var _tarojs_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @tarojs/runtime */ "webpack/container/remote/@tarojs/runtime");
+/* harmony import */ var _tarojs_runtime__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_tarojs_runtime__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_pnpm_tarojs_taro_loader_3_6_30_swc_helpers_0_5_15_tarojs_runtime_3_6_30_tarojs_shared_3_6_30_zvk4cn4bol7pc6swockffza6ja_node_modules_tarojs_taro_loader_lib_entry_cache_js_name_pages_all_beans_index_index_tsx__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !!../../../../../node_modules/.pnpm/@tarojs+taro-loader@3.6.30_@swc+helpers@0.5.15_@tarojs+runtime@3.6.30_@tarojs+shared@3.6.30___zvk4cn4bol7pc6swockffza6ja/node_modules/@tarojs/taro-loader/lib/entry-cache.js?name=pages/all-beans/index!./index.tsx */ "../../node_modules/.pnpm/@tarojs+taro-loader@3.6.30_@swc+helpers@0.5.15_@tarojs+runtime@3.6.30_@tarojs+shared@3.6.30___zvk4cn4bol7pc6swockffza6ja/node_modules/@tarojs/taro-loader/lib/entry-cache.js?name=pages/all-beans/index!./src/pages/all-beans/index.tsx");
+
+
+var config = {"navigationBarTitleText":"全部咖啡豆"};
+
+
+var inst = Page((0,_tarojs_runtime__WEBPACK_IMPORTED_MODULE_0__.createPageConfig)(_node_modules_pnpm_tarojs_taro_loader_3_6_30_swc_helpers_0_5_15_tarojs_runtime_3_6_30_tarojs_shared_3_6_30_zvk4cn4bol7pc6swockffza6ja_node_modules_tarojs_taro_loader_lib_entry_cache_js_name_pages_all_beans_index_index_tsx__WEBPACK_IMPORTED_MODULE_1__["default"], 'pages/all-beans/index', {root:{cn:[]}}, config || {}))
+
+
+/* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_pnpm_tarojs_taro_loader_3_6_30_swc_helpers_0_5_15_tarojs_runtime_3_6_30_tarojs_shared_3_6_30_zvk4cn4bol7pc6swockffza6ja_node_modules_tarojs_taro_loader_lib_entry_cache_js_name_pages_all_beans_index_index_tsx__WEBPACK_IMPORTED_MODULE_1__["default"]);
+
+
+/***/ })
+
+},
+/******/ function(__webpack_require__) { // webpackRuntimeModules
+/******/ var __webpack_exec__ = function(moduleId) { return __webpack_require__(__webpack_require__.s = moduleId); }
+/******/ __webpack_require__.O(0, ["taro","vendors","common"], function() { return __webpack_exec__("./src/pages/all-beans/index.tsx"); });
+/******/ var __webpack_exports__ = __webpack_require__.O();
+/******/ }
+]);
+//# sourceMappingURL=index.js.map

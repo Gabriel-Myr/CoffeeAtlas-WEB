@@ -14,6 +14,7 @@ import type {
   UserFavorite,
 } from '../../types';
 import { isLoggedIn, login, logout } from '../../utils/auth';
+import { getApiBaseUrlState } from '../../utils/api-config';
 import {
   getBeanFavorites,
   getHistory,
@@ -140,6 +141,7 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<TabKey>('beans');
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [apiState, setApiState] = useState(getApiBaseUrlState());
   const [localBeanFavorites, setLocalBeanFavorites] = useState<BeanSnapshot[]>([]);
   const [localRoasterFavorites, setLocalRoasterFavorites] = useState<RoasterSnapshot[]>([]);
   const [cloudFavorites, setCloudFavorites] = useState<UserFavorite[]>([]);
@@ -149,7 +151,8 @@ export default function Profile() {
   useDidShow(() => {
     const authed = isLoggedIn();
     setLoggedIn(authed);
-    setUser(getStoredUser());
+    setUser(authed ? getStoredUser() : null);
+    setApiState(getApiBaseUrlState());
     setLocalBeanFavorites(getBeanFavorites());
     setLocalRoasterFavorites(getRoasterFavorites());
     setHistory(getHistory());
@@ -239,6 +242,7 @@ export default function Profile() {
   const summaryLabel = loggedIn ? '已同步至云端' : '本地收藏，登录后自动同步';
   const heroName = user?.nickname || (loggedIn ? '咖啡爱好者' : '你的咖啡私藏');
   const heroInitial = heroName.charAt(0).toUpperCase();
+  const apiModeLabel = apiState.mode === 'cloud' ? '云端' : apiState.mode === 'local' ? '本地' : '未配置';
 
   return (
     <View className="profile">
@@ -282,6 +286,21 @@ export default function Profile() {
             <Text className="profile__stat-num">{history.length}</Text>
             <Text className="profile__stat-label">最近浏览</Text>
           </View>
+        </View>
+      </View>
+
+      <View
+        className="profile__debug-card"
+        onClick={() => Taro.navigateTo({ url: '/pages/debug/index' })}
+      >
+        <View className="profile__debug-copy">
+          <Text className="profile__debug-title">API 联调</Text>
+          <Text className="profile__debug-desc">
+            {apiState.baseUrl || '点击配置云端联调地址'}
+          </Text>
+        </View>
+        <View className={`profile__debug-pill profile__debug-pill--${apiState.mode}`}>
+          <Text className="profile__debug-pill-text">{apiModeLabel}</Text>
         </View>
       </View>
 

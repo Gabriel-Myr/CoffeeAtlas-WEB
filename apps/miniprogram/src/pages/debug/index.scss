@@ -1,0 +1,191 @@
+.debug-page {
+  min-height: 100vh;
+  padding: 28rpx 32rpx 48rpx;
+
+  &__hero {
+    padding: 24rpx 8rpx 32rpx;
+  }
+
+  &__eyebrow {
+    display: block;
+    font-size: 20rpx;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(139, 115, 85, 0.72);
+  }
+
+  &__title {
+    display: block;
+    margin-top: 14rpx;
+    font-size: 44rpx;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-coffee-dark, #3e2a1e);
+  }
+
+  &__subtitle {
+    display: block;
+    margin-top: 16rpx;
+    font-size: 24rpx;
+    line-height: 1.7;
+    color: rgba(107, 83, 68, 0.82);
+  }
+
+  &__card {
+    margin-top: 20rpx;
+    padding: 28rpx;
+    border-radius: 30rpx;
+    border: 1rpx solid rgba(107, 83, 68, 0.08);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(253, 250, 244, 0.94)),
+      #fff;
+    box-shadow:
+      0 18rpx 36rpx rgba(62, 42, 30, 0.05),
+      inset 0 1rpx 0 rgba(255, 255, 255, 0.86);
+  }
+
+  &__card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18rpx;
+  }
+
+  &__card-title {
+    display: block;
+    font-size: 28rpx;
+    font-weight: 600;
+    color: var(--color-coffee-dark, #3e2a1e);
+  }
+
+  &__value {
+    display: block;
+    margin-top: 16rpx;
+    font-size: 26rpx;
+    line-height: 1.7;
+    color: var(--color-coffee-dark, #3e2a1e);
+    word-break: break-all;
+  }
+
+  &__meta {
+    display: block;
+    margin-top: 12rpx;
+    font-size: 22rpx;
+    line-height: 1.7;
+    color: rgba(139, 115, 85, 0.78);
+  }
+
+  &__warning {
+    display: block;
+    margin-top: 12rpx;
+    padding: 14rpx 18rpx;
+    border-radius: 20rpx;
+    background: rgba(232, 154, 127, 0.12);
+    color: var(--color-accent-rust, #c85c3d);
+    font-size: 22rpx;
+    line-height: 1.7;
+  }
+
+  &__badge {
+    padding: 8rpx 18rpx;
+    border-radius: 999rpx;
+    font-size: 20rpx;
+    font-weight: 600;
+
+    &--cloud {
+      background: rgba(90, 90, 64, 0.12);
+      color: var(--color-accent-olive, #5a5a40);
+    }
+
+    &--local {
+      background: rgba(232, 154, 127, 0.12);
+      color: var(--color-accent-rust, #c85c3d);
+    }
+
+    &--unset {
+      background: rgba(139, 115, 85, 0.12);
+      color: var(--color-coffee-light, #8b7355);
+    }
+  }
+
+  &__input {
+    margin-top: 20rpx;
+    width: 100%;
+    padding: 20rpx 24rpx;
+    border-radius: 22rpx;
+    background: rgba(245, 240, 232, 0.96);
+    border: 1rpx solid rgba(107, 83, 68, 0.08);
+    font-size: 24rpx;
+    color: var(--color-coffee-dark, #3e2a1e);
+  }
+
+  &__actions,
+  &__probe-grid {
+    display: grid;
+    gap: 16rpx;
+  }
+
+  &__actions {
+    margin-top: 20rpx;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  &__probe-grid {
+    margin-top: 20rpx;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  &__button,
+  &__probe-button {
+    margin: 0;
+    height: 80rpx !important;
+    line-height: 80rpx !important;
+    border-radius: 999rpx !important;
+    border: 1rpx solid rgba(107, 83, 68, 0.08) !important;
+    background: rgba(245, 240, 232, 0.92) !important;
+    color: var(--color-coffee-dark, #3e2a1e) !important;
+    font-size: 24rpx !important;
+
+    &::after {
+      border: none;
+    }
+  }
+
+  &__button--primary {
+    background: var(--color-coffee-dark, #3e2a1e) !important;
+    color: #fff !important;
+  }
+
+  &__result {
+    margin-top: 18rpx;
+    padding: 20rpx;
+    border-radius: 22rpx;
+    background: rgba(245, 240, 232, 0.72);
+    border: 1rpx solid rgba(107, 83, 68, 0.08);
+  }
+
+  &__result-title {
+    display: block;
+    font-size: 22rpx;
+    font-weight: 600;
+    color: var(--color-coffee-dark, #3e2a1e);
+  }
+
+  &__result-code,
+  &__result-error {
+    display: block;
+    margin-top: 14rpx;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-size: 22rpx;
+    line-height: 1.7;
+  }
+
+  &__result-code {
+    color: rgba(62, 42, 30, 0.88);
+  }
+
+  &__result-error {
+    color: var(--color-accent-rust, #c85c3d);
+  }
+}

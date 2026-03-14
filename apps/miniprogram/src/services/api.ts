@@ -1,6 +1,8 @@
 import Taro from '@tarojs/taro';
 import type {
+  ApiHealthStatus,
   CoffeeBean,
+  CurrentUserProfile,
   LoginResponse,
   PaginatedResult,
   RoasterDetail,
@@ -9,30 +11,26 @@ import type {
   V1Response,
 } from '../types';
 import { getToken } from '../utils/storage';
+import { getApiBaseUrlState } from '../utils/api-config';
 
-const BASE_URL = process.env.TARO_APP_API_URL || '';
 const PLACEHOLDER_PATTERN = /YOUR_LAN_IP|your-domain\.com/i;
-
-function normalizeBaseUrl(url: string): string {
-  return url
-    .trim()
-    .replace(/\/+$/, '')
-    .replace(/\/api$/, '');
-}
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
   return '请求失败，请稍后重试';
 }
 
+export { getApiBaseUrlState } from '../utils/api-config';
+
 async function request<T>(
   endpoint: string,
   options?: Partial<Taro.request.Option>
 ): Promise<T> {
-  const baseUrl = normalizeBaseUrl(BASE_URL);
+  const apiState = getApiBaseUrlState();
+  const baseUrl = apiState.baseUrl;
 
   if (!baseUrl) {
-    throw new Error('未配置 TARO_APP_API_URL。开发联调请改成 http://你的局域网IP:3000；正式环境请改成 HTTPS 域名。');
+    throw new Error('未配置 API 地址。可在“我的 > API 联调”里填写云端 HTTPS 域名。');
   }
 
   if (PLACEHOLDER_PATTERN.test(baseUrl)) {
@@ -106,6 +104,14 @@ export async function getRoasters(params?: {
 
 export async function getRoasterById(id: string): Promise<RoasterDetail> {
   return request<RoasterDetail>(`/api/v1/roasters/${id}`);
+}
+
+export async function getApiHealth(): Promise<ApiHealthStatus> {
+  return request<ApiHealthStatus>('/api/v1/health');
+}
+
+export async function getMe(): Promise<CurrentUserProfile> {
+  return request<CurrentUserProfile>('/api/v1/me');
 }
 
 // 认证

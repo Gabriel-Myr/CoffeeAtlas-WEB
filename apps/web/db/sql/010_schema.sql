@@ -106,6 +106,7 @@ create table if not exists public.roaster_beans (
   sales_count int check (sales_count is null or sales_count >= 0),
   weight_grams int check (weight_grams is null or weight_grams > 0),
   product_url text,
+  image_url text,
   status publish_status not null default 'DRAFT',
   is_in_stock boolean not null default true,
   release_at timestamptz,
@@ -170,6 +171,27 @@ create table if not exists public.change_requests (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (entity_type in ('ROASTER', 'BEAN', 'ROASTER_BEAN', 'ALIAS'))
+);
+
+create table if not exists public.app_users (
+  id uuid primary key default gen_random_uuid(),
+  wechat_openid text not null unique,
+  wechat_unionid text,
+  nickname text,
+  avatar_url text,
+  last_login_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.user_favorites (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.app_users(id) on delete cascade,
+  target_type text not null check (target_type in ('bean', 'roaster')),
+  target_id uuid not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, target_type, target_id)
 );
 
 -- Search vector maintenance.
@@ -244,6 +266,16 @@ for each row execute function public.set_updated_at();
 drop trigger if exists trg_change_requests_updated_at on public.change_requests;
 create trigger trg_change_requests_updated_at
 before update on public.change_requests
+for each row execute function public.set_updated_at();
+
+drop trigger if exists trg_app_users_updated_at on public.app_users;
+create trigger trg_app_users_updated_at
+before update on public.app_users
+for each row execute function public.set_updated_at();
+
+drop trigger if exists trg_user_favorites_updated_at on public.user_favorites;
+create trigger trg_user_favorites_updated_at
+before update on public.user_favorites
 for each row execute function public.set_updated_at();
 
 drop trigger if exists trg_roasters_search_tsv on public.roasters;

@@ -118,8 +118,10 @@ create table if not exists public.roaster_beans (
   roast_level text,
   price_amount numeric(10, 2) check (price_amount is null or price_amount >= 0),
   price_currency char(3) not null default 'CNY',
+  sales_count int check (sales_count is null or sales_count >= 0),
   weight_grams int check (weight_grams is null or weight_grams > 0),
   product_url text,
+  image_url text,
   status publish_status not null default 'DRAFT',
   is_in_stock boolean not null default true,
   release_at timestamptz,
@@ -186,6 +188,27 @@ create table if not exists public.change_requests (
   check (entity_type in ('ROASTER', 'BEAN', 'ROASTER_BEAN', 'ALIAS'))
 );
 
+create table if not exists public.app_users (
+  id uuid primary key default gen_random_uuid(),
+  wechat_openid text not null unique,
+  wechat_unionid text,
+  nickname text,
+  avatar_url text,
+  last_login_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.user_favorites (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.app_users(id) on delete cascade,
+  target_type text not null check (target_type in ('bean', 'roaster')),
+  target_id uuid not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, target_type, target_id)
+);
+
 -- Search vector maintenance functions
 create or replace function public.update_roaster_search_tsv()
 returns trigger
@@ -248,6 +271,12 @@ create trigger trg_import_jobs_updated_at before update on public.import_jobs fo
 drop trigger if exists trg_change_requests_updated_at on public.change_requests;
 create trigger trg_change_requests_updated_at before update on public.change_requests for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_app_users_updated_at on public.app_users;
+create trigger trg_app_users_updated_at before update on public.app_users for each row execute function public.set_updated_at();
+
+drop trigger if exists trg_user_favorites_updated_at on public.user_favorites;
+create trigger trg_user_favorites_updated_at before update on public.user_favorites for each row execute function public.set_updated_at();
+
 drop trigger if exists trg_roasters_search_tsv on public.roasters;
 create trigger trg_roasters_search_tsv before insert or update of name, name_en, city, description on public.roasters for each row execute function public.update_roaster_search_tsv();
 
@@ -276,6 +305,9 @@ create index if not exists idx_price_snapshots_rb_captured on public.price_snaps
 create index if not exists idx_import_jobs_status_created on public.import_jobs (status, created_at desc);
 create index if not exists idx_ingestion_events_created on public.ingestion_events (created_at desc);
 create index if not exists idx_change_requests_status_created on public.change_requests (status, created_at desc);
+create index if not exists idx_app_users_openid on public.app_users (wechat_openid);
+create index if not exists idx_user_favorites_user_created on public.user_favorites (user_id, created_at desc);
+create index if not exists idx_user_favorites_target on public.user_favorites (target_type, target_id);
 
 create index if not exists idx_roasters_search_tsv on public.roasters using gin (search_tsv);
 create index if not exists idx_beans_search_tsv on public.beans using gin (search_tsv);
@@ -298,6 +330,8 @@ alter table public.price_snapshots enable row level security;
 alter table public.import_jobs enable row level security;
 alter table public.ingestion_events enable row level security;
 alter table public.change_requests enable row level security;
+alter table public.app_users enable row level security;
+alter table public.user_favorites enable row level security;
 
 create or replace function public.has_platform_role(required_roles text[])
 returns boolean
@@ -364,6 +398,7 @@ select
   rb.price_currency,
   rb.is_in_stock,
   rb.product_url,
+  rb.image_url,
   rb.release_at,
   rb.updated_at
 from public.roaster_beans rb
@@ -382,7 +417,9 @@ select
   rb.roast_level,
   rb.price_amount,
   rb.price_currency,
+  rb.sales_count,
   rb.product_url,
+  rb.image_url,
   rb.release_at,
   rb.retire_at,
   rb.created_at,

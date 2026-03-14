@@ -20,6 +20,7 @@ select
   rb.sales_count,
   rb.is_in_stock,
   rb.product_url,
+  rb.image_url,
   rb.release_at,
   rb.updated_at
 from public.roaster_beans rb
@@ -41,6 +42,7 @@ select
   rb.price_currency,
   rb.sales_count,
   rb.product_url,
+  rb.image_url,
   rb.release_at,
   rb.retire_at,
   rb.created_at,

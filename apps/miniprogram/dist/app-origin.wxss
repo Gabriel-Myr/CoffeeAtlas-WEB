@@ -1,1 +1,150 @@
-:root{--color-coffee-dark:#3e2a1e;--color-coffee-light:#8b7355;--color-coffee-medium:#6b5344;--color-coffee-pale:#d4c4b5;--color-bg-warm:#f5f0e8;--color-bg-cream:#fdfaf4;--color-card-bg:#fff;--color-accent-rust:#c85c3d;--color-accent-olive:#5a5a40;--color-accent-soft:#e89a7f;--color-surface:#fff;--color-border:rgba(107,83,68,.15);--font-sans:"SF Pro Text","Avenir Next","PingFang SC","Helvetica Neue",Helvetica,Arial,sans-serif;--font-serif:"Iowan Old Style","Baskerville","Times New Roman",Georgia,serif;--page-gutter:32rpx;--space-1:8rpx;--space-2:16rpx;--space-3:24rpx;--space-4:32rpx;--space-5:40rpx;--space-6:48rpx;--space-7:56rpx;--space-8:64rpx;--radius-pill:1998rpx;--radius-card:40rpx;--radius-card-lg:56rpx;--shadow-card:0 24rpx 60rpx rgba(62,42,30,.06);--shadow-card-hover:0 36rpx 80rpx rgba(62,42,30,.1);--spring-easing:cubic-bezier(0.175,0.885,0.32,1.275);--smooth-easing:cubic-bezier(0.4,0,0.2,1)}@keyframes fade-in-up{from{opacity:0;transform:translateY(32rpx)}to{opacity:1;transform:translateY(0)}}@keyframes scale-in{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}@keyframes fade-in{from{opacity:0}to{opacity:1}}@keyframes slide-in-bounce-left{0%{opacity:0;transform:translateX(-48rpx)}60%{opacity:1;transform:translateX(8rpx)}100%{opacity:1;transform:translateX(0)}}@keyframes slide-in-left{from{opacity:0;transform:translateX(-24rpx)}to{opacity:1;transform:translateX(0)}}.animate-fade-in-up{animation:fade-in-up .3s ease forwards}.animate-scale-in{animation:scale-in .2s ease forwards}.animate-fade-in{animation:fade-in .25s ease forwards}.animate-delay-1{animation-delay:.05s}.animate-delay-2{animation-delay:.1s}.animate-delay-3{animation-delay:.15s}.animate-delay-4{animation-delay:.2s}.animate-delay-5{animation-delay:.25s}page{-webkit-font-smoothing:antialiased;background:radial-gradient(circle at top,hsla(37,39%,94%,.94),hsla(40,69%,97%,.98) 38%),linear-gradient(180deg,#f7f1e8,#fdfaf4 48%,#fffdf9);color:var(--color-coffee-dark,#3e2a1e);font-family:var(--font-sans)}button,image,input,text,view{box-sizing:border-box}button{line-height:inherit;margin:0;padding:0}button::after{border:0}
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/.pnpm/css-loader@6.11.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[1]!../../node_modules/.pnpm/postcss-loader@7.3.4_postcss@8.5.8_typescript@5.8.2_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[2]!../../node_modules/.pnpm/resolve-url-loader@5.0.0/node_modules/resolve-url-loader/index.js!../../node_modules/.pnpm/sass-loader@12.4.0_sass@1.50.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[4]!./src/app.scss ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+:root {
+  --color-coffee-dark: #3e2a1e;
+  --color-coffee-light: #8b7355;
+  --color-coffee-medium: #6b5344;
+  --color-coffee-pale: #d4c4b5;
+  --color-bg-warm: #f5f0e8;
+  --color-bg-cream: #fdfaf4;
+  --color-card-bg: #ffffff;
+  --color-accent-rust: #c85c3d;
+  --color-accent-olive: #5a5a40;
+  --color-accent-soft: #e89a7f;
+  --color-surface: #ffffff;
+  --color-border: rgba(107, 83, 68, 0.15);
+  --font-sans: "SF Pro Text", "Avenir Next", "PingFang SC", "Helvetica Neue", Helvetica, Arial,
+    sans-serif;
+  --font-serif: "Iowan Old Style", "Baskerville", "Times New Roman", Georgia, serif;
+  --page-gutter: 32rpx;
+  --space-1: 8rpx;
+  --space-2: 16rpx;
+  --space-3: 24rpx;
+  --space-4: 32rpx;
+  --space-5: 40rpx;
+  --space-6: 48rpx;
+  --space-7: 56rpx;
+  --space-8: 64rpx;
+  --radius-pill: 1998rpx;
+  --radius-card: 40rpx;
+  --radius-card-lg: 56rpx;
+  --shadow-card: 0 24rpx 60rpx rgba(62, 42, 30, 0.06);
+  --shadow-card-hover: 0 36rpx 80rpx rgba(62, 42, 30, 0.1);
+  --spring-easing: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --smooth-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(32rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-bounce-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-48rpx);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(8rpx);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-24rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s ease forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease forwards;
+}
+
+.animate-delay-1 {
+  animation-delay: 0.05s;
+}
+
+.animate-delay-2 {
+  animation-delay: 0.1s;
+}
+
+.animate-delay-3 {
+  animation-delay: 0.15s;
+}
+
+.animate-delay-4 {
+  animation-delay: 0.2s;
+}
+
+.animate-delay-5 {
+  animation-delay: 0.25s;
+}
+
+page {
+  background: radial-gradient(circle at top, rgba(245, 240, 232, 0.94), rgba(253, 250, 244, 0.98) 38%), linear-gradient(180deg, #f7f1e8 0%, #fdfaf4 48%, #fffdf9 100%);
+  color: var(--color-coffee-dark, #3e2a1e);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+view,
+text,
+image,
+button,
+input {
+  box-sizing: border-box;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  line-height: inherit;
+}
+
+button::after {
+  border: 0;
+}

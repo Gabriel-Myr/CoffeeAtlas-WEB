@@ -1,5 +1,17 @@
 begin;
 
+create extension if not exists pgcrypto;
+
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
 create table if not exists public.app_users (
   id uuid primary key default gen_random_uuid(),
   wechat_openid text not null unique,
@@ -21,10 +33,12 @@ create table if not exists public.user_favorites (
   unique (user_id, target_type, target_id)
 );
 
+drop trigger if exists trg_app_users_updated_at on public.app_users;
 create trigger trg_app_users_updated_at
 before update on public.app_users
 for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_user_favorites_updated_at on public.user_favorites;
 create trigger trg_user_favorites_updated_at
 before update on public.user_favorites
 for each row execute function public.set_updated_at();

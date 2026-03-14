@@ -4,6 +4,7 @@ export default defineAppConfig({
     'pages/all-beans/index',
     'pages/roasters/index',
     'pages/profile/index',
+    'pages/debug/index',
     'pages/bean-detail/index',
     'pages/roaster-detail/index',
   ],

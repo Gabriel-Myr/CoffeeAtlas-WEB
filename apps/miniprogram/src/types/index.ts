@@ -76,6 +76,18 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+export interface CurrentUserProfile extends AuthUser {
+  createdAt: string;
+}
+
+export interface ApiHealthStatus {
+  service: string;
+  ts: string;
+  supabaseConfigured: boolean;
+  wechatConfigured: boolean;
+  jwtConfigured: boolean;
+}
+
 // 收藏
 interface FavoriteRecordBase {
   id: string;

@@ -7,8 +7,10 @@
     "build": "next build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --test --experimental-strip-types tests/**/*.test.ts",
+    "smoke:api": "node scripts/smoke-v1.mjs",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check:cloud-env": "node scripts/check-cloud-env.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",

@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: 'CoffeeAtlas is your comprehensive coffee discovery platform. Explore thousands of specialty coffee beans, discover exceptional roasters, and build your perfect coffee journey.',
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: any }) {
   return (
     <html lang="en">
       <body>{children}</body>

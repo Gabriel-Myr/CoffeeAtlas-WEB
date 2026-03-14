@@ -15,6 +15,9 @@ create index if not exists idx_price_snapshots_rb_captured on public.price_snaps
 create index if not exists idx_import_jobs_status_created on public.import_jobs (status, created_at desc);
 create index if not exists idx_ingestion_events_created on public.ingestion_events (created_at desc);
 create index if not exists idx_change_requests_status_created on public.change_requests (status, created_at desc);
+create index if not exists idx_app_users_openid on public.app_users (wechat_openid);
+create index if not exists idx_user_favorites_user_created on public.user_favorites (user_id, created_at desc);
+create index if not exists idx_user_favorites_target on public.user_favorites (target_type, target_id);
 
 -- Full text indexes.
 create index if not exists idx_roasters_search_tsv on public.roasters using gin (search_tsv);

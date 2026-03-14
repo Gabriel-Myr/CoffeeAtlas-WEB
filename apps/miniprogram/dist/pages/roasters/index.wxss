@@ -1,1 +1,88 @@
-.roaster-card{align-items:center;background:hsla(0,0%,100%,.96);border:2rpx solid rgba(107,83,68,.08);border-radius:48rpx;box-shadow:var(--shadow-card,0 24rpx 60rpx rgba(62,42,30,.06));display:flex;gap:32rpx;margin-bottom:32rpx;padding:36rpx;transition:transform .2s ease,box-shadow .2s ease}.roaster-card__avatar{align-items:center;background:linear-gradient(180deg,hsla(37,39%,94%,.98),hsla(31,43%,84%,.92));border-radius:36rpx;display:flex;flex-shrink:0;height:112rpx;justify-content:center;width:112rpx}.roaster-card__initial{color:var(--color-coffee-dark,#3e2a1e);font-size:48rpx;font-weight:700}.roaster-card__body{flex:1;min-width:0}.roaster-card__name{color:var(--color-coffee-dark,#3e2a1e);display:block;font-size:36rpx;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.roaster-card__city{color:rgba(139,115,85,.92);display:block;font-size:28rpx;margin-top:12rpx}.roaster-card__count{align-items:baseline;background:hsla(37,39%,94%,.98);border-radius:var(--radius-pill,1998rpx);display:flex;flex-shrink:0;gap:6rpx;padding:16rpx 20rpx}.roaster-card__count-num{color:var(--color-accent-rust,#c85c3d);font-size:32rpx;font-weight:700}.roaster-card__count-label{color:rgba(139,115,85,.92);font-size:24rpx;font-weight:600}.roaster-card__arrow{color:var(--color-coffee-pale,#d4c4b5);flex-shrink:0;font-size:44rpx}.roaster-card-active{box-shadow:var(--shadow-card-hover,0 36rpx 80rpx rgba(62,42,30,.1));transform:scale(.98)}.roasters-page{min-height:100vh;padding-bottom:80rpx}.roasters-page__header{align-items:center;display:flex;flex-direction:column;padding:96rpx 48rpx 56rpx;text-align:center}.roasters-page__header::before{color:rgba(139,115,85,.82);content:"COFFEE ATLAS";font-size:20rpx;font-weight:600;letter-spacing:.34em;text-transform:uppercase}.roasters-page__title{color:var(--color-coffee-dark,#3e2a1e);display:block;font-size:56rpx;font-weight:700;letter-spacing:.04em;margin-top:28rpx}.roasters-page__subtitle{color:rgba(139,115,85,.86);display:block;font-size:28rpx;margin-top:16rpx}.roasters-page__list{padding:16rpx 32rpx 0}.roasters-page__end,.roasters-page__loading{padding:56rpx 0 16rpx;text-align:center}.roasters-page__end-text,.roasters-page__loading-text{color:rgba(139,115,85,.72);font-size:26rpx}
+/*!***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/.pnpm/css-loader@6.11.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[1]!../../node_modules/.pnpm/postcss-loader@7.3.4_postcss@8.5.8_typescript@5.8.2_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[2]!../../node_modules/.pnpm/resolve-url-loader@5.0.0/node_modules/resolve-url-loader/index.js!../../node_modules/.pnpm/sass-loader@12.4.0_sass@1.50.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[4]!./src/pages/roasters/index.scss ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.roasters-page {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, rgba(245, 240, 232, 0.96), rgba(253, 250, 244, 0.98) 44%), linear-gradient(180deg, #f7f1e8 0%, #fdfaf4 42%, #fffdf8 100%);
+  padding: 48rpx 0 80rpx;
+}
+.roasters-page__hero {
+  padding: 88rpx 64rpx 48rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.roasters-page__title-en {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--color-coffee-dark, #3E2A1E);
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+.roasters-page__title-atlas {
+  margin-top: -8rpx;
+  font-size: 40rpx;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--color-accent-rust, #c85c3d);
+  line-height: 1;
+}
+.roasters-page__subtitle {
+  margin-top: 36rpx;
+  font-size: 24rpx;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-coffee-light, #8B7355);
+}
+.roasters-page__count {
+  margin-top: 24rpx;
+  font-size: 30rpx;
+  color: var(--color-coffee-light, #8B7355);
+}
+.roasters-page__city-bar {
+  margin: -24rpx 64rpx 32rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.roasters-page__city-chip {
+  padding: 12rpx 22rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1rpx solid rgba(107, 83, 68, 0.1);
+  font-size: 22rpx;
+  color: var(--color-coffee-light, #8B7355);
+}
+.roasters-page__city-chip--active {
+  background: var(--color-coffee-dark, #3E2A1E);
+  border-color: var(--color-coffee-dark, #3E2A1E);
+  color: #fff;
+}
+.roasters-page__query-bar {
+  margin: 0 64rpx 36rpx;
+  padding: 0 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32rpx;
+}
+.roasters-page__query-text {
+  font-size: 26rpx;
+  color: var(--color-coffee-light, #8B7355);
+}
+.roasters-page__query-clear {
+  font-size: 26rpx;
+  color: var(--color-accent-rust, #c85c3d);
+}
+.roasters-page__list {
+  padding: 0 64rpx;
+}
+.roasters-page__loading, .roasters-page__end {
+  text-align: center;
+  padding: 56rpx 0 16rpx;
+}
+.roasters-page__loading-text, .roasters-page__end-text {
+  font-size: 26rpx;
+  color: var(--color-coffee-pale, #d4c4b5);
+}

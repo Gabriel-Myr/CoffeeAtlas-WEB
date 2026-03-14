@@ -8,6 +8,8 @@ alter table public.price_snapshots enable row level security;
 alter table public.import_jobs enable row level security;
 alter table public.ingestion_events enable row level security;
 alter table public.change_requests enable row level security;
+alter table public.app_users enable row level security;
+alter table public.user_favorites enable row level security;
 
 -- Custom role check from JWT app metadata.
 create or replace function public.has_platform_role(required_roles text[])

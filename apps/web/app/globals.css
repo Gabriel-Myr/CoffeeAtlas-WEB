@@ -13,6 +13,14 @@
   --color-accent-soft: #e89a7f;
   --color-surface: #ffffff;
   --color-border: rgba(107, 83, 68, 0.15);
+  --atlas-paper: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 244, 238, 0.92) 100%);
+  --atlas-panel: rgba(255, 255, 255, 0.8);
+  --atlas-veil: rgba(252, 248, 242, 0.88);
+  --atlas-line: rgba(107, 83, 68, 0.15);
+  --atlas-ink-soft: rgba(62, 42, 30, 0.68);
+  --atlas-chip: rgba(232, 219, 205, 0.62);
+  --atlas-highlight: rgba(216, 111, 76, 0.14);
+  --atlas-accent: #c96d52;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Cormorant Garamond", "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
@@ -35,6 +43,14 @@
   --color-accent-soft: #c85c3d;
   --color-surface: #2d2926;
   --color-border: rgba(232, 224, 216, 0.1);
+  --atlas-paper: linear-gradient(180deg, rgba(37, 34, 32, 0.94) 0%, rgba(27, 23, 22, 0.98) 100%);
+  --atlas-panel: rgba(45, 41, 38, 0.88);
+  --atlas-veil: rgba(57, 51, 47, 0.72);
+  --atlas-line: rgba(232, 224, 216, 0.12);
+  --atlas-ink-soft: rgba(232, 224, 216, 0.72);
+  --atlas-chip: rgba(90, 79, 71, 0.72);
+  --atlas-highlight: rgba(232, 154, 127, 0.12);
+  --atlas-accent: #e89a7f;
 }
 
 /* 清新绿茶主题 */
@@ -51,6 +67,14 @@
   --color-accent-soft: #c85c3d;
   --color-surface: #ffffff;
   --color-border: rgba(45, 74, 58, 0.12);
+  --atlas-paper: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(240, 245, 242, 0.96) 100%);
+  --atlas-panel: rgba(255, 255, 255, 0.82);
+  --atlas-veil: rgba(245, 249, 246, 0.9);
+  --atlas-line: rgba(45, 74, 58, 0.12);
+  --atlas-ink-soft: rgba(45, 74, 58, 0.68);
+  --atlas-chip: rgba(212, 230, 221, 0.58);
+  --atlas-highlight: rgba(74, 106, 90, 0.1);
+  --atlas-accent: #4a6a5a;
 }
 
 /* 极简白咖啡主题 */
@@ -67,6 +91,14 @@
   --color-accent-soft: #e89a7f;
   --color-surface: #ffffff;
   --color-border: rgba(0, 0, 0, 0.08);
+  --atlas-paper: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 247, 247, 0.96) 100%);
+  --atlas-panel: rgba(255, 255, 255, 0.86);
+  --atlas-veil: rgba(250, 250, 250, 0.92);
+  --atlas-line: rgba(0, 0, 0, 0.08);
+  --atlas-ink-soft: rgba(26, 26, 26, 0.64);
+  --atlas-chip: rgba(232, 232, 232, 0.72);
+  --atlas-highlight: rgba(64, 64, 64, 0.06);
+  --atlas-accent: #404040;
 }
 
 /* 日式和风主题 */
@@ -83,6 +115,14 @@
   --color-accent-soft: #c85c3d;
   --color-surface: #ffffff;
   --color-border: rgba(44, 44, 44, 0.1);
+  --atlas-paper: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 245, 241, 0.94) 100%);
+  --atlas-panel: rgba(255, 255, 255, 0.84);
+  --atlas-veil: rgba(249, 246, 242, 0.92);
+  --atlas-line: rgba(44, 44, 44, 0.1);
+  --atlas-ink-soft: rgba(44, 44, 44, 0.64);
+  --atlas-chip: rgba(230, 223, 214, 0.72);
+  --atlas-highlight: rgba(160, 82, 45, 0.1);
+  --atlas-accent: #8b4513;
 }
 
 body {

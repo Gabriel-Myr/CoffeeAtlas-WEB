@@ -1,1 +1,198 @@
-.bean-detail{min-height:100vh;padding-bottom:80rpx}.bean-detail--loading{align-items:center;display:flex;justify-content:center}.bean-detail__loading-text{color:rgba(139,115,85,.72);font-size:30rpx}.bean-detail__image-wrap{background:linear-gradient(180deg,hsla(37,39%,94%,.98),hsla(34,34%,87%,.92));padding-top:84%;position:relative;width:100%}.bean-detail__image{height:100%;left:0;position:absolute;top:0;width:100%}.bean-detail__image-placeholder{align-items:center;display:flex;font-size:160rpx;height:100%;justify-content:center;left:0;position:absolute;top:0;width:100%}.bean-detail__badge{background:hsla(0,0%,100%,.92);border-radius:var(--radius-pill,1998rpx);box-shadow:0 16rpx 40rpx rgba(62,42,30,.08);color:var(--color-coffee-dark,#3e2a1e);font-size:22rpx;font-weight:700;left:32rpx;letter-spacing:.18em;padding:14rpx 24rpx;position:absolute;top:32rpx}.bean-detail__actions{display:flex;gap:20rpx;position:absolute;right:32rpx;top:32rpx}.bean-detail__action-btn{align-items:center;background:hsla(0,0%,100%,.92);border:2rpx solid rgba(107,83,68,.08);border-radius:50%;box-shadow:0 20rpx 48rpx rgba(62,42,30,.08);display:flex;height:88rpx;justify-content:center;width:88rpx}.bean-detail__body{background:var(--color-bg-cream,#fdfaf4);border-radius:56rpx 56rpx 0 0;margin-top:-56rpx;padding:48rpx 40rpx 0;position:relative}.bean-detail__roaster{align-items:center;display:flex;flex-wrap:wrap;gap:20rpx;margin-bottom:20rpx}.bean-detail__roaster-name{color:var(--color-accent-rust,#c85c3d);font-size:26rpx;font-weight:700;letter-spacing:.18em;text-transform:uppercase}.bean-detail__city{color:rgba(139,115,85,.86);font-size:26rpx}.bean-detail__name{color:var(--color-coffee-dark,#3e2a1e);font-family:var(--font-serif,Georgia,serif);font-size:56rpx;font-weight:600;line-height:1.22;margin-bottom:36rpx}.bean-detail__price-row{align-items:baseline;display:flex;flex-wrap:wrap;gap:28rpx;margin-bottom:48rpx}.bean-detail__price{color:var(--color-coffee-dark,#3e2a1e);font-size:60rpx;font-weight:700}.bean-detail__sales{background:hsla(15,70%,70%,.12);border-radius:var(--radius-pill,1998rpx);color:rgba(139,115,85,.92);font-size:26rpx;padding:12rpx 20rpx}.bean-detail__divider{background:rgba(107,83,68,.12);height:2rpx;margin-bottom:48rpx}.bean-detail__info-grid{background:hsla(0,0%,100%,.96);border:2rpx solid rgba(107,83,68,.08);border-radius:48rpx;box-shadow:var(--shadow-card,0 24rpx 60rpx rgba(62,42,30,.06));display:flex;flex-direction:column;gap:0;margin-bottom:40rpx;padding:36rpx 36rpx 8rpx}.bean-detail__info-item{align-items:flex-start;border-bottom:2rpx solid rgba(107,83,68,.08);display:flex;gap:32rpx;justify-content:space-between;margin-bottom:28rpx;padding-bottom:28rpx}.bean-detail__info-item:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}.bean-detail__info-label{color:rgba(139,115,85,.9);font-size:22rpx;font-weight:600;letter-spacing:.18em;text-transform:uppercase}.bean-detail__info-value{color:var(--color-coffee-dark,#3e2a1e);font-size:30rpx;font-weight:500;line-height:1.5;max-width:58%;text-align:right}.bean-detail__notes{background:hsla(0,0%,100%,.96);border:2rpx solid rgba(107,83,68,.08);border-radius:48rpx;box-shadow:var(--shadow-card,0 24rpx 60rpx rgba(62,42,30,.06));padding:40rpx}.bean-detail__notes-title{color:rgba(139,115,85,.9);display:block;font-size:22rpx;font-weight:600;letter-spacing:.22em;margin-bottom:28rpx;text-transform:uppercase}.bean-detail__notes-tags{display:flex;flex-wrap:wrap;gap:20rpx}.bean-detail__note-tag{background:hsla(37,39%,94%,.9);border:2rpx solid rgba(139,115,85,.12);border-radius:var(--radius-pill,1998rpx);color:var(--color-coffee-medium,#6b5344);font-size:26rpx;font-weight:500;padding:16rpx 24rpx}
+/*!******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/.pnpm/css-loader@6.11.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[1]!../../node_modules/.pnpm/postcss-loader@7.3.4_postcss@8.5.8_typescript@5.8.2_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[2]!../../node_modules/.pnpm/resolve-url-loader@5.0.0/node_modules/resolve-url-loader/index.js!../../node_modules/.pnpm/sass-loader@12.4.0_sass@1.50.0_webpack@5.105.4_@swc+core@1.3.96_@swc+helpers@0.5.15__/node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].oneOf[0].use[4]!./src/pages/bean-detail/index.scss ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+.bean-detail {
+  min-height: 100vh;
+  padding-bottom: 80rpx;
+}
+.bean-detail--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bean-detail__loading-text {
+  color: rgba(139, 115, 85, 0.72);
+  font-size: 30rpx;
+}
+.bean-detail__image-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 84%;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.98), rgba(233, 223, 210, 0.92));
+}
+.bean-detail__image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.bean-detail__image-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 160rpx;
+}
+.bean-detail__badge {
+  position: absolute;
+  top: 32rpx;
+  left: 32rpx;
+  padding: 14rpx 24rpx;
+  color: var(--color-coffee-dark, #3e2a1e);
+  font-size: 22rpx;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--radius-pill, 1998rpx);
+  box-shadow: 0 16rpx 40rpx rgba(62, 42, 30, 0.08);
+}
+.bean-detail__actions {
+  position: absolute;
+  top: 32rpx;
+  right: 32rpx;
+  display: flex;
+  gap: 20rpx;
+}
+.bean-detail__action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88rpx;
+  height: 88rpx;
+  background: rgba(255, 255, 255, 0.92);
+  border: 2rpx solid rgba(107, 83, 68, 0.08);
+  border-radius: 50%;
+  box-shadow: 0 20rpx 48rpx rgba(62, 42, 30, 0.08);
+}
+.bean-detail__body {
+  position: relative;
+  margin-top: -56rpx;
+  padding: 48rpx 40rpx 0;
+  background: var(--color-bg-cream, #fdfaf4);
+  border-radius: 56rpx 56rpx 0 0;
+}
+.bean-detail__roaster {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+.bean-detail__roaster-name {
+  color: var(--color-accent-rust, #c85c3d);
+  font-size: 26rpx;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.bean-detail__city {
+  color: rgba(139, 115, 85, 0.86);
+  font-size: 26rpx;
+}
+.bean-detail__name {
+  color: var(--color-coffee-dark, #3e2a1e);
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 56rpx;
+  font-weight: 600;
+  line-height: 1.22;
+  margin-bottom: 36rpx;
+}
+.bean-detail__price-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 28rpx;
+  margin-bottom: 48rpx;
+}
+.bean-detail__price {
+  color: var(--color-coffee-dark, #3e2a1e);
+  font-size: 60rpx;
+  font-weight: 700;
+}
+.bean-detail__sales {
+  padding: 12rpx 20rpx;
+  color: rgba(139, 115, 85, 0.92);
+  font-size: 26rpx;
+  background: rgba(232, 154, 127, 0.12);
+  border-radius: var(--radius-pill, 1998rpx);
+}
+.bean-detail__divider {
+  height: 2rpx;
+  margin-bottom: 48rpx;
+  background: rgba(107, 83, 68, 0.12);
+}
+.bean-detail__info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 40rpx;
+  padding: 36rpx 36rpx 8rpx;
+  background: rgba(255, 255, 255, 0.96);
+  border: 2rpx solid rgba(107, 83, 68, 0.08);
+  border-radius: 48rpx;
+  box-shadow: var(--shadow-card, 0 24rpx 60rpx rgba(62, 42, 30, 0.06));
+}
+.bean-detail__info-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 32rpx;
+  margin-bottom: 28rpx;
+  padding-bottom: 28rpx;
+  border-bottom: 2rpx solid rgba(107, 83, 68, 0.08);
+}
+.bean-detail__info-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.bean-detail__info-label {
+  color: rgba(139, 115, 85, 0.9);
+  font-size: 22rpx;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.bean-detail__info-value {
+  max-width: 58%;
+  color: var(--color-coffee-dark, #3e2a1e);
+  font-size: 30rpx;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: right;
+}
+.bean-detail__notes {
+  padding: 40rpx;
+  background: rgba(255, 255, 255, 0.96);
+  border: 2rpx solid rgba(107, 83, 68, 0.08);
+  border-radius: 48rpx;
+  box-shadow: var(--shadow-card, 0 24rpx 60rpx rgba(62, 42, 30, 0.06));
+}
+.bean-detail__notes-title {
+  display: block;
+  margin-bottom: 28rpx;
+  color: rgba(139, 115, 85, 0.9);
+  font-size: 22rpx;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.bean-detail__notes-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+.bean-detail__note-tag {
+  padding: 16rpx 24rpx;
+  color: var(--color-coffee-medium, #6b5344);
+  font-size: 26rpx;
+  font-weight: 500;
+  background: rgba(245, 240, 232, 0.9);
+  border: 2rpx solid rgba(139, 115, 85, 0.12);
+  border-radius: var(--radius-pill, 1998rpx);
+}
