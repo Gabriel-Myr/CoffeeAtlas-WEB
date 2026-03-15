@@ -1,5 +1,7 @@
 import type { CatalogBeanCard } from '../catalog';
 
+export type RoasterFeature = 'has_image' | 'has_beans' | 'taobao' | 'xiaohongshu';
+
 // Roaster Summary (for list views)
 export interface RoasterSummary {
   id: string;
@@ -8,6 +10,9 @@ export interface RoasterSummary {
   beanCount?: number;
   description?: string | null;
   logoUrl?: string | null;
+  coverImageUrl?: string | null;
+  taobaoUrl?: string | null;
+  xiaohongshuUrl?: string | null;
 }
 
 // Roaster Detail (for detail view)
@@ -25,5 +30,6 @@ export interface RoastersQueryParams {
   pageSize?: number;
   q?: string;
   city?: string;
+  feature?: RoasterFeature;
   sort?: 'name_asc' | 'updated_desc';
 }

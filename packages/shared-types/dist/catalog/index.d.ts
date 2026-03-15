@@ -1,3 +1,5 @@
+export type BeanSort = 'updated_desc' | 'sales_desc' | 'price_asc' | 'price_desc';
+export type BeanDiscoverContinent = 'asia' | 'africa' | 'americas';
 export interface CatalogBeanCard {
     id: string;
     name: string;
@@ -12,6 +14,12 @@ export interface CatalogBeanCard {
     salesCount: number;
     imageUrl: string | null;
     isInStock: boolean;
+    originRegion?: string;
+    farm?: string;
+    variety?: string;
+    discountedPrice?: number;
+    tastingNotes?: string[];
+    isNewArrival?: boolean;
 }
 export interface CatalogBeanDetail extends CatalogBeanCard {
     originRegion: string;
@@ -20,6 +28,41 @@ export interface CatalogBeanDetail extends CatalogBeanCard {
     discountedPrice: number;
     tastingNotes: string[];
     isNewArrival: boolean;
+}
+export interface BeanDiscoverOption {
+    id: string;
+    label: string;
+    count: number;
+    description?: string;
+}
+export interface BeanDiscoverEditorial {
+    title: string;
+    subtitle: string;
+    mode: 'manual' | 'fallback';
+}
+export interface BeanDiscoverEditorialPick {
+    bean: CatalogBeanCard;
+    reason: string;
+}
+export interface BeanDiscoverSummary {
+    total: number;
+    process?: string;
+    continent?: BeanDiscoverContinent;
+    country?: string;
+}
+export interface BeanDiscoverPayload {
+    processOptions: BeanDiscoverOption[];
+    continentOptions: BeanDiscoverOption[];
+    countryOptions: BeanDiscoverOption[];
+    editorial: BeanDiscoverEditorial;
+    editorPicks: BeanDiscoverEditorialPick[];
+    resultSummary: BeanDiscoverSummary;
+}
+export interface BeanDiscoverQueryParams {
+    q?: string;
+    process?: string;
+    continent?: BeanDiscoverContinent;
+    country?: string;
 }
 export interface BeansQueryParams {
     page?: number;
@@ -30,6 +73,9 @@ export interface BeansQueryParams {
     process?: string;
     roastLevel?: string;
     inStock?: boolean;
-    sort?: 'updated_desc' | 'sales_desc' | 'price_asc' | 'price_desc';
+    sort?: BeanSort;
+    isNewArrival?: boolean;
+    continent?: BeanDiscoverContinent;
+    country?: string;
 }
 //# sourceMappingURL=index.d.ts.map

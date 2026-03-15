@@ -19,6 +19,17 @@ export class ApiClient {
     async getBeanDetail(id) {
         return this.request(`/api/v1/beans/${id}`);
     }
+    async getBeanDiscover(params) {
+        const query = new URLSearchParams(params).toString();
+        return this.request(`/api/v1/beans/discover${query ? `?${query}` : ''}`);
+    }
+    async getRoasters(params) {
+        const query = new URLSearchParams(params).toString();
+        return this.request(`/api/v1/roasters?${query}`);
+    }
+    async getRoasterDetail(id) {
+        return this.request(`/api/v1/roasters/${id}`);
+    }
 }
 export * from './beans';
 export * from './roasters';

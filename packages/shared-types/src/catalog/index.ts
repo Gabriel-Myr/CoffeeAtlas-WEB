@@ -1,3 +1,6 @@
+export type BeanSort = 'updated_desc' | 'sales_desc' | 'price_asc' | 'price_desc';
+export type BeanDiscoverContinent = 'asia' | 'africa' | 'americas';
+
 // Catalog Bean Card (for list views)
 export interface CatalogBeanCard {
   id: string;
@@ -31,6 +34,47 @@ export interface CatalogBeanDetail extends CatalogBeanCard {
   isNewArrival: boolean;
 }
 
+export interface BeanDiscoverOption {
+  id: string;
+  label: string;
+  count: number;
+  description?: string;
+}
+
+export interface BeanDiscoverEditorial {
+  title: string;
+  subtitle: string;
+  mode: 'manual' | 'fallback';
+}
+
+export interface BeanDiscoverEditorialPick {
+  bean: CatalogBeanCard;
+  reason: string;
+}
+
+export interface BeanDiscoverSummary {
+  total: number;
+  process?: string;
+  continent?: BeanDiscoverContinent;
+  country?: string;
+}
+
+export interface BeanDiscoverPayload {
+  processOptions: BeanDiscoverOption[];
+  continentOptions: BeanDiscoverOption[];
+  countryOptions: BeanDiscoverOption[];
+  editorial: BeanDiscoverEditorial;
+  editorPicks: BeanDiscoverEditorialPick[];
+  resultSummary: BeanDiscoverSummary;
+}
+
+export interface BeanDiscoverQueryParams {
+  q?: string;
+  process?: string;
+  continent?: BeanDiscoverContinent;
+  country?: string;
+}
+
 // Query params for /api/v1/beans
 export interface BeansQueryParams {
   page?: number;
@@ -41,5 +85,8 @@ export interface BeansQueryParams {
   process?: string;
   roastLevel?: string;
   inStock?: boolean;
-  sort?: 'updated_desc' | 'sales_desc' | 'price_asc' | 'price_desc';
+  sort?: BeanSort;
+  isNewArrival?: boolean;
+  continent?: BeanDiscoverContinent;
+  country?: string;
 }

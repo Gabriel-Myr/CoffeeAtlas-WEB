@@ -23,6 +23,9 @@ export interface PaginatedResult<T> {
   pageInfo: PageInfo;
 }
 
+export type BeanSort = 'updated_desc' | 'sales_desc' | 'price_asc' | 'price_desc';
+export type DiscoverContinentId = 'asia' | 'africa' | 'americas';
+
 // 咖啡豆
 export interface CoffeeBean {
   id: string;
@@ -46,7 +49,43 @@ export interface CoffeeBean {
   isInStock: boolean;
 }
 
+export interface BeanDiscoverOption {
+  id: string;
+  label: string;
+  count: number;
+  description?: string;
+}
+
+export interface BeanDiscoverEditorial {
+  title: string;
+  subtitle: string;
+  mode: 'manual' | 'fallback';
+}
+
+export interface BeanDiscoverEditorialPick {
+  bean: CoffeeBean;
+  reason: string;
+}
+
+export interface BeanDiscoverSummary {
+  total: number;
+  process?: string;
+  continent?: DiscoverContinentId;
+  country?: string;
+}
+
+export interface BeanDiscoverPayload {
+  processOptions: BeanDiscoverOption[];
+  continentOptions: BeanDiscoverOption[];
+  countryOptions: BeanDiscoverOption[];
+  editorial: BeanDiscoverEditorial;
+  editorPicks: BeanDiscoverEditorialPick[];
+  resultSummary: BeanDiscoverSummary;
+}
+
 // 烘焙商
+export type RoasterFeature = 'has_image' | 'has_beans' | 'taobao' | 'xiaohongshu';
+
 export interface RoasterSummary {
   id: string;
   name: string;
@@ -54,6 +93,9 @@ export interface RoasterSummary {
   beanCount?: number;
   description?: string | null;
   logoUrl?: string | null;
+  coverImageUrl?: string | null;
+  taobaoUrl?: string | null;
+  xiaohongshuUrl?: string | null;
 }
 
 export interface RoasterDetail extends RoasterSummary {

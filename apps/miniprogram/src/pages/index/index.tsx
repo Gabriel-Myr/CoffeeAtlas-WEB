@@ -3,7 +3,6 @@ import { View, Text, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 
 import BeanCard from '../../components/BeanCard';
-import EmptyState from '../../components/EmptyState';
 import SearchBar from '../../components/SearchBar';
 import { getBeans } from '../../services/api';
 import type { CoffeeBean } from '../../types';
@@ -20,14 +19,6 @@ import {
   ORIGIN_ATLAS_COUNTRY_MAP,
 } from '../../utils/origin-atlas';
 import './index.scss';
-
-type TabKey = 'discover' | 'sales' | 'new';
-
-const TAB_LABELS: Record<TabKey, string> = {
-  discover: '发现',
-  sales: '销量',
-  new: '新品',
-};
 
 const EMPTY_STATS: CountryAtlasStats = {
   beanCount: 0,
@@ -68,7 +59,6 @@ function matchesAtlasQuery(country: OriginAtlasCountry, stats: CountryAtlasStats
 }
 
 export default function Index(): ReactElement {
-  const [activeTab, setActiveTab] = useState<TabKey>('discover');
   const [selectedContinent, setSelectedContinent] = useState<OriginAtlasContinent['id'] | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<OriginAtlasCountry['name'] | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,33 +90,6 @@ export default function Index(): ReactElement {
   const atlasStatsMap = useMemo(() => buildCountryAtlasStats(beans), [beans]);
   const atlasQuery = searchQuery.trim().toLowerCase();
 
-  const filteredBeans = useMemo(() => {
-    let result = [...beans];
-
-    if (activeTab === 'new') {
-      result = result.filter((bean) => bean.isNewArrival);
-    } else if (activeTab === 'sales') {
-      result.sort((left, right) => right.salesCount - left.salesCount);
-    }
-
-    if (!atlasQuery) {
-      return result;
-    }
-
-    return result.filter((bean) => {
-      const searchableValues = [
-        bean.name,
-        bean.originCountry,
-        bean.originRegion,
-        bean.roasterName,
-        bean.process,
-        bean.variety,
-      ].filter((value): value is string => typeof value === 'string' && value.length > 0);
-
-      return searchableValues.some((value) => value.toLowerCase().includes(atlasQuery));
-    });
-  }, [activeTab, atlasQuery, beans]);
-
   const activeContinent = selectedContinent ? ORIGIN_ATLAS_CONTINENT_MAP.get(selectedContinent) ?? null : null;
   const activeCountry = selectedCountry ? ORIGIN_ATLAS_COUNTRY_MAP.get(selectedCountry) ?? null : null;
   const activeCountryStats = activeCountry ? atlasStatsMap.get(activeCountry.name) ?? EMPTY_STATS : EMPTY_STATS;
@@ -148,12 +111,6 @@ export default function Index(): ReactElement {
     });
   }, [activeContinent, atlasQuery, atlasStatsMap]);
 
-  const handleTabChange = (tab: TabKey): void => {
-    setActiveTab(tab);
-    setSelectedContinent(null);
-    setSelectedCountry(null);
-  };
-
   const handleBack = (): void => {
     if (selectedCountry) {
       setSelectedCountry(null);
@@ -173,21 +130,8 @@ export default function Index(): ReactElement {
 
       <SearchBar value={searchQuery} placeholder="按烘焙商、产地、处理法或豆种搜索..." onInput={setSearchQuery} />
 
-      <View className="index-page__tabs">
-        {(Object.keys(TAB_LABELS) as TabKey[]).map((tab) => (
-          <View
-            key={tab}
-            className={`index-page__tab ${activeTab === tab ? 'index-page__tab--active' : ''}`}
-            onClick={() => handleTabChange(tab)}
-          >
-            <Text className="index-page__tab-text">{TAB_LABELS[tab]}</Text>
-          </View>
-        ))}
-      </View>
-
       <View className="index-page__content">
-        {activeTab === 'discover' ? (
-          <View className="atlas">
+        <View className="atlas">
             <View className="atlas__toolbar">
               {selectedContinent || selectedCountry ? (
                 <View className="atlas__back" onClick={handleBack}>
@@ -444,19 +388,6 @@ export default function Index(): ReactElement {
               </View>
             ) : null}
           </View>
-        ) : (
-          <View className="index-page__list">
-            {errorMessage ? (
-              <EmptyState message={errorMessage} />
-            ) : loading && beans.length === 0 ? (
-              <EmptyState message="加载中..." />
-            ) : filteredBeans.length === 0 ? (
-              <EmptyState message="未找到咖啡豆" />
-            ) : (
-              filteredBeans.map((bean, index) => <BeanCard key={bean.id} bean={bean} index={index} />)
-            )}
-          </View>
-        )}
       </View>
     </View>
   );

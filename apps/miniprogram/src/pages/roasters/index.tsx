@@ -1,24 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
-import { View, Text } from '@tarojs/components';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView, Text, View } from '@tarojs/components';
 import Taro, { useReachBottom } from '@tarojs/taro';
 
 import EmptyState from '../../components/EmptyState';
 import RoasterCard from '../../components/RoasterCard';
 import SearchBar from '../../components/SearchBar';
 import { getRoasters } from '../../services/api';
-import type { RoasterSummary } from '../../types';
+import type { RoasterFeature, RoasterSummary } from '../../types';
 import './index.scss';
 
 const PAGE_SIZE = 12;
 const SEARCH_DEBOUNCE_MS = 260;
-
-function mergeCities(current: string[], incoming: RoasterSummary[]): string[] {
-  const next = new Set(current);
-  incoming.forEach((roaster) => {
-    if (roaster.city) next.add(roaster.city);
-  });
-  return Array.from(next).slice(0, 8);
-}
+const FEATURE_OPTIONS: Array<{ key: 'all' | RoasterFeature; label: string }> = [
+  { key: 'all', label: '全部品牌' },
+  { key: 'has_image', label: '精选画册' },
+  { key: 'has_beans', label: '有豆单' },
+  { key: 'taobao', label: '淘宝在售' },
+  { key: 'xiaohongshu', label: '小红书' },
+];
 
 export default function RoastersPage() {
   const [roasters, setRoasters] = useState<RoasterSummary[]>([]);
@@ -27,8 +26,7 @@ export default function RoastersPage() {
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
-  const [cityOptions, setCityOptions] = useState<string[]>([]);
+  const [activeFeature, setActiveFeature] = useState<'all' | RoasterFeature>('all');
   const [errorMessage, setErrorMessage] = useState('');
   const loadingRef = useRef(false);
   const requestVersionRef = useRef(0);
@@ -59,7 +57,7 @@ export default function RoastersPage() {
         page: currentPage,
         pageSize: PAGE_SIZE,
         q: normalizedQuery || undefined,
-        city: selectedCity || undefined,
+        feature: activeFeature === 'all' ? undefined : activeFeature,
       });
 
       if (requestVersion !== requestVersionRef.current) return;
@@ -71,10 +69,6 @@ export default function RoastersPage() {
       setTotal(res.pageInfo.total);
       setHasMore(res.pageInfo.hasNextPage);
       setPage(currentPage + 1);
-
-      if (!normalizedQuery) {
-        setCityOptions((prev) => mergeCities(prev, nextItems));
-      }
     } catch (error) {
       if (requestVersion !== requestVersionRef.current) return;
 
@@ -109,7 +103,7 @@ export default function RoastersPage() {
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [normalizedQuery, selectedCity]);
+  }, [normalizedQuery, activeFeature]);
 
   useReachBottom(() => {
     if (!loadingRef.current && hasMore) {
@@ -117,95 +111,115 @@ export default function RoastersPage() {
     }
   });
 
+  const activeFeatureLabel = useMemo(
+    () => FEATURE_OPTIONS.find((item) => item.key === activeFeature)?.label ?? '全部',
+    [activeFeature]
+  );
+
   const countLabel = total !== null
-    ? `共收录 ${total} 家烘焙商`
+    ? activeFeature === 'all'
+      ? `共收录 ${total} 家烘焙商`
+      : `${activeFeatureLabel} · ${total} 家烘焙商`
     : loading
       ? '正在整理品牌目录...'
       : roasters.length > 0
         ? `已呈现 ${roasters.length} 家烘焙商`
         : '';
 
-  const hasFilters = Boolean(normalizedQuery || selectedCity);
+  const hasFilters = Boolean(normalizedQuery || activeFeature !== 'all');
+  const emptyMessage = hasFilters ? '当前筛选下暂时没有匹配的烘焙商' : '暂时还没有烘焙商资料';
 
   return (
     <View className="roasters-page">
-      <View className="roasters-page__hero">
+      <View className="roasters-page__header">
         <Text className="roasters-page__title-en">ROASTER</Text>
-        <Text className="roasters-page__title-atlas">Index</Text>
-        <Text className="roasters-page__subtitle">翻阅当季烘焙品牌册</Text>
-        {countLabel ? (
-          <Text className="roasters-page__count">{countLabel}</Text>
-        ) : null}
+        <Text className="roasters-page__title-atlas">Gallery</Text>
+        <Text className="roasters-page__subtitle">Discover artisan roasters and their craft</Text>
       </View>
 
       <SearchBar
         value={searchQuery}
-        placeholder="按品牌名或城市搜索..."
+        placeholder="按品牌名、产地或介绍搜索..."
         onInput={setSearchQuery}
       />
 
-      {cityOptions.length > 0 ? (
-        <View className="roasters-page__city-bar">
-          <Text
-            className={`roasters-page__city-chip ${selectedCity ? '' : 'roasters-page__city-chip--active'}`}
-            onClick={() => setSelectedCity('')}
-          >
-            全部城市
-          </Text>
-          {cityOptions.map((city) => (
-            <Text
-              key={city}
-              className={`roasters-page__city-chip ${selectedCity === city ? 'roasters-page__city-chip--active' : ''}`}
-              onClick={() => setSelectedCity(city)}
-            >
-              {city}
-            </Text>
-          ))}
-        </View>
-      ) : null}
+      <View className="roasters-page__content">
+        <View className="roaster-atlas">
+          <View className="roaster-atlas__toolbar">
+            <View className="roaster-atlas__toolbar-copy">
+              <Text className="roaster-atlas__toolbar-kicker">Roaster index</Text>
+              <Text className="roaster-atlas__toolbar-title">Gallery Index</Text>
+              <Text className="roaster-atlas__toolbar-subtitle">
+                Browse our curated gallery of artisan coffee roasters, their stories, and current bean offerings.
+              </Text>
+            </View>
 
-      {hasFilters ? (
-        <View className="roasters-page__query-bar">
-          <Text className="roasters-page__query-text">
-            {normalizedQuery ? `搜索 “${normalizedQuery}”` : '按城市查看品牌'}
-            {selectedCity ? ` · ${selectedCity}` : ''}
-          </Text>
-          <Text
-            className="roasters-page__query-clear"
-            onClick={() => {
-              setSearchQuery('');
-              setSelectedCity('');
-            }}
-          >
-            清除
-          </Text>
-        </View>
-      ) : null}
+            <View className="roaster-atlas__filter-shell">
+              <ScrollView scrollX className="roaster-atlas__feature-scroll" showScrollbar={false}>
+                <View className="roaster-atlas__feature-row">
+                  {FEATURE_OPTIONS.map((option) => (
+                    <View
+                      key={option.key}
+                      className={`roaster-atlas__feature-chip ${activeFeature === option.key ? 'roaster-atlas__feature-chip--active' : ''}`}
+                      onClick={() => {
+                        if (activeFeature !== option.key) {
+                          setActiveFeature(option.key);
+                        }
+                      }}
+                    >
+                      <Text className="roaster-atlas__feature-text">{option.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
 
-      <View className="roasters-page__list">
-        {errorMessage ? (
-          <EmptyState message={errorMessage} />
-        ) : loading && roasters.length === 0 ? (
-          <EmptyState message="正在展开品牌目录..." />
-        ) : roasters.length === 0 ? (
-          <EmptyState message="暂时还没有匹配的烘焙商" />
-        ) : (
-          roasters.map((roaster, index) => (
-            <RoasterCard key={roaster.id} roaster={roaster} index={index} />
-          ))
-        )}
-
-        {loading && roasters.length > 0 ? (
-          <View className="roasters-page__loading">
-            <Text className="roasters-page__loading-text">继续翻阅中...</Text>
+            {hasFilters || countLabel ? (
+              <View className="roaster-atlas__query-bar">
+                <Text className="roaster-atlas__query-text">
+                  {countLabel || (normalizedQuery ? `搜索 “${normalizedQuery}”` : activeFeatureLabel)}
+                </Text>
+                {hasFilters ? (
+                  <Text
+                    className="roaster-atlas__query-clear"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setActiveFeature('all');
+                    }}
+                  >
+                    Clear
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
           </View>
-        ) : null}
 
-        {!hasMore && roasters.length > 0 ? (
-          <View className="roasters-page__end">
-            <Text className="roasters-page__end-text">— 品牌目录已到底 —</Text>
+          <View className="roaster-atlas__list">
+            {errorMessage ? (
+              <EmptyState message={errorMessage} />
+            ) : loading && roasters.length === 0 ? (
+              <EmptyState message="正在展开品牌画册..." />
+            ) : roasters.length === 0 ? (
+              <EmptyState message={emptyMessage} />
+            ) : (
+              roasters.map((roaster, index) => (
+                <RoasterCard key={roaster.id} roaster={roaster} index={index} variant="gallery" />
+              ))
+            )}
+
+            {loading && roasters.length > 0 ? (
+              <View className="roaster-atlas__loading">
+                <Text className="roaster-atlas__loading-text">Loading more brands...</Text>
+              </View>
+            ) : null}
+
+            {!hasMore && roasters.length > 0 ? (
+              <View className="roaster-atlas__end">
+                <Text className="roaster-atlas__end-text">— End of the gallery —</Text>
+              </View>
+            ) : null}
           </View>
-        ) : null}
+        </View>
       </View>
     </View>
   );

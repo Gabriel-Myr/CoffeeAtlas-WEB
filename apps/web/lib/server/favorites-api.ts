@@ -55,6 +55,9 @@ function mapRoasterSummary(roaster: Roaster): RoasterSummary {
     beanCount: roaster.beanCount,
     description: roaster.description,
     logoUrl: roaster.logoUrl,
+    coverImageUrl: roaster.coverImageUrl,
+    taobaoUrl: roaster.taobaoUrl,
+    xiaohongshuUrl: roaster.xiaohongshuUrl,
   };
 }
 

@@ -1,10 +1,14 @@
 import Taro from '@tarojs/taro';
 import type {
   ApiHealthStatus,
+  BeanDiscoverPayload,
+  BeanSort,
   CoffeeBean,
   CurrentUserProfile,
+  DiscoverContinentId,
   LoginResponse,
   PaginatedResult,
+  RoasterFeature,
   RoasterDetail,
   RoasterSummary,
   UserFavorite,
@@ -70,6 +74,10 @@ export async function getBeans(params?: {
   originCountry?: string;
   process?: string;
   roastLevel?: string;
+  sort?: BeanSort;
+  isNewArrival?: boolean;
+  continent?: DiscoverContinentId;
+  country?: string;
 }): Promise<PaginatedResult<CoffeeBean>> {
   const query = new URLSearchParams();
   if (params?.pageSize) query.set('pageSize', String(params.pageSize));
@@ -78,8 +86,27 @@ export async function getBeans(params?: {
   if (params?.originCountry) query.set('originCountry', params.originCountry);
   if (params?.process) query.set('process', params.process);
   if (params?.roastLevel) query.set('roastLevel', params.roastLevel);
+  if (params?.sort) query.set('sort', params.sort);
+  if (typeof params?.isNewArrival === 'boolean') query.set('isNewArrival', String(params.isNewArrival));
+  if (params?.continent) query.set('continent', params.continent);
+  if (params?.country) query.set('country', params.country);
   const qs = query.toString();
   return request<PaginatedResult<CoffeeBean>>(`/api/v1/beans${qs ? `?${qs}` : ''}`);
+}
+
+export async function getBeanDiscover(params?: {
+  q?: string;
+  process?: string;
+  continent?: DiscoverContinentId;
+  country?: string;
+}): Promise<BeanDiscoverPayload> {
+  const query = new URLSearchParams();
+  if (params?.q) query.set('q', params.q);
+  if (params?.process) query.set('process', params.process);
+  if (params?.continent) query.set('continent', params.continent);
+  if (params?.country) query.set('country', params.country);
+  const qs = query.toString();
+  return request<BeanDiscoverPayload>(`/api/v1/beans/discover${qs ? `?${qs}` : ''}`);
 }
 
 export async function getBeanById(id: string): Promise<CoffeeBean> {
@@ -92,12 +119,14 @@ export async function getRoasters(params?: {
   page?: number;
   q?: string;
   city?: string;
+  feature?: RoasterFeature;
 }): Promise<PaginatedResult<RoasterSummary>> {
   const query = new URLSearchParams();
   if (params?.pageSize) query.set('pageSize', String(params.pageSize));
   if (params?.page) query.set('page', String(params.page));
   if (params?.q) query.set('q', params.q);
   if (params?.city) query.set('city', params.city);
+  if (params?.feature) query.set('feature', params.feature);
   const qs = query.toString();
   return request<PaginatedResult<RoasterSummary>>(`/api/v1/roasters${qs ? `?${qs}` : ''}`);
 }

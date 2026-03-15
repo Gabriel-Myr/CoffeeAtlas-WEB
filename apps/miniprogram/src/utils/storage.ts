@@ -27,6 +27,10 @@ export interface RoasterSnapshot {
   city: string;
   description?: string | null;
   logoUrl?: string | null;
+  coverImageUrl?: string | null;
+  taobaoUrl?: string | null;
+  xiaohongshuUrl?: string | null;
+  websiteUrl?: string | null;
   beanCount?: number;
 }
 

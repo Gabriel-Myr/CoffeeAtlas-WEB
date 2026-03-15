@@ -1,3 +1,5 @@
+import type { RoasterFeature } from '@coffee-atlas/shared-types';
+
 import { hasSupabaseServerEnv, requireSupabaseServer } from '@/lib/supabase';
 import { normalizeSalesCount } from '@/lib/sales';
 import { sampleCatalog } from '@/lib/sample-data';
@@ -30,8 +32,11 @@ export interface Roaster {
   city: string;
   description: string | null;
   logoUrl: string | null;
+  coverImageUrl: string | null;
   websiteUrl: string | null;
   instagramHandle: string | null;
+  taobaoUrl: string | null;
+  xiaohongshuUrl: string | null;
   beanCount: number;
 }
 
@@ -52,6 +57,7 @@ export interface RoastersQuery {
   offset?: number;
   q?: string;
   city?: string;
+  feature?: RoasterFeature;
 }
 
 type RoasterBeanRow = {
@@ -64,6 +70,8 @@ type RoasterBeanRow = {
   price_currency: string | null;
   sales_count: unknown;
   image_url: string | null;
+  product_url?: string | null;
+  updated_at?: string | null;
   is_in_stock: boolean | null;
 };
 
@@ -101,6 +109,28 @@ type SearchCatalogRow = {
   is_in_stock: boolean | null;
 };
 
+type RoasterAggregateRow = {
+  roaster_id: string | null;
+  image_url: string | null;
+  product_url: string | null;
+};
+
+interface RoasterAggregate {
+  beanCount: number;
+  coverImageUrl: string | null;
+  taobaoUrl: string | null;
+  xiaohongshuUrl: string | null;
+}
+
+const NEW_ARRIVAL_WINDOW_DAYS = 30;
+
+function isNewArrivalTimestamp(value: string | null | undefined): boolean {
+  if (!value) return false;
+  const timestamp = Date.parse(value);
+  if (Number.isNaN(timestamp)) return false;
+  return Date.now() - timestamp <= NEW_ARRIVAL_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+}
+
 function toNumber(value: number | string | null | undefined): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
@@ -108,6 +138,12 @@ function toNumber(value: number | string | null | undefined): number {
     if (Number.isFinite(parsed)) return parsed;
   }
   return 0;
+}
+
+function normalizeOptionalString(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
 }
 
 function mapCoffeeBean(item: RoasterBeanRow, roaster?: RoasterRow, bean?: BeanRow): CoffeeBean {
@@ -129,21 +165,24 @@ function mapCoffeeBean(item: RoasterBeanRow, roaster?: RoasterRow, bean?: BeanRo
     salesCount: normalizeSalesCount(item.sales_count) ?? 0,
     tastingNotes: Array.isArray(bean?.flavor_tags) ? bean.flavor_tags : [],
     imageUrl: item.image_url,
-    isNewArrival: false,
+    isNewArrival: isNewArrivalTimestamp(item.updated_at),
     isInStock: item.is_in_stock ?? true,
   };
 }
 
-function mapRoaster(row: RoasterRow, beanCount: number): Roaster {
+function mapRoaster(row: RoasterRow, aggregate: RoasterAggregate): Roaster {
   return {
     id: row.id,
     name: row.name,
     city: row.city ?? '',
     description: row.description,
     logoUrl: row.logo_url,
+    coverImageUrl: aggregate.coverImageUrl ?? normalizeOptionalString(row.logo_url),
     websiteUrl: row.website_url,
     instagramHandle: row.instagram_handle,
-    beanCount,
+    taobaoUrl: aggregate.taobaoUrl,
+    xiaohongshuUrl: aggregate.xiaohongshuUrl,
+    beanCount: aggregate.beanCount,
   };
 }
 
@@ -230,24 +269,147 @@ async function fetchBeanContext(rows: RoasterBeanRow[]): Promise<{
   };
 }
 
-async function fetchRoasterBeanCounts(roasterIds: string[]): Promise<Map<string, number>> {
+function createEmptyRoasterAggregate(): RoasterAggregate {
+  return {
+    beanCount: 0,
+    coverImageUrl: null,
+    taobaoUrl: null,
+    xiaohongshuUrl: null,
+  };
+}
+
+function isTaobaoUrl(url: string): boolean {
+  const normalized = url.toLowerCase();
+  return normalized.includes('taobao.com') || normalized.includes('tmall.com');
+}
+
+function isXiaohongshuUrl(url: string): boolean {
+  const normalized = url.toLowerCase();
+  return normalized.includes('xiaohongshu.com') || normalized.includes('xhslink.com');
+}
+
+async function fetchRoasterAggregates(roasterIds: string[]): Promise<Map<string, RoasterAggregate>> {
   const supabaseServer = requireSupabaseServer();
   if (roasterIds.length === 0) return new Map();
 
   const { data, error } = await supabaseServer
     .from('roaster_beans')
-    .select('roaster_id')
+    .select('roaster_id, image_url, product_url')
     .eq('status', 'ACTIVE')
+    .order('updated_at', { ascending: false })
     .in('roaster_id', roasterIds);
 
-  if (error) throw createCatalogError(`failed_to_count_roaster_beans:${error.message}`);
+  if (error) throw createCatalogError(`failed_to_load_roaster_aggregates:${error.message}`);
 
-  const counts = new Map<string, number>();
+  const counts = new Map<string, RoasterAggregate>();
   for (const row of data ?? []) {
     if (typeof row.roaster_id !== 'string' || row.roaster_id.length === 0) continue;
-    counts.set(row.roaster_id, (counts.get(row.roaster_id) ?? 0) + 1);
+    const aggregate = counts.get(row.roaster_id) ?? createEmptyRoasterAggregate();
+    aggregate.beanCount += 1;
+
+    const imageUrl = normalizeOptionalString((row as RoasterAggregateRow).image_url);
+    if (imageUrl && !aggregate.coverImageUrl) {
+      aggregate.coverImageUrl = imageUrl;
+    }
+
+    const productUrl = normalizeOptionalString((row as RoasterAggregateRow).product_url);
+    if (productUrl && !aggregate.taobaoUrl && isTaobaoUrl(productUrl)) {
+      aggregate.taobaoUrl = productUrl;
+    }
+    if (productUrl && !aggregate.xiaohongshuUrl && isXiaohongshuUrl(productUrl)) {
+      aggregate.xiaohongshuUrl = productUrl;
+    }
+
+    counts.set(row.roaster_id, aggregate);
   }
   return counts;
+}
+
+function matchesRoasterFeature(
+  row: RoasterRow,
+  aggregate: RoasterAggregate,
+  feature?: RoasterFeature
+): boolean {
+  switch (feature) {
+    case 'has_image':
+      return Boolean(aggregate.coverImageUrl || normalizeOptionalString(row.logo_url));
+    case 'has_beans':
+      return aggregate.beanCount > 0;
+    case 'taobao':
+      return Boolean(aggregate.taobaoUrl);
+    case 'xiaohongshu':
+      return Boolean(aggregate.xiaohongshuUrl);
+    default:
+      return true;
+  }
+}
+
+async function queryRoasterRows(filters: Pick<RoastersQuery, 'q' | 'city'>): Promise<RoasterRow[]> {
+  const supabaseServer = requireSupabaseServer();
+  let query = supabaseServer
+    .from('roasters')
+    .select('id, name, city, description, logo_url, website_url, instagram_handle')
+    .eq('is_public', true)
+    .order('name');
+
+  if (filters.q?.trim()) {
+    const normalizedQuery = filters.q.trim();
+    query = query.or(`name.ilike.%${normalizedQuery}%,description.ilike.%${normalizedQuery}%`);
+  }
+  if (filters.city?.trim()) {
+    query = query.ilike('city', `%${filters.city.trim()}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw createCatalogError(`failed_to_load_roaster_list:${error.message}`);
+  return (data ?? []) as RoasterRow[];
+}
+
+async function resolveRoasterCollection(
+  filters: Pick<RoastersQuery, 'q' | 'city' | 'feature'>
+): Promise<{ rows: RoasterRow[]; aggregates: Map<string, RoasterAggregate> }> {
+  const rows = await queryRoasterRows(filters);
+  if (rows.length === 0) {
+    return {
+      rows: [],
+      aggregates: new Map(),
+    };
+  }
+
+  const aggregates = await fetchRoasterAggregates(rows.map((row) => row.id));
+  const filteredRows = rows.filter((row) => {
+    const aggregate = aggregates.get(row.id) ?? createEmptyRoasterAggregate();
+    return matchesRoasterFeature(row, aggregate, filters.feature);
+  });
+
+  return {
+    rows: filteredRows,
+    aggregates,
+  };
+}
+
+export async function getRoasterPage(
+  options: RoastersQuery = {}
+): Promise<{ items: Roaster[]; total: number }> {
+  if (!hasSupabaseServerEnv) {
+    return {
+      items: [],
+      total: 0,
+    };
+  }
+
+  const offset = options.offset ?? 0;
+  const limit = options.limit;
+  const { rows, aggregates } = await resolveRoasterCollection(options);
+  const pagedRows =
+    typeof limit === 'number'
+      ? rows.slice(offset, offset + limit)
+      : rows.slice(offset);
+
+  return {
+    items: pagedRows.map((row) => mapRoaster(row, aggregates.get(row.id) ?? createEmptyRoasterAggregate())),
+    total: rows.length,
+  };
 }
 
 export async function getCatalogBeansPage({
@@ -347,44 +509,12 @@ export async function getBeanById(id: string): Promise<CoffeeBean | null> {
 export async function getRoasters(limit?: number): Promise<Roaster[]>;
 export async function getRoasters(options?: RoastersQuery): Promise<Roaster[]>;
 export async function getRoasters(limitOrOptions?: number | RoastersQuery): Promise<Roaster[]> {
-  if (!hasSupabaseServerEnv) {
-    return [];
-  }
-
-  const supabaseServer = requireSupabaseServer();
   const options = typeof limitOrOptions === 'number' ? { limit: limitOrOptions } : (limitOrOptions ?? {});
-  const limit = options.limit;
-  const offset = options.offset ?? 0;
-  const q = options.q?.trim();
-  const city = options.city?.trim();
-
-  let query = supabaseServer.from('roasters').select('id, name, city, description, logo_url, website_url, instagram_handle').order('name');
-  if (q) query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%`);
-  if (city) query = query.ilike('city', `%${city}%`);
-  if (typeof limit === 'number') query = query.range(offset, offset + limit - 1);
-
-  const { data, error } = await query;
-  if (error) throw createCatalogError(`failed_to_load_roaster_list:${error.message}`);
-  if (!data || data.length === 0) return [];
-
-  const rows = data as RoasterRow[];
-  const counts = await fetchRoasterBeanCounts(rows.map((row) => row.id));
-  return rows.map((row) => mapRoaster(row, counts.get(row.id) ?? 0));
+  return (await getRoasterPage(options)).items;
 }
 
-export async function countRoasters(filters: Pick<RoastersQuery, 'q' | 'city'> = {}): Promise<number> {
-  if (!hasSupabaseServerEnv) {
-    return 0;
-  }
-
-  const supabaseServer = requireSupabaseServer();
-  let query = supabaseServer.from('roasters').select('id', { count: 'exact', head: true });
-  if (filters.q?.trim()) query = query.or(`name.ilike.%${filters.q.trim()}%,description.ilike.%${filters.q.trim()}%`);
-  if (filters.city?.trim()) query = query.ilike('city', `%${filters.city.trim()}%`);
-
-  const { count, error } = await query;
-  if (error) throw createCatalogError(`failed_to_count_roasters:${error.message}`);
-  return count ?? 0;
+export async function countRoasters(filters: Pick<RoastersQuery, 'q' | 'city' | 'feature'> = {}): Promise<number> {
+  return (await getRoasterPage(filters)).total;
 }
 
 export async function getRoasterById(id: string): Promise<Roaster | null> {
@@ -397,14 +527,15 @@ export async function getRoasterById(id: string): Promise<Roaster | null> {
     .from('roasters')
     .select('id, name, city, description, logo_url, website_url, instagram_handle')
     .eq('id', id)
+    .eq('is_public', true)
     .maybeSingle();
 
   if (error) throw createCatalogError(`failed_to_load_roaster:${error.message}`);
   if (!data) return null;
 
   const row = data as RoasterRow;
-  const counts = await fetchRoasterBeanCounts([row.id]);
-  return mapRoaster(row, counts.get(row.id) ?? 0);
+  const counts = await fetchRoasterAggregates([row.id]);
+  return mapRoaster(row, counts.get(row.id) ?? createEmptyRoasterAggregate());
 }
 
 export async function getRoastersByIds(ids: string[]): Promise<Roaster[]> {
@@ -418,14 +549,17 @@ export async function getRoastersByIds(ids: string[]): Promise<Roaster[]> {
   const { data, error } = await supabaseServer
     .from('roasters')
     .select('id, name, city, description, logo_url, website_url, instagram_handle')
+    .eq('is_public', true)
     .in('id', ids);
 
   if (error) throw createCatalogError(`failed_to_load_roasters_by_ids:${error.message}`);
   if (!data || data.length === 0) return [];
 
   const rows = data as RoasterRow[];
-  const counts = await fetchRoasterBeanCounts(rows.map((row) => row.id));
-  const roasterMap = new Map(rows.map((row) => [row.id, mapRoaster(row, counts.get(row.id) ?? 0)]));
+  const counts = await fetchRoasterAggregates(rows.map((row) => row.id));
+  const roasterMap = new Map(
+    rows.map((row) => [row.id, mapRoaster(row, counts.get(row.id) ?? createEmptyRoasterAggregate())])
+  );
 
   return ids.map((id) => roasterMap.get(id)).filter((roaster): roaster is Roaster => Boolean(roaster));
 }

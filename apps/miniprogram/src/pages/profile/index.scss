@@ -249,6 +249,12 @@
     padding: 0 32rpx 24rpx;
   }
 
+  &__roaster-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16rpx;
+  }
+
   &__fav-action {
     width: 64rpx;
     height: 64rpx;

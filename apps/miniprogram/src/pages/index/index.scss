@@ -46,49 +46,8 @@
     text-transform: uppercase;
   }
 
-  &__tabs {
-    display: flex;
-    justify-content: center;
-    margin: 0 24px 28px;
-    border-bottom: 1px solid var(--color-border, rgba(107, 83, 68, 0.12));
-  }
-
-  &__tab {
-    position: relative;
-    padding: 0 24px 14px;
-
-    &--active::after {
-      content: '';
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      height: 2px;
-      background: var(--color-coffee-dark, #3e2a1e);
-      border-radius: var(--radius-pill, 999px);
-      animation: fade-in 0.2s ease forwards;
-    }
-  }
-
-  &__tab-text {
-    color: rgba(139, 115, 85, 0.72);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    transition: color 0.2s var(--smooth-easing, cubic-bezier(0.4, 0, 0.2, 1));
-
-    .index-page__tab--active & {
-      color: var(--color-coffee-dark, #3e2a1e);
-    }
-  }
-
   &__content {
     padding: 0 var(--page-gutter);
-  }
-
-  &__list {
-    padding-top: 8px;
   }
 }
 

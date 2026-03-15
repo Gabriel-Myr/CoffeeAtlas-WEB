@@ -4,6 +4,8 @@ import type {
   PaginatedResult,
   CatalogBeanCard,
   CatalogBeanDetail,
+  BeanDiscoverPayload,
+  BeanDiscoverQueryParams,
   BeansQueryParams,
   RoasterDetail,
   RoasterSummary,
@@ -37,6 +39,11 @@ export class ApiClient {
 
   async getBeanDetail(id: string): Promise<CatalogBeanDetail> {
     return this.request(`/api/v1/beans/${id}`);
+  }
+
+  async getBeanDiscover(params?: BeanDiscoverQueryParams): Promise<BeanDiscoverPayload> {
+    const query = new URLSearchParams(params as Record<string, string>).toString();
+    return this.request(`/api/v1/beans/discover${query ? `?${query}` : ''}`);
   }
 
   async getRoasters(params?: RoastersQueryParams): Promise<PaginatedResult<RoasterSummary>> {

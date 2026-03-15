@@ -22,11 +22,11 @@ export default defineAppConfig({
     list: [
       {
         pagePath: 'pages/index/index',
-        text: '首页',
+        text: '全部',
       },
       {
         pagePath: 'pages/all-beans/index',
-        text: '豆款',
+        text: '豆子',
       },
       {
         pagePath: 'pages/roasters/index',

@@ -63,6 +63,9 @@ function toRoasterSnapshot(roaster: RoasterSummary): RoasterSnapshot {
     city: roaster.city,
     description: roaster.description,
     logoUrl: roaster.logoUrl,
+    coverImageUrl: roaster.coverImageUrl,
+    taobaoUrl: roaster.taobaoUrl,
+    xiaohongshuUrl: roaster.xiaohongshuUrl,
     beanCount: roaster.beanCount,
   };
 }
@@ -345,29 +348,33 @@ export default function Profile() {
           roasterFavorites.length === 0 ? (
             <EmptyPane icon="heart" message="把喜欢的烘焙品牌留下来，日后会更好回看。" />
           ) : (
-            roasterFavorites.map((item, index) => (
-              <RoasterCard
-                key={item.roaster.id}
-                roaster={item.roaster}
-                index={index}
-                hideArrow
-                trailing={(
-                  <View
-                    className="profile__fav-action"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      if (loggedIn && item.favorite) {
-                        void handleUnfavoriteCloud(item.favorite);
-                      } else {
-                        handleUnfavoriteLocalRoaster(item.roaster);
-                      }
-                    }}
-                  >
-                    <Icon name="heart-filled" size={15} color="#c85c3d" />
-                  </View>
-                )}
-              />
-            ))
+            <View className="profile__roaster-list">
+              {roasterFavorites.map((item, index) => (
+                <RoasterCard
+                  key={item.roaster.id}
+                  roaster={item.roaster}
+                  index={index}
+                  variant="saved"
+                  hideArrow
+                  showQuickActions={false}
+                  trailing={(
+                    <View
+                      className="profile__fav-action"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (loggedIn && item.favorite) {
+                          void handleUnfavoriteCloud(item.favorite);
+                        } else {
+                          handleUnfavoriteLocalRoaster(item.roaster);
+                        }
+                      }}
+                    >
+                      <Icon name="heart-filled" size={15} color="#c85c3d" />
+                    </View>
+                  )}
+                />
+              ))}
+            </View>
           )
         ) : null}
 

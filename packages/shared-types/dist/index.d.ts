@@ -28,5 +28,6 @@ export interface PaginatedResult<T> {
 }
 export * from './catalog';
 export * from './roasters';
+export * from './favorites';
 export * from './common';
 //# sourceMappingURL=index.d.ts.map
