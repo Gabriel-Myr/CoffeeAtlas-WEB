@@ -13,6 +13,15 @@
   --color-surface: #ffffff;
   --color-border: rgba(107, 83, 68, 0.15);
 
+  --atlas-paper: rgba(255, 252, 247, 0.96);
+  --atlas-panel: rgba(255, 255, 255, 0.92);
+  --atlas-veil: rgba(247, 241, 232, 0.86);
+  --atlas-line: rgba(107, 83, 68, 0.12);
+  --atlas-ink-soft: rgba(88, 68, 53, 0.72);
+  --atlas-chip: rgba(249, 244, 238, 0.92);
+  --atlas-highlight: rgba(216, 111, 76, 0.16);
+  --atlas-accent: #c85c3d;
+
   --font-sans: 'SF Pro Text', 'Avenir Next', 'PingFang SC', 'Helvetica Neue', Helvetica, Arial,
     sans-serif;
   --font-serif: 'Iowan Old Style', 'Baskerville', 'Times New Roman', Georgia, serif;
@@ -134,7 +143,7 @@
 
 page {
   background:
-    radial-gradient(circle at top, rgba(245, 240, 232, 0.94), rgba(253, 250, 244, 0.98) 38%),
+    radial-gradient(circle at top, rgba(245, 240, 232, 0.96), rgba(253, 250, 244, 0.98) 38%),
     linear-gradient(180deg, #f7f1e8 0%, #fdfaf4 48%, #fffdf9 100%);
   color: var(--color-coffee-dark, #3e2a1e);
   font-family: var(--font-sans);
