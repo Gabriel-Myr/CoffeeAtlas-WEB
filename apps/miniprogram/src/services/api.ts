@@ -7,6 +7,8 @@ import type {
   CurrentUserProfile,
   DiscoverContinentId,
   LoginResponse,
+  NewArrivalFiltersPayload,
+  NewArrivalFiltersRequest,
   PaginatedResult,
   RoasterFeature,
   RoasterDetail,
@@ -71,6 +73,7 @@ export async function getBeans(params?: {
   pageSize?: number;
   page?: number;
   q?: string;
+  roasterId?: string;
   originCountry?: string;
   process?: string;
   roastLevel?: string;
@@ -83,6 +86,7 @@ export async function getBeans(params?: {
   if (params?.pageSize) query.set('pageSize', String(params.pageSize));
   if (params?.page) query.set('page', String(params.page));
   if (params?.q) query.set('q', params.q);
+  if (params?.roasterId) query.set('roasterId', params.roasterId);
   if (params?.originCountry) query.set('originCountry', params.originCountry);
   if (params?.process) query.set('process', params.process);
   if (params?.roastLevel) query.set('roastLevel', params.roastLevel);
@@ -107,6 +111,13 @@ export async function getBeanDiscover(params?: {
   if (params?.country) query.set('country', params.country);
   const qs = query.toString();
   return request<BeanDiscoverPayload>(`/api/v1/beans/discover${qs ? `?${qs}` : ''}`);
+}
+
+export async function getNewArrivalFilters(payload: NewArrivalFiltersRequest): Promise<NewArrivalFiltersPayload> {
+  return request<NewArrivalFiltersPayload>('/api/v1/beans/new-arrivals/filters', {
+    method: 'POST',
+    data: payload,
+  });
 }
 
 export async function getBeanById(id: string): Promise<CoffeeBean> {

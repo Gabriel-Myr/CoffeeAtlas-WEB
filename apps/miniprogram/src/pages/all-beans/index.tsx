@@ -4,19 +4,27 @@ import Taro, { useReachBottom } from '@tarojs/taro';
 
 import BeanCard from '../../components/BeanCard';
 import EmptyState from '../../components/EmptyState';
+import NewArrivalFilterBar from '../../components/NewArrivalFilterBar';
 import SearchBar from '../../components/SearchBar';
-import { getBeanDiscover, getBeans } from '../../services/api';
-import type { BeanDiscoverPayload, CoffeeBean, DiscoverContinentId } from '../../types';
+import { getBeanDiscover, getBeans, getNewArrivalFilters } from '../../services/api';
+import type { BeanDiscoverPayload, CoffeeBean, DiscoverContinentId, NewArrivalFiltersPayload } from '../../types';
+import {
+  buildLocalNewArrivalFiltersFallback,
+  buildNewArrivalBeanRequestParams,
+  buildNewArrivalFiltersRequest,
+} from './new-arrival-filters';
 import {
   ORIGIN_ATLAS_CONTINENT_MAP,
   ORIGIN_ATLAS_COUNTRY_MAP,
   makeAtlasSvgUri,
 } from '../../utils/origin-atlas';
+import { getBeanFavorites, getRoasterFavorites } from '../../utils/storage';
 import './index.scss';
 
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 250;
 const ALL_DISCOVER_VALUE = 'all';
+const EMPTY_NEW_FILTER_VALUE = '';
 
 type TabKey = 'discover' | 'sales' | 'new';
 type DiscoverContinentKey = DiscoverContinentId | 'all';
@@ -38,10 +46,16 @@ export default function AllBeans() {
   const [selectedProcess, setSelectedProcess] = useState<string>(ALL_DISCOVER_VALUE);
   const [selectedContinent, setSelectedContinent] = useState<DiscoverContinentKey>(ALL_DISCOVER_VALUE);
   const [selectedCountry, setSelectedCountry] = useState<string>(ALL_DISCOVER_VALUE);
+  const [selectedRoasterId, setSelectedRoasterId] = useState<string>(EMPTY_NEW_FILTER_VALUE);
+  const [selectedNewArrivalProcess, setSelectedNewArrivalProcess] = useState<string>(EMPTY_NEW_FILTER_VALUE);
+  const [selectedOriginCountry, setSelectedOriginCountry] = useState<string>(EMPTY_NEW_FILTER_VALUE);
 
   const [discoverPayload, setDiscoverPayload] = useState<BeanDiscoverPayload | null>(null);
   const [discoverLoading, setDiscoverLoading] = useState(false);
   const [discoverError, setDiscoverError] = useState('');
+  const [newArrivalFilters, setNewArrivalFilters] = useState<NewArrivalFiltersPayload | null>(null);
+  const [newArrivalFiltersLoading, setNewArrivalFiltersLoading] = useState(false);
+  const [newArrivalFallbackSeed, setNewArrivalFallbackSeed] = useState<CoffeeBean[]>([]);
 
   const [beans, setBeans] = useState<CoffeeBean[]>([]);
   const [loading, setLoading] = useState(false);
@@ -72,6 +86,17 @@ export default function AllBeans() {
   const hasMixedNewArrivalResults = activeTab === 'new' && visibleBeans.length !== beans.length;
   const effectiveHasMore = hasMixedNewArrivalResults ? false : hasMore;
   const effectiveTotal = activeTab === 'new' && hasMixedNewArrivalResults ? visibleBeans.length : total;
+  const hasNewArrivalSelections =
+    selectedRoasterId !== EMPTY_NEW_FILTER_VALUE ||
+    selectedNewArrivalProcess !== EMPTY_NEW_FILTER_VALUE ||
+    selectedOriginCountry !== EMPTY_NEW_FILTER_VALUE;
+  const resolvedNewArrivalFilters = useMemo(() => {
+    if (newArrivalFilters) return newArrivalFilters;
+
+    return buildLocalNewArrivalFiltersFallback(
+      newArrivalFallbackSeed.length > 0 ? newArrivalFallbackSeed : visibleBeans
+    );
+  }, [newArrivalFallbackSeed, newArrivalFilters, visibleBeans]);
 
   const discoverPathItems = useMemo(() => {
     const items: Array<{ key: 'process' | 'continent' | 'country'; label: string; value: string }> = [];
@@ -144,16 +169,27 @@ export default function AllBeans() {
     setErrorMessage('');
 
     try {
-      const response = await getBeans({
-        pageSize: PAGE_SIZE,
-        page: currentPage,
-        q: normalizedQuery || undefined,
-        sort: mode === 'sales' ? 'sales_desc' : 'updated_desc',
-        isNewArrival: mode === 'new' ? true : undefined,
-        process: mode === 'discover' && selectedProcess !== ALL_DISCOVER_VALUE ? selectedProcess : undefined,
-        continent: mode === 'discover' && selectedContinent !== ALL_DISCOVER_VALUE ? selectedContinent : undefined,
-        country: mode === 'discover' && selectedCountry !== ALL_DISCOVER_VALUE ? selectedCountry : undefined,
-      });
+      const response = await getBeans(
+        mode === 'new'
+          ? buildNewArrivalBeanRequestParams({
+              searchQuery: normalizedQuery,
+              selectedRoasterId,
+              selectedProcess: selectedNewArrivalProcess,
+              selectedOriginCountry,
+              page: currentPage,
+              pageSize: PAGE_SIZE,
+            })
+          : {
+              pageSize: PAGE_SIZE,
+              page: currentPage,
+              q: normalizedQuery || undefined,
+              sort: mode === 'sales' ? 'sales_desc' : 'updated_desc',
+              isNewArrival: undefined,
+              process: mode === 'discover' && selectedProcess !== ALL_DISCOVER_VALUE ? selectedProcess : undefined,
+              continent: mode === 'discover' && selectedContinent !== ALL_DISCOVER_VALUE ? selectedContinent : undefined,
+              country: mode === 'discover' && selectedCountry !== ALL_DISCOVER_VALUE ? selectedCountry : undefined,
+            }
+      );
 
       if (requestVersion !== requestVersionRef.current) return;
 
@@ -208,6 +244,21 @@ export default function AllBeans() {
     }
   };
 
+  const loadNewArrivalFilters = async () => {
+    setNewArrivalFiltersLoading(true);
+
+    try {
+      const response = await getNewArrivalFilters(
+        buildNewArrivalFiltersRequest(getBeanFavorites(), getRoasterFavorites())
+      );
+      setNewArrivalFilters(response);
+    } catch {
+      setNewArrivalFilters(null);
+    } finally {
+      setNewArrivalFiltersLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab !== 'discover') return undefined;
 
@@ -226,7 +277,14 @@ export default function AllBeans() {
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [activeTab, normalizedQuery]);
+  }, [activeTab, normalizedQuery, selectedNewArrivalProcess, selectedOriginCountry, selectedRoasterId]);
+
+  useEffect(() => {
+    if (activeTab !== 'new') return undefined;
+
+    void loadNewArrivalFilters();
+    return undefined;
+  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab !== 'discover') return undefined;
@@ -245,6 +303,34 @@ export default function AllBeans() {
 
     return () => clearTimeout(timer);
   }, [activeTab, normalizedQuery, selectedContinent, selectedCountry, selectedProcess, shouldShowDiscoverResults]);
+
+  useEffect(() => {
+    if (activeTab !== 'new') return;
+    if (normalizedQuery || hasNewArrivalSelections) return;
+    if (visibleBeans.length === 0) return;
+
+    setNewArrivalFallbackSeed(visibleBeans.filter((bean) => bean.isNewArrival));
+  }, [activeTab, hasNewArrivalSelections, normalizedQuery, visibleBeans]);
+
+  useEffect(() => {
+    if (selectedRoasterId && !resolvedNewArrivalFilters.roasterOptions.some((option) => option.id === selectedRoasterId)) {
+      setSelectedRoasterId(EMPTY_NEW_FILTER_VALUE);
+    }
+
+    if (
+      selectedNewArrivalProcess &&
+      !resolvedNewArrivalFilters.processOptions.some((option) => option.id === selectedNewArrivalProcess)
+    ) {
+      setSelectedNewArrivalProcess(EMPTY_NEW_FILTER_VALUE);
+    }
+
+    if (
+      selectedOriginCountry &&
+      !resolvedNewArrivalFilters.originOptions.some((option) => option.id === selectedOriginCountry)
+    ) {
+      setSelectedOriginCountry(EMPTY_NEW_FILTER_VALUE);
+    }
+  }, [resolvedNewArrivalFilters, selectedNewArrivalProcess, selectedOriginCountry, selectedRoasterId]);
 
   useEffect(() => {
     if (!discoverPayload) return;
@@ -316,6 +402,18 @@ export default function AllBeans() {
       setSelectedContinent(atlasCountry.continentId);
     }
     setSelectedCountry(value === selectedCountry ? ALL_DISCOVER_VALUE : value);
+  };
+
+  const handleNewArrivalRoasterSelect = (value: string) => {
+    setSelectedRoasterId(value);
+  };
+
+  const handleNewArrivalProcessSelect = (value: string) => {
+    setSelectedNewArrivalProcess(value);
+  };
+
+  const handleNewArrivalOriginSelect = (value: string) => {
+    setSelectedOriginCountry(value);
   };
 
   const clearDiscoverPath = (key?: 'process' | 'continent' | 'country') => {
@@ -397,6 +495,34 @@ export default function AllBeans() {
             清除
           </Text>
         </View>
+      ) : null}
+
+      {activeTab === 'new' &&
+      (newArrivalFiltersLoading ||
+        resolvedNewArrivalFilters.roasterOptions.length > 0 ||
+        resolvedNewArrivalFilters.processOptions.length > 0 ||
+        resolvedNewArrivalFilters.originOptions.length > 0) ? (
+        newArrivalFiltersLoading &&
+        resolvedNewArrivalFilters.roasterOptions.length === 0 &&
+        resolvedNewArrivalFilters.processOptions.length === 0 &&
+        resolvedNewArrivalFilters.originOptions.length === 0 ? (
+          <View className="all-beans__new-arrival-loading">
+            <Text className="all-beans__new-arrival-loading-text">正在整理猜你喜欢筛选...</Text>
+          </View>
+        ) : (
+          <NewArrivalFilterBar
+            mode={resolvedNewArrivalFilters.mode}
+            roasterOptions={resolvedNewArrivalFilters.roasterOptions}
+            processOptions={resolvedNewArrivalFilters.processOptions}
+            originOptions={resolvedNewArrivalFilters.originOptions}
+            selectedRoasterId={selectedRoasterId}
+            selectedProcess={selectedNewArrivalProcess}
+            selectedOriginCountry={selectedOriginCountry}
+            onRoasterChange={handleNewArrivalRoasterSelect}
+            onProcessChange={handleNewArrivalProcessSelect}
+            onOriginChange={handleNewArrivalOriginSelect}
+          />
+        )
       ) : null}
 
       <View className="all-beans__list">

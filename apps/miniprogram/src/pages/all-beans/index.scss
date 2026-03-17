@@ -593,3 +593,16 @@
     }
   }
 }
+
+.all-beans__new-arrival-loading {
+  margin: 0 var(--page-gutter) 16px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: rgba(255, 252, 247, 0.96);
+  border: 1px solid rgba(139, 115, 85, 0.14);
+}
+
+.all-beans__new-arrival-loading-text {
+  color: rgba(110, 82, 58, 0.78);
+  font-size: 13px;
+}

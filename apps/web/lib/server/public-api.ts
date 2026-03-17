@@ -36,6 +36,7 @@ const DEFAULT_BEAN_SORT: BeanSort = 'updated_desc';
 
 interface BeanListFilters {
   q?: string;
+  roasterId?: string;
   originCountry?: string;
   process?: string;
   roastLevel?: string;
@@ -188,6 +189,7 @@ function applySortPlan<T extends { order: (column: string, options: { ascending:
 
 async function queryBeanIdsFromView({
   q,
+  roasterId,
   originCountry,
   process,
   roastLevel,
@@ -212,6 +214,7 @@ async function queryBeanIdsFromView({
   query = applySortPlan(query, normalizeBeanSort(sort));
 
   if (q) query = query.or(buildSearchConditions(q));
+  if (roasterId) query = query.eq('roaster_id', roasterId);
   if (originCountry) query = query.ilike('origin_country', `%${originCountry}%`);
   if (process) query = query.ilike('process_method', `%${process}%`);
   if (roastLevel) query = query.ilike('roast_level', `%${roastLevel}%`);
@@ -242,6 +245,7 @@ async function queryBeanIdsFromView({
 
 async function countBeanIdsFromView({
   q,
+  roasterId,
   originCountry,
   process,
   roastLevel,
@@ -256,6 +260,7 @@ async function countBeanIdsFromView({
   let query = supabaseServer.from('v_catalog_active').select('roaster_bean_id', { count: 'exact', head: true });
 
   if (q) query = query.or(buildSearchConditions(q));
+  if (roasterId) query = query.eq('roaster_id', roasterId);
   if (originCountry) query = query.ilike('origin_country', `%${originCountry}%`);
   if (process) query = query.ilike('process_method', `%${process}%`);
   if (roastLevel) query = query.ilike('roast_level', `%${roastLevel}%`);
@@ -311,6 +316,7 @@ function matchesBeanFilters(
   bean: CoffeeBean,
   {
     q,
+    roasterId,
     originCountry,
     process,
     roastLevel,
@@ -337,6 +343,10 @@ function matchesBeanFilters(
   }
 
   if (originCountry && !bean.originCountry.toLowerCase().includes(originCountry.toLowerCase())) {
+    return false;
+  }
+
+  if (roasterId && bean.roasterId !== roasterId) {
     return false;
   }
 
@@ -391,6 +401,7 @@ async function loadLocalBeans(filters: BeanListFilters): Promise<CoffeeBean[]> {
   const seed = await getCatalogBeansPage({
     limit: LOCAL_FALLBACK_LIMIT,
     offset: 0,
+    roasterId: filters.roasterId,
     origin: filters.originCountry,
     process: filters.process,
     roastLevel: filters.roastLevel,
@@ -625,6 +636,7 @@ export async function listBeansV1({
   page,
   pageSize,
   q,
+  roasterId,
   originCountry,
   process,
   roastLevel,
@@ -636,6 +648,7 @@ export async function listBeansV1({
   page: number;
   pageSize: number;
   q?: string;
+  roasterId?: string;
   originCountry?: string;
   process?: string;
   roastLevel?: string;
@@ -647,6 +660,7 @@ export async function listBeansV1({
   const offset = (page - 1) * pageSize;
   const filters: BeanListFilters = {
     q: sanitizeSearchTerm(normalizeString(q)),
+    roasterId: normalizeString(roasterId),
     originCountry: normalizeString(originCountry),
     process: normalizeString(process),
     roastLevel: normalizeString(roastLevel),
