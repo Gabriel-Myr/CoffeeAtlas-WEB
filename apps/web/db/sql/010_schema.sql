@@ -62,6 +62,20 @@ create table if not exists public.roasters (
   search_tsv tsvector
 );
 
+create table if not exists public.roaster_source_bindings (
+  id uuid primary key default gen_random_uuid(),
+  roaster_id uuid not null references public.roasters(id) on delete cascade,
+  source_id uuid not null references public.sources(id) on delete cascade,
+  canonical_shop_url text not null,
+  canonical_shop_name text not null,
+  search_keyword text,
+  is_active boolean not null default true,
+  last_synced_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (roaster_id, source_id)
+);
+
 create table if not exists public.beans (
   id uuid primary key default gen_random_uuid(),
   canonical_name text not null,
@@ -107,6 +121,8 @@ create table if not exists public.roaster_beans (
   weight_grams int check (weight_grams is null or weight_grams > 0),
   product_url text,
   image_url text,
+  source_item_id text,
+  source_sku_id text,
   status publish_status not null default 'DRAFT',
   is_in_stock boolean not null default true,
   release_at timestamptz,
@@ -246,6 +262,11 @@ for each row execute function public.set_updated_at();
 drop trigger if exists trg_roasters_updated_at on public.roasters;
 create trigger trg_roasters_updated_at
 before update on public.roasters
+for each row execute function public.set_updated_at();
+
+drop trigger if exists trg_roaster_source_bindings_updated_at on public.roaster_source_bindings;
+create trigger trg_roaster_source_bindings_updated_at
+before update on public.roaster_source_bindings
 for each row execute function public.set_updated_at();
 
 drop trigger if exists trg_beans_updated_at on public.beans;

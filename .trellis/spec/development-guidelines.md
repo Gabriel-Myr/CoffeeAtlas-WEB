@@ -1,291 +1,175 @@
 # 开发规范
 
-## Monorepo 开发规范
+> 仓库级通用规范。具体到 frontend / backend / test 的实现约束，优先看对应的 Trellis 子目录文档。
 
-### 包管理
+---
 
-使用 pnpm workspace + Turborepo：
+## Monorepo 基本规则
+
+### 包管理与任务执行
+
+根目录统一使用 pnpm + Turborepo：
 
 ```bash
-# 在特定包中安装依赖
-pnpm --filter <package-name> add <dep>
-
-# 添加内部包依赖
-pnpm --filter @coffeeatlas/miniprogram add @coffee-atlas/api-client
-
-# 运行特定包的命令
-pnpm --filter coffeestories-webdb dev
-
-# 全量构建（Turborepo 自动处理依赖顺序）
-pnpm turbo build
-
-# 全量类型检查
-pnpm turbo typecheck
+pnpm install
+pnpm dev
+pnpm lint
+pnpm typecheck
+pnpm build
 ```
 
-### 包命名规范
+按包执行时使用 `--filter`：
 
-| 包路径 | 包名 | 用途 |
-|--------|------|------|
-| `apps/web` | `coffeestories-webdb` | Next.js Web 应用 |
+```bash
+pnpm --filter coffeestories-webdb dev
+pnpm --filter coffeestories-webdb test
+pnpm --filter @coffeeatlas/miniprogram typecheck
+```
+
+### 当前包职责
+
+| 路径 | 包名 | 职责 |
+|------|------|------|
+| `apps/web` | `coffeestories-webdb` | Web UI + Next API + Supabase server access |
 | `apps/miniprogram` | `@coffeeatlas/miniprogram` | Taro 小程序 |
-| `packages/shared-types` | `@coffee-atlas/shared-types` | 共享类型定义 |
-| `packages/api-client` | `@coffee-atlas/api-client` | API 客户端 |
-| `packages/domain` | `@coffee-atlas/domain` | 领域逻辑 |
+| `packages/shared-types` | `@coffee-atlas/shared-types` | 当前权威 API 契约层 |
+| `packages/api-client` | `@coffee-atlas/api-client` | 预备中的跨端 client |
+| `packages/domain` | `@coffee-atlas/domain` | 预备中的纯领域逻辑层 |
 
-### 代码归属原则
+---
 
-- **Web 专用逻辑** → `apps/web/lib/` 或 `apps/web/app/`
-- **小程序专用逻辑** → `apps/miniprogram/src/`
-- **两端共用类型** → `packages/shared-types/src/`
-- **两端共用 API 调用** → `packages/api-client/src/`
-- **业务领域逻辑** → `packages/domain/src/`
+## 代码归属原则
 
-### 共享包导入
+- **Web 页面与 Web 专属 UI** -> `apps/web/app/`、`apps/web/components/`
+- **Web 服务端逻辑** -> `apps/web/lib/server/`
+- **公开目录读取与 sample fallback** -> `apps/web/lib/catalog.ts`
+- **小程序页面与组件** -> `apps/miniprogram/src/pages/`、`apps/miniprogram/src/components/`
+- **小程序 API / storage / auth** -> `apps/miniprogram/src/services/`、`apps/miniprogram/src/utils/`
+- **跨层 API DTO / query params** -> `packages/shared-types/src/`
+- **真正稳定的跨端逻辑** -> 评估后再进入 `packages/api-client` 或 `packages/domain`
 
-```typescript
-// ✅ 从共享包导入类型
-import type { CatalogBeanCard, ApiResponse } from '@coffee-atlas/shared-types';
+不要因为 `packages/api-client` / `packages/domain` 已存在，就把还没稳定的代码强行迁进去。
 
-// ✅ 使用 API 客户端（小程序端）
-import { ApiClient } from '@coffee-atlas/api-client';
+---
 
-// ❌ 跨 app 直接引用
+## 跨包边界
+
+### 允许
+
+```ts
+import type { CatalogBeanCard } from '@coffee-atlas/shared-types';
+import { apiSuccess } from '@/lib/server/api-helpers';
+```
+
+### 不允许
+
+```ts
 import { something } from '../../apps/web/lib/catalog';
+import { NextRequest } from 'next/server'; // in packages/*
+import Taro from '@tarojs/taro'; // in packages/*
+```
+
+规则：
+
+- `packages/*` 必须保持平台无关
+- Web / miniprogram 不直接跨 app 引内部文件
+- 跨层契约优先走 `@coffee-atlas/shared-types`
+
+---
+
+## TypeScript 与路径别名
+
+### 共享基础
+
+- 根 `tsconfig.base.json` 提供 `@coffee-atlas/*` 路径映射
+- `apps/web/tsconfig.json` 提供 `@/*`
+- `apps/miniprogram/tsconfig.json` 提供 `@/* -> src/*`
+
+### 类型要求
+
+- 默认 `strict: true`
+- 导出函数和复杂 helper 应明确类型边界
+- 尽量避免 `any`
+- row shape、内部模型、DTO 要分层，不要混用
+
+---
+
+## 命名规范
+
+- 组件：PascalCase
+- route segment：Next.js 下用目录名表达路由，如 `all-beans/page.tsx`
+- helper / util：camelCase 导出，文件名通常 kebab-case 或约定俗成
+- 常量：`UPPER_SNAKE_CASE`
+- 类型 / 接口：PascalCase
+
+---
+
+## 环境变量与敏感信息
+
+### 新代码规则
+
+- 只通过 `process.env.*` 读取敏感配置
+- 客户端可见配置必须走 `NEXT_PUBLIC_*` 或 `TARO_APP_*`
+- 新增脚本不要再内嵌 key、域名或本地绝对路径
+
+### 当前仓库现实
+
+仓库里仍有历史债务：部分 env 文件和导入脚本带有真实/默认敏感值。Trellis 文档需要记住这个风险，但新代码不能继续复制这种模式。
+
+---
+
+## 路由与服务端逻辑拆分
+
+- route handler 负责：解析请求、鉴权、调用 service、返回响应
+- 复杂查询和 DTO 组装放到 `apps/web/lib/server/**` 或 `apps/web/lib/catalog.ts`
+- 不要把大段 DB 查询、鉴权、转换逻辑直接堆进 `route.ts`
+
+---
+
+## 验证命令
+
+按改动范围执行：
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm --filter coffeestories-webdb test
+pnpm --filter @coffeeatlas/miniprogram typecheck
+```
+
+API 改动且环境可用时：
+
+```bash
+cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
 ```
 
 ---
 
-## TypeScript 配置
+## Git 与提交
 
-### 严格模式
-
-项目启用 TypeScript 严格模式：
-
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "allowJs": false,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "moduleResolution": "bundler",
-    "isolatedModules": true,
-    "jsx": "react-jsx"
-  }
-}
-```
-
-### 类型安全要求
-
-- ✅ 所有函数参数和返回值必须有类型注解
-- ✅ 禁止使用 `any`（除非有充分理由）
-- ✅ 使用 `@coffee-atlas/shared-types` 中定义的共享类型，或各包内的本地类型
-- ❌ 不允许 `allowJs: true`
-
-## 代码风格
-
-### 命名规范
-
-- **组件**: PascalCase（如 `HomePageClient.tsx`）
-- **文件**:
-  - 组件文件：PascalCase（如 `AddBeanForm.tsx`）
-  - 路由文件：kebab-case（如 `all-beans/page.tsx`）
-  - 工具文件：kebab-case（如 `supabase.ts`）
-- **变量/函数**: camelCase（如 `getCatalogBeans`）
-- **常量**: UPPER_SNAKE_CASE（如 `MAX_BEANS_PER_PAGE`）
-- **类型/接口**: PascalCase（如 `CoffeeBean`, `PublishStatus`）
-
-### 注释规范
-
-- **不主动添加注释**（遵循全局 CLAUDE.md 配置）
-- 只在逻辑复杂、不易理解的地方添加注释
-- 使用中文注释
-
-```typescript
-// ✅ 好的注释：解释"为什么"
-// 使用 Map 避免 N+1 查询问题
-const roastersMap = new Map(roasters.map(r => [r.id, r]));
-
-// ❌ 不必要的注释：重复代码内容
-// 创建一个 Map
-const roastersMap = new Map(roasters.map(r => [r.id, r]));
-```
-
-## 文件操作规则
-
-1. **修改文件前先读取**：使用 Read 工具查看现有内容
-2. **优先编辑现有文件**：不要轻易创建新文件
-3. **不创建文档文件**：除非用户明确要求，不创建 README 或其他文档
-
-## 环境变量
-
-### 命名规范
-
-- 客户端可见：`NEXT_PUBLIC_*` 前缀
-- 服务端专用：无前缀
-
-### 使用示例
-
-```typescript
-// ✅ 正确：使用环境变量
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !serviceRoleKey) {
-  throw new Error('Missing environment variables');
-}
-
-// ❌ 错误：硬编码凭证
-const supabaseUrl = 'https://xxx.supabase.co';
-const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
-```
-
-### 必需的环境变量
+提交信息继续使用约定式风格：
 
 ```bash
-# .env.local
-NEXT_PUBLIC_SUPABASE_URL=         # Supabase 项目 URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY=    # 匿名密钥（客户端）
-SUPABASE_SERVICE_ROLE_KEY=        # Service Role 密钥（服务端）
+feat(scope): description
+fix(scope): description
+docs(scope): description
+refactor(scope): description
+test(scope): description
+chore(scope): description
 ```
 
-## 导入路径
+常见 scope：`web`、`miniprogram`、`api`、`packages`、`db`、`trellis`
 
-使用 `@/*` 别名：
+---
 
-```typescript
-// ✅ 推荐
-import { supabaseBrowser } from '@/lib/supabase';
-import { CoffeeBean } from '@/lib/types';
+## 文档同步原则
 
-// ❌ 避免相对路径
-import { supabaseBrowser } from '../../lib/supabase';
-```
+以下变更完成后，应同步 Trellis：
 
-## 组件规范
+- 新 API 契约
+- 新数据访问模式
+- 新前端组织方式
+- 新测试约定
+- 新的 repo 级坑点或技术债边界
 
-### 客户端组件标记
-
-需要交互的组件必须标记 `'use client'`：
-
-```typescript
-'use client';
-
-import { useState } from 'react';
-
-export default function InteractiveComponent() {
-  const [count, setCount] = useState(0);
-  // ...
-}
-```
-
-### Props 类型定义
-
-```typescript
-interface HomePageClientProps {
-  initialBeans: CoffeeBean[];
-  theme?: ThemeOption;
-}
-
-export default function HomePageClient({
-  initialBeans,
-  theme = 'warm'
-}: HomePageClientProps) {
-  // ...
-}
-```
-
-## 错误处理
-
-### API 路由
-
-```typescript
-// app/api/beans/route.ts
-import { NextResponse } from 'next/server';
-
-export async function GET() {
-  try {
-    const { data, error } = await supabaseServer
-      .from('roaster_beans')
-      .select('*');
-
-    if (error) {
-      return NextResponse.json(
-        { ok: false, error: error.message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ ok: true, data });
-  } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-```
-
-### 数据获取
-
-```typescript
-const { data, error } = await supabaseServer
-  .from('roaster_beans')
-  .select('*');
-
-if (error) {
-  console.error('Database error:', error);
-  return [];
-}
-
-return data;
-```
-
-## Git 提交规范
-
-使用约定式提交（Conventional Commits）：
-
-```bash
-feat: 添加咖啡豆搜索功能
-fix: 修复主题切换时的样式问题
-chore: 更新依赖版本
-docs: 更新 README
-refactor: 重构数据获取逻辑
-```
-
-## 代码质量检查
-
-### 运行 Lint
-
-```bash
-# 单包
-pnpm --filter coffeestories-webdb lint
-
-# 全量
-pnpm turbo lint
-```
-
-### 类型检查
-
-```bash
-# 单包
-pnpm --filter coffeestories-webdb typecheck
-
-# 全量（按依赖顺序）
-pnpm turbo typecheck
-```
-
-## 性能优化建议
-
-1. **使用 useMemo 缓存计算结果**
-2. **避免在循环中进行数据库查询**（使用批量查询 + Map）
-3. **图片使用 Next.js Image 组件**
-4. **大列表使用虚拟滚动**（如需要）
-
-## 安全规范
-
-1. **不要在客户端暴露 service role key**
-2. **使用 RLS 策略保护数据**
-3. **验证用户输入**
-4. **不要在代码中硬编码敏感信息**
+目标不是“文档很多”，而是让下一次 AI / 人类进入仓库时读到的是当前现实。

@@ -1,6 +1,7 @@
 -- Enable RLS.
 alter table public.sources enable row level security;
 alter table public.roasters enable row level security;
+alter table public.roaster_source_bindings enable row level security;
 alter table public.beans enable row level security;
 alter table public.bean_aliases enable row level security;
 alter table public.roaster_beans enable row level security;
@@ -78,6 +79,14 @@ with check (public.has_platform_role(array['admin', 'editor']));
 drop policy if exists sources_admin_all on public.sources;
 create policy sources_admin_all
 on public.sources
+for all
+to authenticated
+using (public.has_platform_role(array['admin', 'editor']))
+with check (public.has_platform_role(array['admin', 'editor']));
+
+drop policy if exists roaster_source_bindings_admin_all on public.roaster_source_bindings;
+create policy roaster_source_bindings_admin_all
+on public.roaster_source_bindings
 for all
 to authenticated
 using (public.has_platform_role(array['admin', 'editor']))

@@ -3,6 +3,12 @@ create index if not exists idx_roaster_beans_roaster_id on public.roaster_beans 
 create index if not exists idx_roaster_beans_bean_id on public.roaster_beans (bean_id);
 create index if not exists idx_roaster_beans_status_stock_release on public.roaster_beans (status, is_in_stock, release_at desc);
 create index if not exists idx_roaster_beans_price_amount on public.roaster_beans (price_amount);
+create index if not exists idx_roaster_source_bindings_roaster_id on public.roaster_source_bindings (roaster_id);
+create index if not exists idx_roaster_source_bindings_source_id on public.roaster_source_bindings (source_id);
+create index if not exists idx_roaster_source_bindings_active_sync on public.roaster_source_bindings (is_active, last_synced_at desc);
+create unique index if not exists idx_roaster_beans_source_identity_unique
+on public.roaster_beans (source_id, source_item_id, coalesce(source_sku_id, ''))
+where source_id is not null and source_item_id is not null;
 
 create index if not exists idx_roasters_city_country on public.roasters (city, country_code);
 create index if not exists idx_roasters_is_public on public.roasters (is_public);

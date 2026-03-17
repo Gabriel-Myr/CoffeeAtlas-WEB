@@ -102,7 +102,7 @@ export default function AllBeans() {
     }
 
     if (total !== null) {
-      return activeTab === 'new' ? `共 ${total} 款近期上新` : `共 ${total} 款咖啡豆`;
+      return activeTab === 'new' ? `共 ${total} 款本次上新` : `共 ${total} 款咖啡豆`;
     }
     if (loading) return '正在同步目录...';
     if (beans.length > 0) return `已加载 ${beans.length} 款咖啡豆`;
@@ -445,7 +445,7 @@ export default function AllBeans() {
                       >
                         <Image
                           className="continent-card__map"
-                          src={makeAtlasSvgUri(continentMeta.path, continentMeta.color, true)}
+                          src={makeAtlasSvgUri(continentMeta.path, continentMeta.viewBox, continentMeta.color, true)}
                           mode="aspectFit"
                           lazyLoad
                         />
@@ -527,7 +527,12 @@ export default function AllBeans() {
                         <View className="country-focus__map-shell">
                           <Image
                             className="country-focus__map"
-                            src={makeAtlasSvgUri(activeCountryMeta.path, activeCountryMeta.color, true)}
+                            src={makeAtlasSvgUri(
+                              activeCountryMeta.path,
+                              activeCountryMeta.viewBox,
+                              activeCountryMeta.color,
+                              true
+                            )}
                             mode="aspectFit"
                             lazyLoad
                           />
@@ -550,7 +555,12 @@ export default function AllBeans() {
                         <View className="country-focus__map-shell">
                           <Image
                             className="country-focus__map"
-                            src={makeAtlasSvgUri(activeContinentMeta.path, activeContinentMeta.color, true)}
+                            src={makeAtlasSvgUri(
+                              activeContinentMeta.path,
+                              activeContinentMeta.viewBox,
+                              activeContinentMeta.color,
+                              true
+                            )}
                             mode="aspectFit"
                             lazyLoad
                           />
@@ -654,7 +664,7 @@ export default function AllBeans() {
         ) : loading && beans.length === 0 ? (
           <EmptyState message="加载中..." />
         ) : beans.length === 0 ? (
-          <EmptyState message="未找到咖啡豆" />
+          <EmptyState message={activeTab === 'new' ? '最近一次导入暂无新品' : '未找到咖啡豆'} />
         ) : (
           <View>
             {beans.map((bean, index) => <BeanCard key={bean.id} bean={bean} index={index} />)}
@@ -664,8 +674,10 @@ export default function AllBeans() {
               </View>
             ) : null}
             {!hasMore && beans.length > 0 ? (
-              <View className="all-beans__end">
-                <Text className="all-beans__end-text">— 已加载全部 —</Text>
+              <View className={`all-beans__end ${activeTab === 'new' ? 'all-beans__end--new' : ''}`}>
+                <Text className={`all-beans__end-text ${activeTab === 'new' ? 'all-beans__end-text--new' : ''}`}>
+                  {activeTab === 'new' ? '当前无更多新品，去别处看看吧～' : '— 已加载全部 —'}
+                </Text>
               </View>
             ) : null}
           </View>

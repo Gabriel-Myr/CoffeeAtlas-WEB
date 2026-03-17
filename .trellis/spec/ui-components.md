@@ -1,314 +1,151 @@
 # UI 组件规范
 
-## 组件库
-
-### 图标库
-- **lucide-react**: 主要图标库
-- 常用图标：`Search`, `Filter`, `Coffee`, `Palette`, `Settings`
-
-```tsx
-import { Search, Coffee } from 'lucide-react';
-
-<Search className="w-5 h-5" />
-<Coffee className="w-6 h-6 text-amber-600" />
-```
-
-### 动画库
-- **framer-motion**: 页面和组件动画
-- 包名：`motion`（版本 12.34.3）
-
-```tsx
-import { motion, AnimatePresence } from 'framer-motion';
-```
-
-## 主要组件
-
-### 1. HomePageClient
-
-**位置**: `app/HomePageClient.tsx`
-
-**功能**:
-- 首页主组件
-- 地图式咖啡豆浏览
-- 按大洲分类展示
-- 主题切换
-
-**Props**:
-```typescript
-interface HomePageClientProps {
-  initialBeans: CoffeeBean[];
-}
-```
-
-**特点**:
-- 使用 `'use client'` 标记
-- 集成 Framer Motion 动画
-- 支持 5 种主题切换
-- 响应式设计
+> 这是仓库级 UI 组件总览，覆盖 web 与 miniprogram。更细的层级规则见 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/frontend/component-guidelines.md`。
 
 ---
 
-### 2. AllBeansClient
+## UI 技术基底
 
-**位置**: `app/all-beans/AllBeansClient.tsx`
+### Web
+- Next.js App Router
+- Tailwind CSS v4（`app/globals.css`）
+- `lucide-react` 图标
+- `motion/react` 动效
+- CSS 变量 + `data-theme` 主题切换
 
-**功能**:
-- 完整咖啡豆目录
-- 搜索和筛选
-- 列表/网格视图切换
-
-**Props**:
-```typescript
-interface AllBeansClientProps {
-  initialBeans: CoffeeBean[];
-}
-```
-
-**特点**:
-- 实时搜索（客户端过滤）
-- 支持按产地、品种、处理法筛选
-- 虚拟滚动（如果列表很长）
+### Miniprogram
+- Taro 3.x 组件体系
+- SCSS
+- 自定义 `Icon` 组件，用 data URI SVG 渲染图标
+- CSS 动画和页面级进入效果
 
 ---
 
-### 3. MapSilhouette
+## 当前核心 Web 组件
 
-**位置**: `app/HomePageClient.tsx`（内联组件）
+### `HomePageClient`
+- 路径：`/Users/gabi/CoffeeAtlas-Web/apps/web/app/HomePageClient.tsx`
+- 角色：首页交互壳
+- 负责：搜索、tab、主题切换、Atlas 与列表视图切换
+- 特点：仍保留内联 `BeanCard`
 
-**功能**:
-- 渲染大洲地图轮廓
-- SVG 图形展示
+### `AllBeansClient`
+- 路径：`/Users/gabi/CoffeeAtlas-Web/apps/web/app/all-beans/AllBeansClient.tsx`
+- 角色：完整目录页客户端壳
+- 负责：搜索、主题、列表展示
+- 特点：同样保留内联 `BeanCard`
 
-**Props**:
-```typescript
-interface MapSilhouetteProps {
-  path: string;      // SVG path 数据
-  color: string;     // 主题色
-  isLarge?: boolean; // 是否大尺寸
-}
-```
+### `OriginAtlasExplorer`
+- 路径：`/Users/gabi/CoffeeAtlas-Web/apps/web/components/atlas/OriginAtlasExplorer.tsx`
+- 角色：Atlas 风格产地探索主组件
+- 负责：continent / country 级联浏览、统计卡片、地图版式
+- 特点：是当前 UI 风格最强的设计锚点，相关改动要避免退化成通用卡片布局
 
-**使用示例**:
-```tsx
-<MapSilhouette
-  path="M10,10 L50,50 ..."
-  color="#E07A5F"
-  isLarge={true}
-/>
-```
+### `MapSilhouette`
+- 路径：`/Users/gabi/CoffeeAtlas-Web/apps/web/components/atlas/MapSilhouette.tsx`
+- 角色：地图轮廓 SVG 展示组件
+- 输入：`path`、`color`、`detail`、`interactive`
+- 特点：不是内联组件，已抽离为独立复用模块
+
+### `AddBeanForm`
+- 路径：`/Users/gabi/CoffeeAtlas-Web/apps/web/components/AddBeanForm.tsx`
+- 角色：管理端录入表单
+- 特点：包含可搜索 roaster 选择、字段校验、状态与货币输入
 
 ---
 
-### 4. AddBeanForm
+## 当前核心 Miniprogram 组件
 
-**位置**: `components/AddBeanForm.tsx`
+### `BeanCard`
+- 路径：`/Users/gabi/CoffeeAtlas-Web/apps/miniprogram/src/components/BeanCard/index.tsx`
+- 角色：豆款列表卡片
+- 特点：图片占位、价格 tag、销量 tag、点击跳详情
 
-**功能**:
-- 添加新咖啡豆表单
-- 字段验证
+### `RoasterCard`
+- 路径：`/Users/gabi/CoffeeAtlas-Web/apps/miniprogram/src/components/RoasterCard/index.tsx`
+- 角色：烘焙商档案卡片
+- 特点：支持 gallery / saved 变体、外链 quick actions、封面/徽记 fallback
 
-**字段**:
-- 烘焙商名称
-- 咖啡豆名称
-- 产地、品种、处理法
-- 价格、库存状态
+### `SearchBar`
+- 路径：`/Users/gabi/CoffeeAtlas-Web/apps/miniprogram/src/components/SearchBar/index.tsx`
+- 角色：统一搜索输入
+
+### `EmptyState`
+- 路径：`/Users/gabi/CoffeeAtlas-Web/apps/miniprogram/src/components/EmptyState/index.tsx`
+- 角色：空状态占位
+
+### `Icon`
+- 路径：`/Users/gabi/CoffeeAtlas-Web/apps/miniprogram/src/components/Icon/index.tsx`
+- 角色：跨页面复用图标
+- 特点：用 data URI SVG，而不是外部 icon 库
 
 ---
 
 ## 主题系统
 
-### 主题定义
+Web 主题定义集中在：
+- `/Users/gabi/CoffeeAtlas-Web/apps/web/app/globals.css`
 
-```typescript
-type ThemeOption = 'warm' | 'dark' | 'green' | 'minimal' | 'japanese';
+当前主题：
+- `warm`
+- `dark`
+- `green`
+- `minimal`
+- `japanese`
 
-const themes = [
-  { id: 'warm', name: '温暖奶咖', color: '#f5f0e8' },
-  { id: 'dark', name: '深色咖啡馆', color: '#1a1614' },
-  { id: 'green', name: '清新绿茶', color: '#f0f5f2' },
-  { id: 'minimal', name: '极简白咖啡', color: '#fafafa' },
-  { id: 'japanese', name: '日式和风', color: '#f4f1ee' },
-];
-```
+核心变量包括：
+- `--color-*`
+- `--atlas-*`
+- `--font-sans`
+- `--font-serif`
+- `--shadow-*`
 
-### 主题切换实现
-
-通过修改根元素的 `data-theme` 属性：
-
-```tsx
-const [currentTheme, setCurrentTheme] = useState<ThemeOption>('warm');
-
-useEffect(() => {
-  document.documentElement.setAttribute('data-theme', currentTheme);
-}, [currentTheme]);
-```
-
-### CSS 变量
-
-在 `app/globals.css` 中定义主题变量：
-
-```css
-[data-theme="warm"] {
-  --bg-primary: #f5f0e8;
-  --text-primary: #2c2420;
-  --accent: #d4a574;
-}
-
-[data-theme="dark"] {
-  --bg-primary: #1a1614;
-  --text-primary: #f5f0e8;
-  --accent: #c9a87c;
-}
-```
+规则：
+- 新 UI 优先复用这些变量，而不是直接写一堆硬编码颜色
+- Atlas 相关组件优先使用 `--atlas-*` 变量
+- 标题排版延续当前 `Inter + Cormorant Garamond/Playfair Display` 组合
 
 ---
 
-## 大洲数据配置
+## 动效规范
 
-```typescript
-const CONTINENTS = [
-  {
-    id: 'asia',
-    name: '亚洲',
-    icon: '🌏',
-    color: '#E07A5F',  // 珊瑚红
-    countries: ['云南', '印尼', '越南', '泰国', '印度', '也门']
-  },
-  {
-    id: 'africa',
-    name: '非洲',
-    icon: '🌍',
-    color: '#F2CC8F',  // 暖黄
-    countries: ['埃塞俄比亚', '肯尼亚', '卢旺达', '坦桑尼亚', '乌干达']
-  },
-  {
-    id: 'americas',
-    name: '美洲',
-    icon: '🌎',
-    color: '#81B29A',  // 薄荷绿
-    countries: ['哥伦比亚', '巴西', '危地马拉', '哥斯达黎加', '巴拿马', ...]
-  },
-];
+### Web
+
+当前统一使用 `motion/react`：
+
+```tsx
+import { motion } from 'motion/react';
 ```
+
+常见模式：
+- 初始 `opacity + y`
+- 卡片延迟入场
+- hover 轻微位移或放大
+- `layoutId` 用于 tab 指示器
+
+### Miniprogram
+
+- 主要依赖 SCSS animation / delay
+- 卡片通过 `animationDelay` 做分批入场
+- 不引入 web 端的 `motion/react`
 
 ---
 
-## 动画规范
+## 响应式与平台边界
 
-### 页面进入动画
+### Web
+- 用 Tailwind 响应式 class
+- Atlas 卡片和 grid 在桌面/移动端需要保持层级感，不要只为了省事退化成单列普通列表
 
-```tsx
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.3 }}
->
-  {content}
-</motion.div>
-```
-
-### 列表项动画
-
-```tsx
-<motion.div
-  initial={{ opacity: 0, scale: 0.95 }}
-  animate={{ opacity: 1, scale: 1 }}
-  transition={{ duration: 0.2, delay: index * 0.05 }}
->
-  {item}
-</motion.div>
-```
-
-### Hover 动画
-
-```tsx
-<motion.button
-  whileHover={{ scale: 1.05 }}
-  whileTap={{ scale: 0.95 }}
->
-  点击我
-</motion.button>
-```
+### Miniprogram
+- 只使用 `@tarojs/components`
+- 不使用 HTML 标签
+- 导航统一 `Taro.navigateTo`
 
 ---
 
-## 响应式设计
+## 当前已知例外
 
-### Tailwind 断点
-
-```tsx
-<div className="
-  grid
-  grid-cols-1          /* 移动端：1 列 */
-  md:grid-cols-2       /* 平板：2 列 */
-  lg:grid-cols-3       /* 桌面：3 列 */
-  xl:grid-cols-4       /* 大屏：4 列 */
-  gap-4
-">
-  {items}
-</div>
-```
-
-### 移动端优化
-
-- 触摸友好的按钮尺寸（最小 44x44px）
-- 简化移动端导航
-- 优化移动端搜索体验
-
----
-
-## 组件开发规范
-
-### 1. 组件文件结构
-
-```tsx
-'use client';  // 如果需要
-
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-
-// Props 类型定义
-interface MyComponentProps {
-  title: string;
-  items: Item[];
-}
-
-// 组件实现
-export default function MyComponent({ title, items }: MyComponentProps) {
-  const [selected, setSelected] = useState<string | null>(null);
-
-  return (
-    <div>
-      {/* 组件内容 */}
-    </div>
-  );
-}
-```
-
-### 2. 样式规范
-
-- 优先使用 Tailwind CSS 类
-- 复杂样式使用 CSS Modules 或 styled-components
-- 避免内联样式（除非动态计算）
-
-```tsx
-// ✅ 推荐：Tailwind
-<div className="flex items-center gap-4 p-6 bg-white rounded-lg shadow-md">
-
-// ❌ 避免：内联样式
-<div style={{ display: 'flex', padding: '24px', background: 'white' }}>
-```
-
-### 3. 性能优化
-
-- 使用 `React.memo` 避免不必要的重渲染
-- 使用 `useMemo` 缓存计算结果
-- 使用 `useCallback` 缓存回调函数
-
-```tsx
-const MemoizedComponent = React.memo(MyComponent);
-
-const filteredItems = useMemo(() => {
-  return items.filter(item => item.active);
-}, [items]);
-```
+- `HomePageClient` / `AllBeansClient` 仍含内联卡片组件，这是现实，不是推荐默认模板
+- web 图像展示中仍使用 `<img>` 的地方存在，不是所有场景都切到了 `next/image`
+- miniprogram 的 Icon 体系与 web 图标体系分离，后续如做统一抽象要谨慎，不要破坏当前体积和兼容性

@@ -54,6 +54,14 @@ interface CatalogViewDiscoverRow {
   process_method: string | null;
 }
 
+interface ImportJobIdRow {
+  id: string;
+}
+
+interface IngestionEventEntityRow {
+  entity_id: string | null;
+}
+
 function mapBeanCard(bean: CoffeeBean): CatalogBeanCard {
   return {
     id: bean.id,
@@ -162,6 +170,42 @@ function getNewArrivalCutoff(): string {
   return cutoff.toISOString();
 }
 
+async function getLatestSyncedNewArrivalBeanIds(): Promise<string[]> {
+  const supabaseServer = requireSupabaseServer();
+
+  const { data: latestJob, error: latestJobError } = await supabaseServer
+    .from('import_jobs')
+    .select('id')
+    .eq('job_type', 'SCRAPE_SYNC')
+    .eq('file_name', 'sync-taobao-new-arrivals')
+    .in('status', ['SUCCEEDED', 'PARTIAL'])
+    .order('completed_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (latestJobError) throw latestJobError;
+  const jobId = (latestJob as ImportJobIdRow | null)?.id;
+  if (!jobId) return [];
+
+  const { data: ingestionEvents, error: ingestionEventsError } = await supabaseServer
+    .from('ingestion_events')
+    .select('entity_id')
+    .eq('import_job_id', jobId)
+    .eq('entity_type', 'ROASTER_BEAN')
+    .in('action', ['INSERT', 'UPSERT']);
+
+  if (ingestionEventsError) throw ingestionEventsError;
+
+  return Array.from(
+    new Set(
+      ((ingestionEvents ?? []) as IngestionEventEntityRow[])
+        .map((row) => row.entity_id)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    )
+  );
+}
+
 function applySortPlan<T extends { order: (column: string, options: { ascending: boolean; nullsFirst?: boolean }) => T }>(
   query: T,
   sort: BeanSort
@@ -196,9 +240,11 @@ async function queryBeanIdsFromView({
   country,
   limit,
   offset,
+  latestNewArrivalBeanIds,
 }: BeanListFilters & {
   limit: number;
   offset: number;
+  latestNewArrivalBeanIds?: string[];
 }) {
   const supabaseServer = requireSupabaseServer();
   let query = supabaseServer
@@ -220,8 +266,13 @@ async function queryBeanIdsFromView({
   if (continentConditions) query = query.or(continentConditions);
 
   if (typeof isNewArrival === 'boolean') {
-    const cutoff = getNewArrivalCutoff();
-    query = isNewArrival ? query.gte('updated_at', cutoff) : query.lt('updated_at', cutoff);
+    if (isNewArrival && latestNewArrivalBeanIds) {
+      if (latestNewArrivalBeanIds.length === 0) return [];
+      query = query.in('roaster_bean_id', latestNewArrivalBeanIds);
+    } else {
+      const cutoff = getNewArrivalCutoff();
+      query = isNewArrival ? query.gte('updated_at', cutoff) : query.lt('updated_at', cutoff);
+    }
   }
 
   const { data, error } = await query;
@@ -240,7 +291,10 @@ async function countBeanIdsFromView({
   isNewArrival,
   continent,
   country,
-}: BeanListFilters) {
+  latestNewArrivalBeanIds,
+}: BeanListFilters & {
+  latestNewArrivalBeanIds?: string[];
+}) {
   const supabaseServer = requireSupabaseServer();
   let query = supabaseServer.from('v_catalog_active').select('roaster_bean_id', { count: 'exact', head: true });
 
@@ -256,8 +310,13 @@ async function countBeanIdsFromView({
   if (continentConditions) query = query.or(continentConditions);
 
   if (typeof isNewArrival === 'boolean') {
-    const cutoff = getNewArrivalCutoff();
-    query = isNewArrival ? query.gte('updated_at', cutoff) : query.lt('updated_at', cutoff);
+    if (isNewArrival && latestNewArrivalBeanIds) {
+      if (latestNewArrivalBeanIds.length === 0) return 0;
+      query = query.in('roaster_bean_id', latestNewArrivalBeanIds);
+    } else {
+      const cutoff = getNewArrivalCutoff();
+      query = isNewArrival ? query.gte('updated_at', cutoff) : query.lt('updated_at', cutoff);
+    }
   }
 
   const { count, error } = await query;
@@ -644,13 +703,18 @@ export async function listBeansV1({
   let total: number;
 
   if (hasSupabaseServerEnv) {
+    const latestNewArrivalBeanIds = filters.isNewArrival ? await getLatestSyncedNewArrivalBeanIds() : undefined;
     const [ids, count] = await Promise.all([
       queryBeanIdsFromView({
         ...filters,
         limit: pageSize,
         offset,
+        latestNewArrivalBeanIds,
       }),
-      countBeanIdsFromView(filters),
+      countBeanIdsFromView({
+        ...filters,
+        latestNewArrivalBeanIds,
+      }),
     ]);
     beans = await getCatalogBeansByIds(ids);
     total = count;

@@ -1,76 +1,122 @@
 # Directory Structure
 
-> 本项目是 Monorepo，前端分为两个 app：`apps/web`（Next.js）和 `apps/miniprogram`（Taro）。
+> 当前仓库是 monorepo。前端代码主要分布在 `apps/web`、`apps/miniprogram` 和 `packages/shared-types`。
 
 ---
 
-## Web 端（apps/web）
+## Web (`apps/web`)
 
 ```
 apps/web/
-├── app/                        # Next.js App Router
-│   ├── layout.tsx              # 根布局
-│   ├── globals.css             # 全局样式（CSS 变量 + Tailwind）
-│   ├── page.tsx                # 首页（服务端组件）
-│   ├── HomePageClient.tsx      # 首页客户端组件
+├── app/
+│   ├── layout.tsx
+│   ├── globals.css
+│   ├── page.tsx
+│   ├── HomePageClient.tsx
 │   ├── all-beans/
 │   │   ├── page.tsx
 │   │   └── AllBeansClient.tsx
-│   └── api/v1/                 # 小程序 API 路由【待开发】
-├── components/                 # Web 专用组件
-├── lib/                        # 工具库
-│   ├── catalog.ts              # 核心数据访问层（Supabase 查询）
-│   ├── supabase.ts             # Supabase 客户端（browser + server）
-│   ├── types.ts                # 数据库实体类型
-│   ├── sales.ts                # 销量格式化
-│   └── server/                 # 仅服务端使用的模块
-│       └── api-helpers.ts      # API 响应格式化工具
-└── db/sql/                     # 数据库迁移 SQL
+│   ├── geo-preview/
+│   ├── geo-compare/
+│   ├── api/
+│   │   ├── health/route.ts
+│   │   ├── beans/route.ts
+│   │   ├── roasters/route.ts
+│   │   └── v1/**
+├── components/
+│   ├── AddBeanForm.tsx
+│   └── atlas/
+│       ├── MapSilhouette.tsx
+│       └── OriginAtlasExplorer.tsx
+├── lib/
+│   ├── catalog.ts
+│   ├── supabase.ts
+│   ├── sales.ts
+│   ├── sample-data.ts
+│   ├── geo-data*.ts
+│   ├── types.ts
+│   └── server/
+│       ├── api-helpers.ts
+│       ├── api-primitives.ts
+│       ├── public-api.ts
+│       ├── favorites-api.ts
+│       ├── auth-*.ts
+│       ├── wechat-auth.ts
+│       └── admin-*.ts
+├── scripts/
+├── tests/
+└── db/
+    ├── sql/
+    └── migrations/
 ```
 
-## 小程序端（apps/miniprogram）
+### Placement Rules
+
+- 页面入口放 `app/**/page.tsx`
+- 页面专属客户端壳放同目录或 `app/*Client.tsx`
+- 可复用视图组件放 `components/`
+- 公开目录数据访问放 `lib/catalog.ts`
+- API 参数解析 / 鉴权 / envelope helper 放 `lib/server/`
+- CLI / smoke / env 检查脚本放 `scripts/`
+- 单元测试放 `tests/**/*.test.ts`
+
+---
+
+## Miniprogram (`apps/miniprogram/src`)
 
 ```
 apps/miniprogram/src/
 ├── app.tsx / app.config.ts / app.scss
 ├── pages/
-│   ├── index/          # 首页
-│   ├── all-beans/      # 全部咖啡豆
-│   ├── bean-detail/    # 豆款详情
-│   ├── roasters/       # 烘焙商列表
-│   ├── roaster-detail/ # 烘焙商详情
-│   └── profile/        # 个人中心
-├── components/         # 小程序专用组件（每个组件一个目录）
-│   └── BeanCard/
-│       ├── index.tsx
-│       └── index.scss
+│   ├── index/
+│   ├── all-beans/
+│   ├── bean-detail/
+│   ├── roasters/
+│   ├── roaster-detail/
+│   ├── profile/
+│   └── debug/
+├── components/
+│   ├── BeanCard/
+│   ├── RoasterCard/
+│   ├── SearchBar/
+│   ├── FilterBar/
+│   ├── EmptyState/
+│   └── Icon/
 ├── services/
-│   └── api.ts          # 唯一 API 入口
+│   └── api.ts
 ├── types/
-│   └── index.ts        # 所有类型定义
+│   ├── index.ts
+│   └── global.d.ts
 └── utils/
-    ├── storage.ts
+    ├── api-config.ts
     ├── auth.ts
-    └── formatters.ts
+    ├── storage.ts
+    ├── formatters.ts
+    ├── origin-atlas.ts
+    └── external-links.ts
 ```
 
-## 共享包（packages/）
+### Placement Rules
+
+- 页面一律放 `pages/<name>/index.tsx`
+- Taro 组件一律一个目录一个组件：`index.tsx` + `index.scss`
+- API 调用集中在 `services/api.ts`
+- runtime API 地址覆盖逻辑只放 `utils/api-config.ts`
+- token / 收藏 / 历史记录都走 `utils/storage.ts`
+
+---
+
+## Shared Packages (`packages/*`)
 
 ```
 packages/
-├── shared-types/       # API DTO、响应信封、分页类型
-├── domain/             # 纯领域逻辑（骨架，待填充）
-└── api-client/         # 跨平台 fetch 客户端（骨架，待填充）
+├── shared-types/   # 当前权威 DTO / response / query param 契约
+├── api-client/     # 预备中的跨端 client，当前只部分实现
+└── domain/         # 预备中的纯领域逻辑，当前只部分实现
 ```
 
-**规则**：`packages/*` 禁止引入 `next/*` 或 `@tarojs/*`。
+### Rules
 
-## 命名约定
-
-| 类型 | 规则 | 示例 |
-|------|------|------|
-| 页面文件 | `index.tsx` | `pages/bean-detail/index.tsx` |
-| 客户端组件 | `*Client.tsx` | `HomePageClient.tsx` |
-| 组件目录 | PascalCase | `components/BeanCard/` |
-| 工具函数 | camelCase | `formatSalesCount` |
-| 类型接口 | PascalCase | `CoffeeBean`, `RoasterDetail` |
+- `packages/*` 禁止引入 `next/*`、`next/server`、`@tarojs/*`
+- 当前如果只是改 API 契约，先改 `shared-types`
+- 不要因为有 `api-client` / `domain` 目录就把新逻辑强行挪过去；只有真正跨端、已抽象稳定的内容才迁移

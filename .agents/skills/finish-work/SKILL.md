@@ -18,144 +18,107 @@ Before submitting or committing, use this checklist to ensure work completeness.
 
 ### 1. Code Quality
 
+Run the commands that match the files you changed:
+
 ```bash
-# Must pass
 pnpm lint
-pnpm type-check
-pnpm test
+pnpm typecheck
+pnpm --filter coffeestories-webdb test
 ```
 
-- [ ] `pnpm lint` passes with 0 errors?
-- [ ] `pnpm type-check` passes with no type errors?
-- [ ] Tests pass?
-- [ ] No `console.log` statements (use logger)?
-- [ ] No non-null assertions (the `x!` operator)?
-- [ ] No `any` types?
+Additional checks when relevant:
+
+```bash
+pnpm --filter @coffeeatlas/miniprogram typecheck
+cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
+```
+
+- [ ] `pnpm lint` passes?
+- [ ] `pnpm typecheck` passes?
+- [ ] Web backend/helper changes -> `pnpm --filter coffeestories-webdb test` passes?
+- [ ] Miniprogram changes -> `pnpm --filter @coffeeatlas/miniprogram typecheck` passes?
+- [ ] API changes -> smoke/manual verification done?
+- [ ] No leftover debug logging?
+- [ ] No unnecessary non-null assertions (`x!`) or `any` types?
 
 ### 1.5. Test Coverage
 
 Check if your change needs new or updated tests (see `.trellis/spec/unit-test/conventions.md`):
 
-- [ ] New pure function → unit test added?
-- [ ] Bug fix → regression test added in `test/regression.test.ts`?
-- [ ] Changed init/update behavior → integration test added/updated?
-- [ ] No logic change (text/data only) → no test needed
+- [ ] New pure function -> unit test added?
+- [ ] Bug fix in parser/normalizer/helper -> regression test added?
+- [ ] API contract change -> helper test and smoke/manual check updated?
+- [ ] No logic change (copy/style only) -> no new test needed?
 
 ### 2. Code-Spec Sync
 
-**Code-Spec Docs**:
 - [ ] Does `.trellis/spec/backend/` need updates?
-  - New patterns, new modules, new conventions
 - [ ] Does `.trellis/spec/frontend/` need updates?
-  - New components, new hooks, new patterns
+- [ ] Does `.trellis/spec/unit-test/` need updates?
 - [ ] Does `.trellis/spec/guides/` need updates?
-  - New cross-layer flows, lessons from bugs
 
-**Key Question**: 
-> "If I fixed a bug or discovered something non-obvious, should I document it so future me (or others) won't hit the same issue?"
-
-If YES -> Update the relevant code-spec doc.
+Key question:
+> If I changed a real contract, uncovered a trap, or confirmed a repo-specific rule, did I write it down in Trellis?
 
 ### 2.5. Code-Spec Hard Block (Infra/Cross-Layer)
 
-If this change touches infra or cross-layer contracts, this is a blocking checklist:
+If the change touches infra or cross-layer contracts:
 
-- [ ] Spec content is executable (real signatures/contracts), not principle-only text
-- [ ] Includes file path + command/API name + payload field names
-- [ ] Includes validation and error matrix
-- [ ] Includes Good/Base/Bad cases
-- [ ] Includes required tests and assertion points
-
-**Block Rule**:
-In pipeline mode, the finish agent will automatically detect and execute spec updates when gaps are found.
-If running this checklist manually, ensure spec sync is complete before committing — run `/trellis:update-spec` if needed.
+- [ ] Spec content is executable, not abstract only
+- [ ] File paths / API names / payload fields are documented
+- [ ] Validation and error behavior are documented
+- [ ] Good/base/bad cases are documented when useful
+- [ ] Required verification steps are documented
 
 ### 3. API Changes
 
 If you modified API endpoints:
 
-- [ ] Input schema updated?
-- [ ] Output schema updated?
-- [ ] API documentation updated?
-- [ ] Client code updated to match?
+- [ ] Request params/body contract updated?
+- [ ] Response envelope and fields updated?
+- [ ] Consumer code updated (`apps/miniprogram`, `packages/shared-types`, etc.)?
+- [ ] Legacy compatibility considered if touching `/api/beans` or `/api/roasters`?
 
 ### 4. Database Changes
 
-If you modified database schema:
+If you modified database schema or queries:
 
-- [ ] Migration file created?
-- [ ] Schema file updated?
-- [ ] Related queries updated?
-- [ ] Seed data updated (if applicable)?
+- [ ] Migration or SQL update added in the right place?
+- [ ] Related query helpers updated?
+- [ ] Fallback behavior still correct?
+- [ ] Sensitive env usage still server-only?
 
 ### 5. Cross-Layer Verification
 
 If the change spans multiple layers:
 
-- [ ] Data flows correctly through all layers?
-- [ ] Error handling works at each boundary?
-- [ ] Types are consistent across layers?
-- [ ] Loading states handled?
+- [ ] Types are consistent across route/helper/client layers?
+- [ ] Error handling is consistent across boundaries?
+- [ ] Pagination/search/filter params stay aligned?
+- [ ] Required manual path was exercised?
 
 ### 6. Manual Testing
 
-- [ ] Feature works in browser/app?
-- [ ] Edge cases tested?
+- [ ] Feature works in browser / mini-program / script runtime?
 - [ ] Error states tested?
-- [ ] Works after page refresh?
+- [ ] Empty/loading states checked if UI changed?
+- [ ] Works after refresh or re-entry?
 
 ---
 
 ## Quick Check Flow
 
 ```bash
-# 1. Code checks
-pnpm lint && pnpm type-check
+pnpm lint && pnpm typecheck
 
-# 2. View changes
 git status
 git diff --name-only
-
-# 3. Based on changed files, check relevant items above
 ```
 
----
-
-## Common Oversights
-
-| Oversight | Consequence | Check |
-|-----------|-------------|-------|
-| Code-spec docs not updated | Others don't know the change | Check .trellis/spec/ |
-| Spec text is abstract only | Easy regressions in infra/cross-layer changes | Require signature/contract/matrix/cases/tests |
-| Migration not created | Schema out of sync | Check db/migrations/ |
-| Types not synced | Runtime errors | Check shared types |
-| Tests not updated | False confidence | Run full test suite |
-| Console.log left in | Noisy production logs | Search for console.log |
-
----
-
-## Relationship to Other Commands
-
-```
-Development Flow:
-  Write code -> Test -> /trellis:finish-work -> git commit -> /trellis:record-session
-                          |                              |
-                   Ensure completeness              Record progress
-                   
-Debug Flow:
-  Hit bug -> Fix -> /trellis:break-loop -> Knowledge capture
-                       |
-                  Deep analysis
-```
-
-- `/trellis:finish-work` - Check work completeness (this command)
-- `/trellis:record-session` - Record session and commits
-- `/trellis:break-loop` - Deep analysis after debugging
+Then run the extra package-specific commands that match the changed files.
 
 ---
 
 ## Core Principle
 
-> **Delivery includes not just code, but also documentation, verification, and knowledge capture.**
-
-Complete work = Code + Docs + Tests + Verification
+> Complete work = Code + Verification + Updated Trellis knowledge.

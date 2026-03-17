@@ -35,6 +35,37 @@ function buildAtlasStyle(accent: string, outline: string): string {
   return `--atlas-card-accent:${accent};--atlas-card-outline:${outline};`;
 }
 
+interface AtlasSilhouetteProps {
+  path: string;
+  viewBox: string;
+  color: string;
+  frame: OriginAtlasContinent['silhouetteFrame'];
+  shellClassName: string;
+  imageClassName: string;
+  detail?: boolean;
+}
+
+function AtlasSilhouette({
+  path,
+  viewBox,
+  color,
+  frame,
+  shellClassName,
+  imageClassName,
+  detail = false,
+}: AtlasSilhouetteProps): ReactElement {
+  return (
+    <View className={`${shellClassName} atlas-silhouette atlas-silhouette--${frame}`}>
+      <Image
+        src={makeAtlasSvgUri(path, viewBox, color, detail)}
+        className={`${imageClassName} atlas-silhouette__image`}
+        mode="aspectFit"
+        lazyLoad
+      />
+    </View>
+  );
+}
+
 function matchesAtlasQuery(country: OriginAtlasCountry, stats: CountryAtlasStats, query: string): boolean {
   if (!query) return true;
 
@@ -175,14 +206,15 @@ export default function Index(): ReactElement {
                         hoverStayTime={70}
                         onClick={() => setSelectedContinent(continent.id)}
                       >
-                        <View className="continent-card__map-shell">
-                          <Image
-                            src={makeAtlasSvgUri(continent.path, continent.color, true)}
-                            className="continent-card__map"
-                            mode="aspectFit"
-                            lazyLoad
-                          />
-                        </View>
+                        <AtlasSilhouette
+                          path={continent.path}
+                          viewBox={continent.viewBox}
+                          color={continent.color}
+                          frame={continent.silhouetteFrame}
+                          shellClassName="continent-card__map-shell"
+                          imageClassName="continent-card__map"
+                          detail
+                        />
                         <View className="continent-card__body">
                           <Text className="continent-card__kicker">{continent.editorialLabel}</Text>
                           <Text className="continent-card__name">{continent.name}</Text>
@@ -219,14 +251,15 @@ export default function Index(): ReactElement {
             {activeContinent && !activeCountry ? (
               <View className="atlas__country-index">
                 <View className="continent-panel" style={buildAtlasStyle(activeContinent.color, activeContinent.color)}>
-                  <View className="continent-panel__map-shell">
-                    <Image
-                      src={makeAtlasSvgUri(activeContinent.path, activeContinent.color, true)}
-                      className="continent-panel__map"
-                      mode="aspectFit"
-                      lazyLoad
-                    />
-                  </View>
+                  <AtlasSilhouette
+                    path={activeContinent.path}
+                    viewBox={activeContinent.viewBox}
+                    color={activeContinent.color}
+                    frame={activeContinent.silhouetteFrame}
+                    shellClassName="continent-panel__map-shell"
+                    imageClassName="continent-panel__map"
+                    detail
+                  />
                   <Text className="continent-panel__kicker">{activeContinent.editorialLabel}</Text>
                   <Text className="continent-panel__title">{activeContinent.name} Index</Text>
                   <Text className="continent-panel__description">{activeContinent.description}</Text>
@@ -246,14 +279,15 @@ export default function Index(): ReactElement {
                           hoverStayTime={70}
                           onClick={() => setSelectedCountry(country.name)}
                         >
-                          <View className="country-card__map-shell">
-                            <Image
-                              src={makeAtlasSvgUri(country.path, country.color, true)}
-                              className="country-card__map"
-                              mode="aspectFit"
-                              lazyLoad
-                            />
-                          </View>
+                          <AtlasSilhouette
+                            path={country.path}
+                            viewBox={country.viewBox}
+                            color={country.color}
+                            frame={country.silhouetteFrame}
+                            shellClassName="country-card__map-shell"
+                            imageClassName="country-card__map"
+                            detail
+                          />
                           <View className="country-card__body">
                             <Text className="country-card__kicker">{country.editorialLabel}</Text>
                             <Text className="country-card__name">{country.name}</Text>
@@ -280,14 +314,15 @@ export default function Index(): ReactElement {
             {activeCountry ? (
               <View className="atlas__country-detail" style={buildAtlasStyle(activeCountry.accent, activeCountry.color)}>
                 <View className="detail-hero">
-                  <View className="detail-hero__map-shell">
-                    <Image
-                      src={makeAtlasSvgUri(activeCountry.path, activeCountry.color, true)}
-                      className="detail-hero__map"
-                      mode="aspectFit"
-                      lazyLoad
-                    />
-                  </View>
+                  <AtlasSilhouette
+                    path={activeCountry.path}
+                    viewBox={activeCountry.viewBox}
+                    color={activeCountry.color}
+                    frame={activeCountry.silhouetteFrame}
+                    shellClassName="detail-hero__map-shell"
+                    imageClassName="detail-hero__map"
+                    detail
+                  />
                   <View className="detail-hero__body">
                     <Text className="detail-hero__kicker">{activeContinent?.name}</Text>
                     <Text className="detail-hero__title">{activeCountry.name}</Text>

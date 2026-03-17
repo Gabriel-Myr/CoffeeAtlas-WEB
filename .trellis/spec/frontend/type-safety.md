@@ -2,98 +2,119 @@
 
 ---
 
-## TypeScript 配置
+## Canonical Contract Layer
 
-- `strict: true`（所有项目）
-- `noUncheckedIndexedAccess: true`（packages/shared-types）
-- 禁止使用 `any`，用 `unknown` + 类型守卫代替
+`@coffee-atlas/shared-types` 是当前 v1 API 的主契约层。
+
+这里维护：
+
+- `ApiResponse<T>` / `ApiError`
+- `PaginatedResult<T>` / `PageInfo`
+- `CatalogBeanCard` / `CatalogBeanDetail`
+- `RoasterSummary` / `RoasterDetail`
+- favorites DTO
+- `BeanSort`、`BeanDiscoverContinent`、`RoasterFeature` 等 query enum
+
+如果 `/api/v1/*` 改了字段，先改 shared-types，再改实现和 consumer。
 
 ---
 
-## 类型分层
+## Web Type Layers
 
-### 1. 数据库实体（apps/web/lib/types.ts）
+### 1. Internal app models (`apps/web/lib/catalog.ts`)
 
-直接映射 Supabase 表结构：
+`CoffeeBean`、`Roaster` 属于 Web 内部读取模型：
+
+- 来源：Supabase + sample fallback
+- 用途：页面渲染、v1 DTO 组装、favorites hydration
+- 不是对外契约层
+
+### 2. API DTO (`packages/shared-types/src/**`)
+
+v1 route 出口必须尽量对齐 shared-types，而不是直接返回 `lib/catalog.ts` 原型。
+
+### 3. Local helper/input types
+
+比如：
+
+- `JwtPayload`
+- `CreateAdminBeanInput`
+- Taro 组件 props
+
+这类类型可以留在本地文件，不必全部提升到 shared-types。
+
+---
+
+## Miniprogram Types
+
+当前小程序仍保留 `apps/miniprogram/src/types/index.ts` 这份本地类型镜像，主要原因：
+
+- `packages/api-client` 尚未成为主运行时 client
+- 小程序直接调用 `src/services/api.ts`
+
+规则：
+
+- 改 v1 契约时，必须同时检查 `packages/shared-types` 和 `apps/miniprogram/src/types/index.ts`
+- 如果字段只在小程序本地 storage/UI 中使用，可以保留在小程序本地类型
+- 不要让 shared-types 与 miniprogram 本地类型长期悄悄分叉
+
+---
+
+## Row Shape Never Leaks Into UI
+
+数据库 row 在 Web server 侧保持 snake_case，本地模型 / props / DTO 用 camelCase。
+
+### Good
 
 ```ts
-export interface CoffeeBean {
-  id: string;
-  name: string;
-  roaster_id: string;
-  origin: string | null;
-  process: string | null;
-  price: number | null;
-  sales_count: number | null;
+type RoasterBeanRow = {
+  price_amount: number | string | null;
   image_url: string | null;
-  created_at: string;
+};
+
+function mapCoffeeBean(row: RoasterBeanRow): CoffeeBean {
+  return {
+    price: toNumber(row.price_amount),
+    imageUrl: row.image_url,
+  };
 }
 ```
 
-### 2. API DTO（packages/shared-types）
-
-跨平台共享，用于 API 请求/响应：
+### Bad
 
 ```ts
-// packages/shared-types/src/index.ts
-export interface V1Response<T> {
-  data: T;
-  error: null;
-}
-
-export interface V1ErrorResponse {
-  data: null;
-  error: { code: string; message: string };
-}
-
-export interface PaginatedResult<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
-}
-```
-
-### 3. 小程序本地类型（apps/miniprogram/src/types/index.ts）
-
-```ts
-export interface CoffeeBean {
-  id: string;
-  name: string;
-  roasterName: string;
-  origin: string | null;
-  process: string | null;
-  price: number | null;
-  salesCount: number | null;
-  imageUrl: string | null;
-}
-
-export interface AuthUser {
-  id: string;
-  openid: string;
-  nickname: string | null;
-  avatarUrl: string | null;
-}
-
-export interface LoginResponse {
-  token: string;
-  user: AuthUser;
-}
+return {
+  price_amount: row.price_amount,
+  image_url: row.image_url,
+};
 ```
 
 ---
 
-## API 响应类型守卫
+## Preferred Narrowing Patterns
+
+- 优先 `typeof` / `Array.isArray` / type predicate
+- 尽量避免 `as any`
+- Supabase 返回值需要 cast 时，在 query 边界立即 cast，不要让松散类型往下游传
+
+### Good
 
 ```ts
-function isV1Error(res: unknown): res is V1ErrorResponse {
-  return typeof res === 'object' && res !== null && 'error' in res && (res as any).error !== null;
-}
+const ids = rows
+  .map((row) => row.roaster_bean_id)
+  .filter((id): id is string => typeof id === 'string' && id.length > 0);
 ```
 
-## 禁止模式
+### Bad
 
-- 禁止 `as any`（用 `as unknown as T` 并注释原因）
-- 禁止在 API 响应处理中跳过类型检查
-- 禁止在 `packages/*` 中使用平台特定类型（`NextRequest`、`TaroElement` 等）
+```ts
+const ids = rows.map((row) => row.roaster_bean_id as string);
+```
+
+---
+
+## Platform Type Boundaries
+
+- Next.js 类型只留在 `apps/web/**`
+- Taro 类型只留在 `apps/miniprogram/**`
+- `packages/*` 保持平台无关

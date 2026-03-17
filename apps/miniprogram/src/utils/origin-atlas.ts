@@ -1,4 +1,9 @@
 import type { CoffeeBean } from '../types';
+import {
+  type AtlasSilhouetteFrame,
+  GENERATED_CONTINENT_SHAPES,
+  GENERATED_COUNTRY_SHAPES,
+} from './origin-atlas-shapes.generated';
 
 export interface OriginAtlasContinent {
   id: 'asia' | 'africa' | 'americas';
@@ -6,6 +11,8 @@ export interface OriginAtlasContinent {
   icon: string;
   color: string;
   path: string;
+  viewBox: string;
+  silhouetteFrame: AtlasSilhouetteFrame;
   editorialLabel: string;
   description: string;
   cardVariant: 'split' | 'column' | 'panorama';
@@ -18,6 +25,8 @@ export interface OriginAtlasCountry {
   continentId: OriginAtlasContinent['id'];
   color: string;
   path: string;
+  viewBox: string;
+  silhouetteFrame: AtlasSilhouetteFrame;
   aliases: string[];
   flavorLabel: string;
   editorialLabel: string;
@@ -37,40 +46,13 @@ export interface CountryAtlasStats {
   beans: CoffeeBean[];
 }
 
-const CONTINENT_PATHS: Record<OriginAtlasContinent['id'], string> = {
-  americas:
-    'M 32,10 C 38,8 45,7 52,9 C 58,11 62,15 64,20 C 66,25 65,30 62,34 C 59,38 57,42 56,47 C 55,52 56,57 59,62 C 62,67 66,71 68,76 C 70,81 69,86 66,90 C 63,94 58,96 53,97 C 48,98 43,97 39,94 C 35,91 33,87 32,83 C 31,79 32,75 34,71 C 36,67 37,63 36,59 C 35,55 33,51 31,48 C 29,45 27,42 26,38 C 25,34 25,30 27,26 C 29,22 31,18 32,14 C 32,12 32,11 32,10 Z',
-  africa:
-    'M 35,15 C 43,12 52,11 61,12 C 69,13 76,16 81,21 C 86,26 89,33 90,41 C 91,49 89,57 85,64 C 81,71 76,77 70,82 C 66,86 62,89 57,91 C 52,93 47,93 43,91 C 39,89 37,85 36,81 C 35,77 35,73 36,69 C 37,65 37,61 36,57 C 35,53 33,49 31,46 C 29,43 27,40 26,36 C 25,32 25,28 26,24 C 27,20 29,17 32,15 C 33,15 34,15 35,15 Z',
-  asia:
-    'M 38,12 C 47,9 57,7 67,8 C 76,9 85,12 92,17 C 97,21 100,27 100,34 C 100,41 97,48 92,54 C 87,60 81,65 74,69 C 69,72 65,76 62,81 C 59,86 57,91 54,95 C 51,98 47,99 43,98 C 39,97 37,94 36,90 C 35,86 35,82 36,78 C 37,74 38,70 37,66 C 36,62 34,58 32,55 C 30,52 28,49 26,46 C 24,43 23,39 23,35 C 23,31 24,27 26,23 C 28,19 31,16 35,13 C 36,13 37,12 38,12 Z',
-};
-
-const COUNTRY_PATHS: Record<string, string> = {
-  云南: 'M 45,28 C 52,26 60,25 67,27 C 73,29 78,33 81,39 C 83,45 83,52 80,58 C 77,64 72,68 66,71 C 60,73 54,73 49,71 C 44,69 41,65 39,60 C 37,55 37,49 39,44 C 41,39 43,34 45,30 C 45,29 45,28 45,28 Z',
-  印尼: 'M 32,48 C 42,45 54,43 66,44 C 77,45 87,48 94,53 C 99,58 101,65 100,72 C 99,79 95,85 89,89 C 83,92 75,94 67,94 C 59,94 52,92 46,89 C 40,86 36,81 34,75 C 32,69 32,62 33,56 C 33,52 33,50 32,48 Z',
-  越南: 'M 52,32 C 56,31 61,30 65,31 C 68,32 71,34 73,37 C 74,40 75,44 74,48 C 73,52 72,56 70,59 C 68,62 65,64 62,66 C 59,67 56,68 53,67 C 50,66 48,64 47,61 C 46,58 46,54 47,50 C 48,46 49,42 50,38 C 51,35 51,33 52,32 Z',
-  泰国: 'M 48,35 C 54,33 61,32 68,33 C 74,34 79,37 82,42 C 84,47 85,53 83,59 C 81,64 78,68 74,71 C 70,73 66,74 62,74 C 58,74 54,73 51,71 C 48,69 46,66 45,62 C 44,58 44,53 45,48 C 46,43 47,39 48,36 C 48,35 48,35 48,35 Z',
-  印度: 'M 40,22 C 50,19 61,18 72,19 C 81,20 89,24 94,31 C 98,38 100,46 98,54 C 96,62 92,69 86,75 C 80,80 73,83 65,84 C 57,85 50,84 45,81 C 40,78 37,73 35,68 C 33,63 33,57 34,51 C 35,45 37,39 40,33 C 40,28 40,25 40,22 Z',
-  也门: 'M 54,40 C 60,38 67,37 74,38 C 80,39 85,42 88,47 C 90,52 90,58 87,63 C 84,68 79,71 73,73 C 67,74 61,74 56,72 C 51,70 48,66 47,61 C 46,56 47,51 50,46 C 51,43 53,41 54,40 Z',
-  埃塞俄比亚: 'M 44,30 C 53,27 63,26 73,28 C 81,30 88,35 93,42 C 96,49 97,57 95,65 C 93,72 88,78 82,82 C 76,85 69,87 62,86 C 55,85 49,82 45,77 C 41,72 39,66 39,60 C 39,54 41,48 43,42 C 43,37 44,33 44,30 Z',
-  肯尼亚: 'M 52,44 C 58,42 65,41 72,42 C 78,43 83,46 86,51 C 88,56 89,62 87,68 C 85,73 81,77 76,80 C 71,82 65,83 59,82 C 53,81 49,78 47,73 C 45,68 45,62 47,56 C 48,51 50,47 52,45 C 52,44 52,44 52,44 Z',
-  卢旺达: 'M 56,50 C 60,49 65,48 69,49 C 72,50 75,52 76,55 C 77,58 77,62 76,65 C 75,68 73,70 70,72 C 67,73 64,74 61,73 C 58,72 56,70 55,67 C 54,64 54,60 55,56 C 55,53 56,51 56,50 Z',
-  坦桑尼亚: 'M 48,48 C 58,45 69,44 80,46 C 89,48 97,52 102,59 C 106,66 107,74 105,82 C 103,89 98,95 92,99 C 86,102 79,103 72,102 C 65,101 59,98 55,93 C 51,88 49,82 49,75 C 49,68 49,61 50,55 C 50,51 49,49 48,48 Z',
-  乌干达: 'M 54,46 C 59,45 65,44 70,45 C 74,46 78,48 80,52 C 82,56 82,61 80,65 C 78,69 75,72 71,74 C 67,75 63,76 59,75 C 55,74 52,72 51,68 C 50,64 50,59 51,55 C 52,51 53,48 54,46 Z',
-  墨西哥: 'M 28,24 C 38,21 50,19 62,20 C 72,21 81,25 87,32 C 91,39 93,47 91,55 C 89,62 85,68 79,73 C 73,77 66,80 59,81 C 52,82 46,80 42,76 C 38,72 36,67 35,62 C 34,57 35,52 37,47 C 37,40 35,34 32,29 C 29,26 28,25 28,24 Z',
-  危地马拉: 'M 42,34 C 46,33 51,32 55,33 C 58,34 61,36 62,39 C 63,42 63,46 61,49 C 59,52 56,54 53,55 C 50,55 47,54 45,52 C 43,50 42,47 42,44 C 42,41 42,38 42,35 C 42,34 42,34 42,34 Z',
-  洪都拉斯: 'M 46,36 C 51,35 57,34 62,35 C 66,36 70,38 72,42 C 74,46 74,51 72,55 C 70,59 67,62 63,64 C 59,65 55,66 51,65 C 47,64 45,61 44,57 C 43,53 43,49 44,45 C 45,41 45,38 46,36 Z',
-  尼加拉瓜: 'M 48,40 C 53,39 59,38 64,39 C 68,40 72,42 74,46 C 76,50 76,55 74,59 C 72,63 69,66 65,68 C 61,69 57,70 53,69 C 49,68 47,65 46,61 C 45,57 45,52 46,47 C 47,44 48,41 48,40 Z',
-  哥斯达黎加: 'M 50,44 C 54,43 58,42 62,43 C 65,44 68,46 69,49 C 70,52 70,56 68,59 C 66,62 64,64 61,65 C 58,66 55,66 53,65 C 51,64 50,61 49,58 C 48,55 49,51 50,48 C 50,46 50,45 50,44 Z',
-  巴拿马: 'M 52,48 C 55,47 59,46 62,47 C 65,48 67,50 68,53 C 69,56 68,59 66,61 C 64,63 61,64 58,64 C 55,64 53,63 52,60 C 51,57 51,54 52,51 C 52,50 52,49 52,48 Z',
-  萨尔瓦多: 'M 48,38 C 52,37 56,36 60,37 C 63,38 65,40 66,43 C 67,46 66,49 64,51 C 62,53 59,54 56,54 C 53,54 51,52 50,49 C 49,46 49,43 50,40 C 49,39 48,38 48,38 Z',
-  哥伦比亚: 'M 38,44 C 46,42 55,41 64,43 C 72,45 79,50 84,57 C 87,64 88,72 86,80 C 84,87 79,93 73,97 C 67,100 60,101 54,100 C 48,99 43,96 40,91 C 37,86 36,80 37,74 C 38,68 39,62 40,56 C 39,51 38,47 38,44 Z',
-  巴西: 'M 42,50 C 54,47 68,46 82,48 C 94,50 104,54 111,61 C 116,68 118,77 116,86 C 114,94 109,101 102,106 C 95,110 86,112 77,112 C 68,112 60,110 54,106 C 48,102 44,96 42,89 C 40,82 40,74 41,66 C 41,59 42,54 42,51 C 42,50 42,50 42,50 Z',
-  秘鲁: 'M 35,54 C 42,52 50,51 58,52 C 65,53 71,56 75,61 C 78,66 79,72 77,78 C 75,83 71,87 66,90 C 61,92 56,93 51,92 C 46,91 42,88 40,84 C 38,80 37,75 38,70 C 39,65 40,60 40,56 C 38,55 36,54 35,54 Z',
-  厄瓜多尔: 'M 38,50 C 43,49 48,48 53,49 C 57,50 60,52 62,56 C 63,60 63,64 61,68 C 59,71 56,73 53,74 C 50,74 47,73 45,71 C 43,69 42,66 42,63 C 42,60 42,57 43,54 C 42,52 40,51 38,50 Z',
-  玻利维亚: 'M 45,60 C 52,58 60,57 68,58 C 75,59 81,62 85,67 C 88,72 89,78 87,84 C 85,89 81,93 76,96 C 71,98 65,99 59,98 C 53,97 49,94 47,89 C 45,84 45,78 46,72 C 46,67 46,63 45,61 C 45,60 45,60 45,60 Z',
-};
+function getCountryShape(name: string) {
+  const shape = GENERATED_COUNTRY_SHAPES[name];
+  if (!shape) {
+    throw new Error(`Missing origin atlas shape for country: ${name}`);
+  }
+  return shape;
+}
 
 export const ORIGIN_ATLAS_CONTINENTS: OriginAtlasContinent[] = [
   {
@@ -78,18 +60,22 @@ export const ORIGIN_ATLAS_CONTINENTS: OriginAtlasContinent[] = [
     name: '亚洲',
     icon: '🌏',
     color: '#D86F4C',
-    path: CONTINENT_PATHS.asia,
+    path: GENERATED_CONTINENT_SHAPES.asia.path,
+    viewBox: GENERATED_CONTINENT_SHAPES.asia.viewBox,
+    silhouetteFrame: GENERATED_CONTINENT_SHAPES.asia.silhouetteFrame,
     editorialLabel: '高地、岛链与季风山谷',
     description: '从云南山地到印尼群岛，酸质、香料感与甜感在湿热海风里不断切换。',
     cardVariant: 'split',
-    countries: ['云南', '印尼', '越南', '泰国', '印度', '也门'],
+    countries: ['云南', '印尼', '越南', '也门'],
   },
   {
     id: 'africa',
     name: '非洲',
     icon: '🌍',
     color: '#D6A85C',
-    path: CONTINENT_PATHS.africa,
+    path: GENERATED_CONTINENT_SHAPES.africa.path,
+    viewBox: GENERATED_CONTINENT_SHAPES.africa.viewBox,
+    silhouetteFrame: GENERATED_CONTINENT_SHAPES.africa.silhouetteFrame,
     editorialLabel: '花香基准与东非高原',
     description: '东非高原以清晰花香、莓果调和结构感著称，是精品咖啡风味的经典坐标。',
     cardVariant: 'column',
@@ -100,7 +86,9 @@ export const ORIGIN_ATLAS_CONTINENTS: OriginAtlasContinent[] = [
     name: '美洲',
     icon: '🌎',
     color: '#6F9F87',
-    path: CONTINENT_PATHS.americas,
+    path: GENERATED_CONTINENT_SHAPES.americas.path,
+    viewBox: GENERATED_CONTINENT_SHAPES.americas.viewBox,
+    silhouetteFrame: GENERATED_CONTINENT_SHAPES.americas.silhouetteFrame,
     editorialLabel: '火山链、雨林与安第斯山脉',
     description: '从中美洲火山土到南美山脉，坚果、巧克力与热带水果在海拔差中形成层次。',
     cardVariant: 'panorama',
@@ -110,7 +98,7 @@ export const ORIGIN_ATLAS_CONTINENTS: OriginAtlasContinent[] = [
 
 const continentColorMap = new Map(ORIGIN_ATLAS_CONTINENTS.map((continent) => [continent.id, continent.color]));
 
-const COUNTRY_META: Array<Omit<OriginAtlasCountry, 'color' | 'path'>> = [
+const COUNTRY_META: Array<Omit<OriginAtlasCountry, 'color' | 'path' | 'viewBox' | 'silhouetteFrame'>> = [
   {
     id: 'yunnan',
     name: '云南',
@@ -143,28 +131,6 @@ const COUNTRY_META: Array<Omit<OriginAtlasCountry, 'color' | 'path'>> = [
     accent: '#DA7E5E',
     layoutVariant: 'coast',
     notableRegions: ['大叻', '林同', '山罗'],
-  },
-  {
-    id: 'thailand',
-    name: '泰国',
-    continentId: 'asia',
-    aliases: ['thailand', 'chiang mai', 'chiang rai'],
-    flavorLabel: '熟果·焦糖·明亮甜酸',
-    editorialLabel: '北部山地与热带气候交叠，常呈现圆润甜感和柔和花果香。',
-    accent: '#D98B6A',
-    layoutVariant: 'coast',
-    notableRegions: ['清迈', '清莱', 'Doi Chang'],
-  },
-  {
-    id: 'india',
-    name: '印度',
-    continentId: 'asia',
-    aliases: ['india', 'karnataka', 'bababudangiri'],
-    flavorLabel: '香料·巧克力·低调果调',
-    editorialLabel: '季风与阴影种植带来更圆润的体感，香料调是它的独特记忆点。',
-    accent: '#C96D52',
-    layoutVariant: 'plateau',
-    notableRegions: ['卡纳塔克', '巴巴布丹吉里', 'Kerala'],
   },
   {
     id: 'yemen',
@@ -366,11 +332,16 @@ const COUNTRY_META: Array<Omit<OriginAtlasCountry, 'color' | 'path'>> = [
   },
 ];
 
-export const ORIGIN_ATLAS_COUNTRIES: OriginAtlasCountry[] = COUNTRY_META.map((country) => ({
-  ...country,
-  color: continentColorMap.get(country.continentId) ?? '#6F9F87',
-  path: COUNTRY_PATHS[country.name],
-}));
+export const ORIGIN_ATLAS_COUNTRIES: OriginAtlasCountry[] = COUNTRY_META.map((country) => {
+  const shape = getCountryShape(country.name);
+  return {
+    ...country,
+    color: continentColorMap.get(country.continentId) ?? '#6F9F87',
+    path: shape.path,
+    viewBox: shape.viewBox,
+    silhouetteFrame: shape.silhouetteFrame,
+  };
+});
 
 export const ORIGIN_ATLAS_COUNTRY_MAP = new Map(ORIGIN_ATLAS_COUNTRIES.map((country) => [country.name, country]));
 export const ORIGIN_ATLAS_CONTINENT_MAP = new Map(ORIGIN_ATLAS_CONTINENTS.map((continent) => [continent.id, continent]));
@@ -477,10 +448,14 @@ export function getContinentSummary(
   );
 }
 
-export function makeAtlasSvgUri(path: string, color: string, detail = false): string {
+export function makeAtlasSvgUri(path: string, viewBox: string, color: string, detail = false): string {
+  const [, , widthValue = '120', heightValue = '120'] = viewBox.split(' ');
+  const minSide = Math.min(Number(widthValue) || 120, Number(heightValue) || 120);
+  const strokeWidth = Math.max(1.2, Number((minSide * 0.018).toFixed(2)));
+  const detailStrokeWidth = Math.max(0.8, Number((strokeWidth * 0.58).toFixed(2)));
   const overlay = detail
-    ? `<path d="${path}" fill="none" stroke="${color}" stroke-width="0.8" transform="translate(8 7) scale(0.84)" stroke-dasharray="4 4" opacity="0.45" />`
+    ? `<path d="${path}" fill="none" stroke="${color}" stroke-width="${detailStrokeWidth}" stroke-dasharray="5 5" opacity="0.22" vector-effect="non-scaling-stroke" />`
     : '';
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><path d="${path}" fill="${color}" opacity="0.14" transform="translate(0 6)" /><path d="${path}" fill="${color}22" stroke="${color}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" />${overlay}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"><path d="${path}" fill="${color}" opacity="0.1" /><path d="${path}" fill="${color}22" stroke="${color}" stroke-width="${strokeWidth}" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />${overlay}</svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }

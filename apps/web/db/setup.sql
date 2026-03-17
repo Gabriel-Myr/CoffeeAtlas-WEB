@@ -77,6 +77,20 @@ create table if not exists public.roasters (
   search_tsv tsvector
 );
 
+create table if not exists public.roaster_source_bindings (
+  id uuid primary key default gen_random_uuid(),
+  roaster_id uuid not null references public.roasters(id) on delete cascade,
+  source_id uuid not null references public.sources(id) on delete cascade,
+  canonical_shop_url text not null,
+  canonical_shop_name text not null,
+  search_keyword text,
+  is_active boolean not null default true,
+  last_synced_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (roaster_id, source_id)
+);
+
 create table if not exists public.beans (
   id uuid primary key default gen_random_uuid(),
   canonical_name text not null,
@@ -122,6 +136,8 @@ create table if not exists public.roaster_beans (
   weight_grams int check (weight_grams is null or weight_grams > 0),
   product_url text,
   image_url text,
+  source_item_id text,
+  source_sku_id text,
   status publish_status not null default 'DRAFT',
   is_in_stock boolean not null default true,
   release_at timestamptz,
@@ -259,6 +275,9 @@ create trigger trg_sources_updated_at before update on public.sources for each r
 drop trigger if exists trg_roasters_updated_at on public.roasters;
 create trigger trg_roasters_updated_at before update on public.roasters for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_roaster_source_bindings_updated_at on public.roaster_source_bindings;
+create trigger trg_roaster_source_bindings_updated_at before update on public.roaster_source_bindings for each row execute function public.set_updated_at();
+
 drop trigger if exists trg_beans_updated_at on public.beans;
 create trigger trg_beans_updated_at before update on public.beans for each row execute function public.set_updated_at();
 
@@ -293,6 +312,12 @@ create index if not exists idx_roaster_beans_roaster_id on public.roaster_beans 
 create index if not exists idx_roaster_beans_bean_id on public.roaster_beans (bean_id);
 create index if not exists idx_roaster_beans_status_stock_release on public.roaster_beans (status, is_in_stock, release_at desc);
 create index if not exists idx_roaster_beans_price_amount on public.roaster_beans (price_amount);
+create index if not exists idx_roaster_source_bindings_roaster_id on public.roaster_source_bindings (roaster_id);
+create index if not exists idx_roaster_source_bindings_source_id on public.roaster_source_bindings (source_id);
+create index if not exists idx_roaster_source_bindings_active_sync on public.roaster_source_bindings (is_active, last_synced_at desc);
+create unique index if not exists idx_roaster_beans_source_identity_unique
+on public.roaster_beans (source_id, source_item_id, coalesce(source_sku_id, ''))
+where source_id is not null and source_item_id is not null;
 
 create index if not exists idx_roasters_city_country on public.roasters (city, country_code);
 create index if not exists idx_roasters_is_public on public.roasters (is_public);
@@ -322,6 +347,7 @@ create index if not exists idx_bean_aliases_alias_trgm on public.bean_aliases us
 -- 4. Row Level Security (RLS)
 -- ============================================================================
 alter table public.sources enable row level security;
+alter table public.roaster_source_bindings enable row level security;
 alter table public.roasters enable row level security;
 alter table public.beans enable row level security;
 alter table public.bean_aliases enable row level security;
@@ -364,6 +390,9 @@ create policy bean_aliases_admin_all on public.bean_aliases for all to authentic
 
 drop policy if exists sources_admin_all on public.sources;
 create policy sources_admin_all on public.sources for all to authenticated using (public.has_platform_role(array['admin', 'editor'])) with check (public.has_platform_role(array['admin', 'editor']));
+
+drop policy if exists roaster_source_bindings_admin_all on public.roaster_source_bindings;
+create policy roaster_source_bindings_admin_all on public.roaster_source_bindings for all to authenticated using (public.has_platform_role(array['admin', 'editor'])) with check (public.has_platform_role(array['admin', 'editor']));
 
 drop policy if exists price_snapshots_admin_all on public.price_snapshots;
 create policy price_snapshots_admin_all on public.price_snapshots for all to authenticated using (public.has_platform_role(array['admin', 'editor'])) with check (public.has_platform_role(array['admin', 'editor']));

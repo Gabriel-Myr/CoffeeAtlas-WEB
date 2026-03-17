@@ -2,89 +2,77 @@
 
 ---
 
-## 代码规范
+## Required Commands
 
-### TypeScript
+按改动范围执行：
 
-- `strict: true`，禁止 `any`
-- 所有导出函数必须有明确的返回类型
-- 接口用 `interface`，联合类型用 `type`
+```bash
+pnpm lint
+pnpm typecheck
+```
 
-### 命名
+如果改了 Web server/helper 或可测试的纯函数，再跑：
 
-| 类型 | 规范 | 示例 |
-|------|------|------|
-| 组件 | PascalCase | `BeanCard` |
-| 函数/变量 | camelCase | `formatSalesCount` |
-| 常量 | UPPER_SNAKE | `BASE_URL` |
-| CSS 类 | BEM kebab-case | `bean-card__tag--sales` |
-| 文件 | 与导出一致 | `BeanCard/index.tsx` |
+```bash
+pnpm --filter coffeestories-webdb test
+```
+
+如果改了小程序，再跑：
+
+```bash
+pnpm --filter @coffeeatlas/miniprogram typecheck
+```
+
+API 改动且有可访问环境时，再补：
+
+```bash
+cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
+```
 
 ---
 
-## 测试策略
+## Frontend Reality Rules
 
-> 当前阶段以手动测试为主，自动化测试待后续补充。
+### Web
+- 优先服务端页面取数，再把 `initial*` 数据传给客户端组件
+- 交互状态留在客户端组件，不把 server-only helper 引进 `use client` 文件
+- Atlas 风格页面依赖 CSS 变量、衬线标题、地图卡片层次，不要无关任务里改成泛化模板风格
 
-### 手动测试检查项
-
-- [ ] 小程序：微信开发者工具真机预览
-- [ ] Web：`pnpm dev` 本地验证
-- [ ] API：curl 或 Postman 验证响应格式
-
-### 未来自动化测试方向
-
-- 单元测试：`vitest`（packages/domain 纯函数）
-- 集成测试：`playwright`（web 端关键流程）
-- 小程序：微信官方测试框架
+### Miniprogram
+- 所有 API 调用集中在 `src/services/api.ts`
+- API 地址覆盖与联调提醒集中在 `src/utils/api-config.ts`
+- 收藏、token、历史记录集中在 `src/utils/storage.ts`
+- 页面加载与分页要防止并发请求覆盖（参考 `all-beans/index.tsx` 的 request version 模式）
 
 ---
 
-## 性能规范
+## Manual Verification Checklist
 
-### Web 端
+### Web
+- 首页 `/` 可以正常渲染、搜索、切 tab、切主题
+- `/all-beans` 搜索与列表正常
+- 如果改了 `/api/v1/*`，至少验证一次返回 envelope 与字段结构
 
-- 服务端组件优先，减少客户端 JS
-- 图片使用 `next/image`（自动优化）
-- 列表页初始加载 ≤ 100 条
-
-### 小程序端
-
-- 图片使用 `lazyLoad` + `mode="aspectFill"`
-- 分页每次加载 20 条
-- 避免在 `useEffect` 中嵌套异步调用
+### Miniprogram
+- 页面能在微信开发者工具打开
+- API 基地址未配置时有明确提示
+- 如果改了登录/收藏/API override，要验证 storage 状态是否正确更新
 
 ---
 
-## Git 规范
+## Forbidden Patterns
 
-### Commit 格式
-
-```
-<type>(<scope>): <subject>
-
-type: feat | fix | chore | docs | refactor | style | test
-scope: web | miniprogram | packages | db
-```
-
-示例：
-```
-feat(miniprogram): add roaster detail page
-fix(web): correct bean card image fallback
-chore(packages): update shared-types exports
-```
-
-### 分支策略
-
-- `main`：稳定版本
-- `feat/*`：新功能
-- `fix/*`：bug 修复
+- 在客户端组件中 import `@/lib/server/*`
+- 在小程序里使用 HTML 标签而不是 `@tarojs/components`
+- 在多个页面各自复制一份 API 请求封装
+- 新增全局状态库（Redux/Zustand/Jotai），除非明确决定升级架构
+- 让 shared-types、本地 miniprogram types、实际 API 响应三者悄悄不一致
+- 把 `/api/v1/*` 和 legacy `/api/beans` / `/api/roasters` 的响应格式混在一起
 
 ---
 
-## 安全规范
+## Notes On Current Exceptions
 
-- 所有 Supabase 查询必须通过 RLS（Row Level Security）
-- API 路由必须验证 JWT token（`Authorization: Bearer <token>`）
-- 禁止在客户端代码中暴露 `SUPABASE_SERVICE_ROLE_KEY`
-- 小程序 `services/api.ts` 包含 placeholder 检测，防止意外提交测试地址
+- `HomePageClient.tsx` 和 `AllBeansClient.tsx` 仍有内联 `BeanCard`，属于当前现实，不是默认推荐的新模式。
+- `packages/api-client` 还未成为小程序主入口，因此不要把“已经有 package”误写成“全项目都在使用”。
+- 小程序 `services/api.ts` 有 placeholder / 本地地址检测，这是一个必须保留的安全网。

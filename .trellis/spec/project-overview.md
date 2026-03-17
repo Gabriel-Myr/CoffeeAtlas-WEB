@@ -3,92 +3,88 @@
 ## 项目信息
 
 - **项目名称**: CoffeeAtlas / CoffeeStories WebDB
-- **定位**: 咖啡豆和烘焙商的数据平台
+- **定位**: 精品咖啡豆、烘焙商与产地探索平台
 - **架构**: Monorepo（pnpm workspace + Turborepo）
 - **技术栈**: Next.js 16 + React 19 + Taro 3.x + Supabase + Tailwind CSS 4 + TypeScript
 
-## 核心功能
+## 核心能力
 
-### 1. 公开目录展示
-- **首页** (`/`): 地图式咖啡豆浏览，按大洲分类展示
-- **完整目录** (`/all-beans`): 可搜索、可筛选的咖啡豆列表
-- 支持多主题切换（温暖奶咖、深色咖啡馆、清新绿茶等）
+### 1. Web 公开目录
+- 首页 `apps/web/app/page.tsx` + `HomePageClient.tsx`
+- 全部豆款页 `apps/web/app/all-beans/page.tsx`
+- Atlas 风格产地探索组件：`apps/web/components/atlas/*`
 
-### 2. 微信小程序
-- 基于 Taro 3.x 构建，支持微信小程序和 H5
-- 通过 Next.js API Routes 中间层访问数据
+### 2. v1 API
+- 主 API 位于 `apps/web/app/api/v1/**`
+- 使用统一响应信封：`{ ok, data|error, meta }`
+- 涵盖 beans、roasters、health、me、favorites、wechat login
 
-### 3. 数据导入系统
-- 支持从 Excel/CSV 导入咖啡豆数据
-- 自动关联烘焙商和咖啡豆
-- 销量数据同步
+### 3. 微信小程序
+- `apps/miniprogram` 已经存在，不再是“规划中”目录
+- 页面、组件、API client、storage/auth 工具已接入当前代码库
+- 运行时通过 `src/utils/api-config.ts` 支持覆盖 API 基地址
 
-### 4. 数据库架构
-- 基于 Supabase (PostgreSQL)
-- 核心表：roasters（烘焙商）、beans（咖啡豆）、roaster_beans（关联表）
-- 支持全文搜索、RLS 权限控制
+### 4. 数据访问与导入
+- `apps/web/lib/catalog.ts` 负责公开目录读取和 sample fallback
+- `apps/web/lib/server/*` 负责服务端 API 组装、鉴权、收藏等逻辑
+- `apps/web/scripts/import-*.ts` 负责导入
+- `apps/web/db/sql/**` + `apps/web/db/migrations/**` 管理 schema 与增量变更
 
-## 项目结构（Monorepo）
+## Monorepo 结构
 
 ```
 CoffeeAtlas-Web/
 ├── apps/
-│   ├── web/              # Next.js Web 应用
-│   │   ├── app/          # App Router 页面
-│   │   ├── components/   # Web 专用组件
-│   │   ├── lib/          # 工具库（supabase、catalog 等）
-│   │   └── scripts/      # 数据导入脚本
-│   └── miniprogram/      # Taro 小程序
-│       ├── src/          # 小程序源码
-│       └── config/       # Taro 编译配置
+│   ├── web/
+│   └── miniprogram/
 ├── packages/
-│   ├── shared-types/     # 共享 TypeScript 类型（API 响应、分页等）
-│   ├── api-client/       # 小程序用 API 客户端
-│   └── domain/           # 领域逻辑（catalog、roasters、mappers）
-├── pnpm-workspace.yaml   # pnpm workspace 配置
-└── turbo.json            # Turborepo 任务配置
+│   ├── shared-types/
+│   ├── api-client/
+│   └── domain/
+├── .trellis/
+├── pnpm-workspace.yaml
+└── turbo.json
 ```
 
-## 包依赖关系
+## 包职责
 
-```
-apps/web          → packages/shared-types（可选）
-apps/miniprogram  → packages/api-client → packages/shared-types
-                  → packages/domain
-packages/domain   → packages/shared-types
-```
+- `apps/web` -> Web UI、Next.js API、Supabase server access
+- `apps/miniprogram` -> Taro 小程序 UI 和本地 API client
+- `packages/shared-types` -> 当前权威 API 契约层
+- `packages/api-client` -> 预备中的跨端 client，当前未完全接管运行时
+- `packages/domain` -> 预备中的纯领域逻辑层，当前内容较少
 
 ## 开发环境
 
-- Node.js 18+
-- pnpm 8+（包管理器）
-- Supabase 项目（需要配置环境变量）
+- Node.js `>=20.9.0`
+- pnpm `>=9.0.0`
+- 可选 Supabase / WeChat 环境变量
 
 ## 快速开始
 
 ```bash
-# 安装所有依赖
 pnpm install
-
-# 启动 Web 开发服务器
-pnpm --filter coffeestories-webdb dev
-
-# 启动小程序开发（微信）
-pnpm --filter @coffeeatlas/miniprogram dev:weapp
-
-# 全量构建
-pnpm turbo build
-
-# 全量类型检查
-pnpm turbo typecheck
+pnpm dev
+pnpm lint
+pnpm typecheck
+pnpm --filter coffeestories-webdb test
 ```
 
-## 数据库初始化
+## 环境变量
 
-按顺序在 Supabase SQL Editor 中执行（位于 `apps/web/db/sql/`）：
-1. `001_extensions.sql`
-2. `010_schema.sql`
-3. `020_indexes.sql`
-4. `030_rls.sql`
-5. `040_views_and_functions.sql`
-6. `050_seed_minimal.sql`（可选）
+### Web / server
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `APP_JWT_SECRET`
+- `WECHAT_APP_ID`
+- `WECHAT_APP_SECRET`
+
+### Miniprogram
+- `TARO_APP_API_URL`
+
+## 重要现实约束
+
+- `apps/web/app/api/beans` 和 `apps/web/app/api/roasters` 仍是 legacy 兼容层。
+- v1 契约以 `packages/shared-types` 为准，小程序本地类型需保持同步。
+- 公开 catalog 读取允许 sample fallback；写接口、鉴权、收藏不允许假写入。

@@ -1,154 +1,112 @@
 # 项目路线图
 
-基于 `docs/roadmap.md` 的开发计划。
-
-## Phase 1 (Week 1-2): 基础设施 ✅
-
-**目标**: 建立数据库基础和基本页面框架
-
-### 已完成
-- ✅ 创建 Postgres schema（roasters, beans, roaster_beans）
-- ✅ 配置索引和 RLS 策略
-- ✅ 实现全文搜索函数
-- ✅ 构建首页和完整目录页面
-- ✅ 实现 API 健康检查端点
-- ✅ 定义导入数据格式（ImportInputRow）
-
-### 数据库迁移文件
-1. `db/sql/001_extensions.sql` - PostgreSQL 扩展
-2. `db/sql/010_schema.sql` - 表结构和枚举
-3. `db/sql/020_indexes.sql` - 索引
-4. `db/sql/030_rls.sql` - 行级安全策略
-5. `db/sql/040_views_and_functions.sql` - 视图和函数
-6. `db/sql/050_seed_minimal.sql` - 初始数据
+> 截至 2026-03-15 的代码库现实快照。这里强调“已实现 / 部分实现 / 下一步”，不再保留过时的周计划口吻。
 
 ---
 
-## Phase 2 (Week 3-4): 数据导入和管理
+## 已实现
 
-**目标**: 实现数据导入流程和基本管理功能
+### Monorepo 与基础能力
+- pnpm workspace + Turborepo 已落地
+- `apps/web`、`apps/miniprogram`、`packages/shared-types`、`packages/api-client`、`packages/domain` 结构已建立
+- 根级 `lint` / `typecheck` / `build` 流程可用
 
-### 任务清单
-- [ ] 完善导入脚本（import-roasters, import-beans, import-sales）
-- [ ] 实现批量导入 API（`/api/admin/import`）
-- [ ] 添加导入任务状态追踪（import_jobs 表）
-- [ ] 实现导入事件时间线
-- [ ] 添加变更请求工作流（change_requests 表）
-  - 编辑者提交变更请求
-  - 管理员审核批准/拒绝
+### Web 体验
+- 首页 Atlas 产地探索页
+- 全部豆款页
+- 主题切换和 Atlas 风格视觉变量体系
+- 开发辅助页：`geo-preview`、`geo-compare`
 
-### API 端点
-```
-POST /api/admin/import          # 批量导入数据
-GET  /api/admin/import/:jobId   # 查询导入任务状态
-GET  /api/admin/import          # 导入任务列表
-```
+### v1 API
+- `/api/v1/beans`
+- `/api/v1/beans/[id]`
+- `/api/v1/beans/discover`
+- `/api/v1/roasters`
+- `/api/v1/roasters/[id]`
+- `/api/v1/health`
+- `/api/v1/me`
+- `/api/v1/me/favorites`
+- `/api/v1/me/favorites/sync`
+- `/api/v1/auth/wechat/login`
 
----
+### 数据与鉴权基础
+- 基础 SQL schema、索引、RLS、视图与函数已在 `apps/web/db/sql/**`
+- `app_users` / `user_favorites` 迁移已存在
+- `roaster_beans.image_url` 迁移已存在
+- JWT、收藏、微信登录 server helper 已落地
 
-## Phase 3 (Week 5-6): 自动化数据采集
-
-**目标**: 构建数据源连接器和自动化同步
-
-### 任务清单
-- [ ] 实现数据源连接器
-  - 官方网站爬虫
-  - 电商平台（淘宝、天猫）API 集成
-- [ ] 添加解析器和规范化规则
-  - 产地/品种/处理法标准化
-  - 别名匹配（bean_aliases 表）
-- [ ] 实现价格快照功能
-  - 记录历史价格变化
-  - 库存状态追踪
-- [ ] 定时任务调度
-  - 每日同步数据源
-  - 价格变动监控
-
-### 数据源类型
-- `OFFICIAL_SITE` - 烘焙商官网
-- `ECOMMERCE` - 电商平台（淘宝、天猫）
-- `SOCIAL` - 社交媒体
-- `IMPORT_FILE` - 手动导入文件
+### 小程序
+- 页面骨架和主要页面逻辑已落地
+- Beans / roasters / favorites / login 等 API client 已落地
+- runtime API 地址覆盖能力已落地
+- Atlas 浏览体验已在小程序首页和列表页接入
 
 ---
 
-## Phase 4 (Week 7-8): 搜索优化和质量控制
+## 部分实现 / 进行中
 
-**目标**: 提升搜索体验和数据质量
+### 共享层抽象
+- `packages/shared-types` 已成为 v1 契约主层
+- `packages/api-client` 仍只部分实现，尚未接管 miniprogram 主运行时路径
+- `packages/domain` 仍较空，尚未承载主要纯领域逻辑
 
-### 任务清单
-- [ ] 替换示例数据为实时查询
-  - 使用 `search_catalog()` 函数
-  - 实现分页和排序
-- [ ] 添加质量评分系统
-  - 检测缺失关键字段
-  - 重复数据置信度评估
-- [ ] 实现监控和告警
-  - 导入任务失败通知
-  - 数据源过期检测
-- [ ] 优化全文搜索
-  - 中文分词支持
-  - 搜索结果排序优化
+### 管理能力
+- 已有 `/api/admin/beans` 和 `/api/admin/roasters`
+- `admin-catalog.ts` 已有创建豆款与搜索 roaster 逻辑
+- 但 `admin-auth.ts` 仍是 placeholder，管理能力尚未真正安全化
 
-### 质量指标
-- 完整度：必填字段覆盖率
-- 准确度：重复数据检测
-- 时效性：数据更新频率
-
----
-
-## 未来规划
-
-### 用户功能
-- [ ] 用户注册和登录
-- [ ] 个人收藏夹
-- [ ] 咖啡豆评分和评论
-- [ ] 烘焙商关注功能
-
-### 高级搜索
-- [ ] 多维度筛选（产地、品种、处理法、价格区间）
-- [ ] 风味标签搜索
-- [ ] 相似咖啡豆推荐
-
-### 数据可视化
-- [ ] 价格趋势图表
-- [ ] 产地分布地图
-- [ ] 烘焙商排行榜
-
-### 移动端
-- [ ] 响应式设计优化
-- [ ] PWA 支持
-- [ ] 移动端专属功能
-
----
-
-## 技术债务
-
-### 需要重构的部分
-- [ ] 清理硬编码的 Supabase 凭证（import-beans.ts, import-roasters.ts）
-- [ ] 统一错误处理模式
-- [ ] 添加单元测试
-- [ ] 添加 E2E 测试
-
-### 性能优化
-- [ ] 实现 Redis 缓存层
-- [ ] 优化大列表渲染（虚拟滚动）
-- [ ] 图片 CDN 集成
-- [ ] 数据库查询优化
+### 导入链路
+- `import-roasters.ts`、`import-beans.ts`、`import-sales.ts` 可运行
+- 但脚本安全性、参数化与可复用性仍不足
 
 ---
 
 ## 当前优先级
 
-**高优先级**：
-1. 清理硬编码凭证（安全问题）
-2. 完善导入脚本
-3. 实现批量导入 API
+### P0 / 安全与一致性
+1. 清理导入脚本和环境文件中的硬编码敏感值
+2. 让管理接口接入真实鉴权，而不是 placeholder `requireAdmin()`
+3. 收敛 v1 shared-types 与 miniprogram 本地镜像类型的重复维护
 
-**中优先级**：
-4. 添加变更请求工作流
-5. 实现数据源连接器
+### P1 / 可维护性
+4. 为导入脚本补统一 package script、参数输入和错误输出规范
+5. 为更多 server helper / parser / normalizer 补测试
+6. 明确 legacy `/api/beans`、`/api/roasters` 与 `/api/v1/*` 的迁移边界
 
-**低优先级**：
-6. 用户功能
-7. 数据可视化
+### P2 / 体验与抽象
+7. 逐步把稳定的跨端逻辑迁移到 `packages/api-client` / `packages/domain`
+8. 继续完善 Atlas 体验与搜索/筛选一致性
+9. 改善图片、价格、来源数据的标准化质量
+
+---
+
+## 中期方向
+
+### API 与数据
+- 更完整的管理端导入 API
+- 更稳定的 product identity，减少销量导入时的模糊匹配风险
+- 更明确的变更请求 / 审核流
+- 质量评分与监控能力
+
+### 前端与客户端
+- 继续统一 Web 与小程序在 beans / roasters / discover 上的契约与行为
+- 如果 `packages/api-client` 成熟，再把小程序逐步迁移过去
+- 针对大列表与图片做性能优化
+
+---
+
+## 长期方向
+
+- 用户体系增强（更完整资料、更多个人化能力）
+- 收藏、评论、关注等社区能力
+- 更丰富的数据可视化
+- 更自动化的数据采集与同步链路
+
+---
+
+## 当前明确技术债
+
+1. 历史导入脚本的敏感信息处理方式不可接受，需要尽快清理
+2. 小程序类型与 shared-types 双轨维护成本高
+3. 管理接口已有功能，但安全边界还没完成
+4. legacy API 与 v1 API 并存，需要持续维护兼容边界
