@@ -1,5 +1,6 @@
 import type { RoasterFeature } from '@coffee-atlas/shared-types';
 
+import { getLatestSyncedNewArrivalBeanIdSet } from '@/lib/new-arrivals';
 import { hasSupabaseServerEnv, requireSupabaseServer } from '@/lib/supabase';
 import { normalizeSalesCount } from '@/lib/sales';
 import { sampleCatalog } from '@/lib/sample-data';
@@ -122,15 +123,6 @@ interface RoasterAggregate {
   xiaohongshuUrl: string | null;
 }
 
-const NEW_ARRIVAL_WINDOW_DAYS = 30;
-
-function isNewArrivalTimestamp(value: string | null | undefined): boolean {
-  if (!value) return false;
-  const timestamp = Date.parse(value);
-  if (Number.isNaN(timestamp)) return false;
-  return Date.now() - timestamp <= NEW_ARRIVAL_WINDOW_DAYS * 24 * 60 * 60 * 1000;
-}
-
 function toNumber(value: number | string | null | undefined): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
@@ -146,7 +138,12 @@ function normalizeOptionalString(value: string | null | undefined): string | nul
   return normalized.length > 0 ? normalized : null;
 }
 
-function mapCoffeeBean(item: RoasterBeanRow, roaster?: RoasterRow, bean?: BeanRow): CoffeeBean {
+function mapCoffeeBean(
+  item: RoasterBeanRow,
+  roaster?: RoasterRow,
+  bean?: BeanRow,
+  latestNewArrivalIds?: Set<string>
+): CoffeeBean {
   return {
     id: item.id,
     name: item.display_name,
@@ -165,7 +162,7 @@ function mapCoffeeBean(item: RoasterBeanRow, roaster?: RoasterRow, bean?: BeanRo
     salesCount: normalizeSalesCount(item.sales_count) ?? 0,
     tastingNotes: Array.isArray(bean?.flavor_tags) ? bean.flavor_tags : [],
     imageUrl: item.image_url,
-    isNewArrival: isNewArrivalTimestamp(item.updated_at),
+    isNewArrival: latestNewArrivalIds?.has(item.id) ?? false,
     isInStock: item.is_in_stock ?? true,
   };
 }
@@ -453,7 +450,11 @@ export async function getCatalogBeansPage({
 
   const rows = data as RoasterBeanRow[];
   const { roastersMap, beansMap } = await fetchBeanContext(rows);
-  return rows.map((row) => mapCoffeeBean(row, roastersMap.get(row.roaster_id ?? ''), beansMap.get(row.bean_id ?? '')));
+  const latestNewArrivalIds = await getLatestSyncedNewArrivalBeanIdSet();
+
+  return rows.map((row) =>
+    mapCoffeeBean(row, roastersMap.get(row.roaster_id ?? ''), beansMap.get(row.bean_id ?? ''), latestNewArrivalIds)
+  );
 }
 
 export async function countCatalogBeans(filters: CatalogBeanFilters = {}): Promise<number> {
@@ -503,7 +504,9 @@ export async function getBeanById(id: string): Promise<CoffeeBean | null> {
 
   const row = data as RoasterBeanRow;
   const { roastersMap, beansMap } = await fetchBeanContext([row]);
-  return mapCoffeeBean(row, roastersMap.get(row.roaster_id ?? ''), beansMap.get(row.bean_id ?? ''));
+  const latestNewArrivalIds = await getLatestSyncedNewArrivalBeanIdSet();
+
+  return mapCoffeeBean(row, roastersMap.get(row.roaster_id ?? ''), beansMap.get(row.bean_id ?? ''), latestNewArrivalIds);
 }
 
 export async function getRoasters(limit?: number): Promise<Roaster[]>;
@@ -572,10 +575,26 @@ export async function getCatalogBeansByIds(ids: string[]): Promise<CoffeeBean[]>
     return ids.map((id) => sampleMap.get(id)).filter((bean): bean is CoffeeBean => Boolean(bean));
   }
 
-  const beans = await Promise.all(ids.map((id) => getBeanById(id)));
+  const supabaseServer = requireSupabaseServer();
+  const { data, error } = await supabaseServer
+    .from('roaster_beans')
+    .select('*')
+    .eq('status', 'ACTIVE')
+    .in('id', ids);
+
+  if (error) throw createCatalogError(`failed_to_load_catalog_beans_by_ids:${error.message}`);
+  if (!data || data.length === 0) return [];
+
+  const rows = data as RoasterBeanRow[];
+  const { roastersMap, beansMap } = await fetchBeanContext(rows);
+  const latestNewArrivalIds = await getLatestSyncedNewArrivalBeanIdSet();
   const beanMap = new Map(
-    beans.filter((bean): bean is CoffeeBean => Boolean(bean)).map((bean) => [bean.id, bean])
+    rows.map((row) => [
+      row.id,
+      mapCoffeeBean(row, roastersMap.get(row.roaster_id ?? ''), beansMap.get(row.bean_id ?? ''), latestNewArrivalIds),
+    ])
   );
+
   return ids.map((id) => beanMap.get(id)).filter((bean): bean is CoffeeBean => Boolean(bean));
 }
 

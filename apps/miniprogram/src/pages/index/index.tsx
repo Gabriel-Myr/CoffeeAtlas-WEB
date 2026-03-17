@@ -11,7 +11,6 @@ import {
   type OriginAtlasCountry,
   type OriginAtlasContinent,
   buildCountryAtlasStats,
-  getContinentSummary,
   getCountriesByContinent,
   makeAtlasSvgUri,
   ORIGIN_ATLAS_CONTINENT_MAP,
@@ -33,6 +32,30 @@ const EMPTY_STATS: CountryAtlasStats = {
 
 function buildAtlasStyle(accent: string, outline: string): string {
   return `--atlas-card-accent:${accent};--atlas-card-outline:${outline};`;
+}
+
+function getBubbleStageClassName(count: number): string {
+  if (count >= 3) return 'atlas__bubble-stage atlas__bubble-stage--trio';
+  if (count === 2) return 'atlas__bubble-stage atlas__bubble-stage--duo';
+  return 'atlas__bubble-stage atlas__bubble-stage--solo';
+}
+
+function getBubblePlacementClassName(count: number, index: number): string {
+  if (count === 2) {
+    return index === 0 ? 'atlas-bubble--duo-left' : 'atlas-bubble--duo-right';
+  }
+
+  if (count === 1) {
+    return 'atlas-bubble--solo';
+  }
+
+  return '';
+}
+
+function getBubbleDelayClassName(index: number): string {
+  if (index === 1) return 'animate-delay-2';
+  if (index >= 2) return 'animate-delay-4';
+  return '';
 }
 
 interface AtlasSilhouetteProps {
@@ -124,6 +147,7 @@ export default function Index(): ReactElement {
   const activeContinent = selectedContinent ? ORIGIN_ATLAS_CONTINENT_MAP.get(selectedContinent) ?? null : null;
   const activeCountry = selectedCountry ? ORIGIN_ATLAS_COUNTRY_MAP.get(selectedCountry) ?? null : null;
   const activeCountryStats = activeCountry ? atlasStatsMap.get(activeCountry.name) ?? EMPTY_STATS : EMPTY_STATS;
+  const showAtlasToolbar = Boolean(selectedContinent || selectedCountry);
 
   const visibleContinents = useMemo(() => {
     if (!atlasQuery) return ORIGIN_ATLAS_CONTINENTS;
@@ -141,6 +165,7 @@ export default function Index(): ReactElement {
       return matchesAtlasQuery(country, atlasStatsMap.get(country.name) ?? EMPTY_STATS, atlasQuery);
     });
   }, [activeContinent, atlasQuery, atlasStatsMap]);
+  const bubbleStageClassName = getBubbleStageClassName(visibleContinents.length);
 
   const handleBack = (): void => {
     if (selectedCountry) {
@@ -163,6 +188,7 @@ export default function Index(): ReactElement {
 
       <View className="index-page__content">
         <View className="atlas">
+          {showAtlasToolbar ? (
             <View className="atlas__toolbar">
               {selectedContinent || selectedCountry ? (
                 <View className="atlas__back" onClick={handleBack}>
@@ -171,145 +197,146 @@ export default function Index(): ReactElement {
               ) : null}
               <View className="atlas__toolbar-copy">
                 <Text className="atlas__toolbar-kicker">
-                  {selectedCountry ? 'Country dossier' : selectedContinent ? 'Continent index' : 'Origin atlas'}
+                  {selectedCountry ? '国家档案' : '洲内索引'}
                 </Text>
-                <Text className="atlas__toolbar-title">{selectedCountry ?? activeContinent?.name ?? 'Origin Atlas'}</Text>
+                <Text className="atlas__toolbar-title">
+                  {selectedCountry ?? (activeContinent ? `${activeContinent.name} 索引` : '洲内索引')}
+                </Text>
                 <Text className="atlas__toolbar-subtitle">
                   {selectedCountry
-                    ? 'Landscape, flavor, and live bean inventory in one editorial panel.'
-                    : selectedContinent
-                      ? 'An atlas-like country index with live bean coverage and outline-led browsing.'
-                      : 'Browse producing continents first, then move inward to country-level coffee dossiers.'}
+                    ? '在一张产地卡中查看地貌、风味与当前豆款覆盖。'
+                    : '先浏览这一洲的国家索引，再进入具体产地查看豆款与烘焙商。'}
                 </Text>
               </View>
             </View>
+          ) : null}
 
-            {errorMessage ? (
-              <View className="atlas__notice">
-                <Text className="atlas__notice-label">开发提示</Text>
-                <Text className="atlas__notice-text">{errorMessage}</Text>
-              </View>
-            ) : null}
+          {errorMessage ? (
+            <View className="atlas__notice">
+              <Text className="atlas__notice-label">开发提示</Text>
+              <Text className="atlas__notice-text">{errorMessage}</Text>
+            </View>
+          ) : null}
 
-            {!selectedContinent ? (
-              <View className="atlas__continent-list">
-                {visibleContinents.length > 0 ? (
-                  visibleContinents.map((continent) => {
-                    const summary = getContinentSummary(continent.id, atlasStatsMap);
-                    return (
-                      <View
-                        key={continent.id}
-                        className={`continent-card continent-card--${continent.id}`}
-                        style={buildAtlasStyle(continent.color, continent.color)}
-                        hoverClass="continent-card--active"
-                        hoverStartTime={20}
-                        hoverStayTime={70}
-                        onClick={() => setSelectedContinent(continent.id)}
-                      >
-                        <AtlasSilhouette
-                          path={continent.path}
-                          viewBox={continent.viewBox}
-                          color={continent.color}
-                          frame={continent.silhouetteFrame}
-                          shellClassName="continent-card__map-shell"
-                          imageClassName="continent-card__map"
-                          detail
-                        />
-                        <View className="continent-card__body">
-                          <Text className="continent-card__kicker">{continent.editorialLabel}</Text>
-                          <Text className="continent-card__name">{continent.name}</Text>
-                          <Text className="continent-card__description">{continent.description}</Text>
-                          <View className="continent-card__metrics">
-                            <View className="metric-pill">
-                              <Text className="metric-pill__label">国家</Text>
-                              <Text className="metric-pill__value">{continent.countries.length}</Text>
-                            </View>
-                            <View className="metric-pill">
-                              <Text className="metric-pill__label">豆款</Text>
-                              <Text className="metric-pill__value">{summary.beanCount}</Text>
-                            </View>
-                            <View className="metric-pill">
-                              <Text className="metric-pill__label">烘焙商</Text>
-                              <Text className="metric-pill__value">{summary.roasterCount}</Text>
-                            </View>
-                          </View>
-                        </View>
-                        <Text className="continent-card__arrow">›</Text>
-                      </View>
-                    );
-                  })
-                ) : (
-                  <View className="atlas-empty">
-                    <Text className="atlas-empty__mark">✦</Text>
-                    <Text className="atlas-empty__title">未匹配到对应产地</Text>
-                    <Text className="atlas-empty__text">可以尝试搜索国家名、产区、处理法、烘焙商或风味关键词。</Text>
-                  </View>
-                )}
-              </View>
-            ) : null}
+          {!selectedContinent ? (
+            <View className="atlas__home-default">
+              {visibleContinents.length > 0 ? (
+                <>
+                  <View className={bubbleStageClassName}>
+                    <View className="atlas__bubble-decor atlas__bubble-decor--1" />
+                    <View className="atlas__bubble-decor atlas__bubble-decor--2" />
+                    <View className="atlas__bubble-decor atlas__bubble-decor--3" />
 
-            {activeContinent && !activeCountry ? (
-              <View className="atlas__country-index">
-                <View className="continent-panel" style={buildAtlasStyle(activeContinent.color, activeContinent.color)}>
-                  <AtlasSilhouette
-                    path={activeContinent.path}
-                    viewBox={activeContinent.viewBox}
-                    color={activeContinent.color}
-                    frame={activeContinent.silhouetteFrame}
-                    shellClassName="continent-panel__map-shell"
-                    imageClassName="continent-panel__map"
-                    detail
-                  />
-                  <Text className="continent-panel__kicker">{activeContinent.editorialLabel}</Text>
-                  <Text className="continent-panel__title">{activeContinent.name} Index</Text>
-                  <Text className="continent-panel__description">{activeContinent.description}</Text>
-                </View>
+                    {visibleContinents.map((continent, index) => {
+                      const delayClassName = getBubbleDelayClassName(index);
+                      const placementClassName = getBubblePlacementClassName(visibleContinents.length, index);
 
-                <View className="country-grid">
-                  {visibleCountries.length > 0 ? (
-                    visibleCountries.map((country) => {
-                      const stats = atlasStatsMap.get(country.name) ?? EMPTY_STATS;
                       return (
                         <View
-                          key={country.name}
-                          className={`country-card country-card--${country.layoutVariant}`}
-                          style={buildAtlasStyle(country.accent, country.color)}
-                          hoverClass="country-card--active"
+                          key={continent.id}
+                          className={`atlas-bubble atlas-bubble--${continent.id} ${placementClassName}`.trim()}
+                          style={buildAtlasStyle(continent.color, continent.color)}
+                          hoverClass="atlas-bubble--active"
                           hoverStartTime={20}
                           hoverStayTime={70}
-                          onClick={() => setSelectedCountry(country.name)}
+                          onClick={() => setSelectedContinent(continent.id)}
                         >
-                          <AtlasSilhouette
-                            path={country.path}
-                            viewBox={country.viewBox}
-                            color={country.color}
-                            frame={country.silhouetteFrame}
-                            shellClassName="country-card__map-shell"
-                            imageClassName="country-card__map"
-                            detail
-                          />
-                          <View className="country-card__body">
-                            <Text className="country-card__kicker">{country.editorialLabel}</Text>
-                            <Text className="country-card__name">{country.name}</Text>
-                            <Text className="country-card__flavor">{country.flavorLabel}</Text>
-                            <View className="country-card__metrics">
-                              <Text className="country-card__metric">{stats.beanCount} 豆款</Text>
-                              <Text className="country-card__metric">{stats.roasterCount} 烘焙商</Text>
+                          <View className="atlas-bubble__motion">
+                            <View className={`atlas-bubble__entry ${delayClassName}`.trim()}>
+                              <View className={`atlas-bubble__orb ${delayClassName}`.trim()}>
+                                <AtlasSilhouette
+                                  path={continent.path}
+                                  viewBox={continent.viewBox}
+                                  color={continent.color}
+                                  frame={continent.silhouetteFrame}
+                                  shellClassName="atlas-bubble__map-shell"
+                                  imageClassName="atlas-bubble__map"
+                                  detail
+                                />
+                                <Text className="atlas-bubble__label">{continent.name}</Text>
+                              </View>
                             </View>
                           </View>
                         </View>
                       );
-                    })
-                  ) : (
-                    <View className="atlas-empty atlas-empty--wide">
-                      <Text className="atlas-empty__mark">⌕</Text>
-                      <Text className="atlas-empty__title">这一洲暂无匹配结果</Text>
-                      <Text className="atlas-empty__text">搜索词已经缩小到洲内国家索引，可以换一个国家、产区或处理法试试。</Text>
-                    </View>
-                  )}
+                    })}
+                  </View>
+                  <View className="atlas__intro">
+                    <Text className="atlas__intro-text">先看三大洲轮廓，再进入国家索引，最后查看对应豆款与烘焙商。</Text>
+                  </View>
+                </>
+              ) : (
+                <View className="atlas-empty atlas-empty--wide">
+                  <Text className="atlas-empty__mark">✦</Text>
+                  <Text className="atlas-empty__title">未匹配到对应产地</Text>
+                  <Text className="atlas-empty__text">可以尝试搜索国家名、产区、处理法、烘焙商或风味关键词。</Text>
                 </View>
+              )}
+            </View>
+          ) : null}
+
+          {activeContinent && !activeCountry ? (
+            <View className="atlas__country-index">
+              <View className="continent-panel" style={buildAtlasStyle(activeContinent.color, activeContinent.color)}>
+                <AtlasSilhouette
+                  path={activeContinent.path}
+                  viewBox={activeContinent.viewBox}
+                  color={activeContinent.color}
+                  frame={activeContinent.silhouetteFrame}
+                  shellClassName="continent-panel__map-shell"
+                  imageClassName="continent-panel__map"
+                  detail
+                />
+                <Text className="continent-panel__kicker">{activeContinent.editorialLabel}</Text>
+                <Text className="continent-panel__title">{activeContinent.name} 国家索引</Text>
+                <Text className="continent-panel__description">{activeContinent.description}</Text>
               </View>
-            ) : null}
+
+              <View className="country-grid">
+                {visibleCountries.length > 0 ? (
+                  visibleCountries.map((country) => {
+                    const stats = atlasStatsMap.get(country.name) ?? EMPTY_STATS;
+                    return (
+                      <View
+                        key={country.name}
+                        className={`country-card country-card--${country.layoutVariant}`}
+                        style={buildAtlasStyle(country.accent, country.color)}
+                        hoverClass="country-card--active"
+                        hoverStartTime={20}
+                        hoverStayTime={70}
+                        onClick={() => setSelectedCountry(country.name)}
+                      >
+                        <AtlasSilhouette
+                          path={country.path}
+                          viewBox={country.viewBox}
+                          color={country.color}
+                          frame={country.silhouetteFrame}
+                          shellClassName="country-card__map-shell"
+                          imageClassName="country-card__map"
+                          detail
+                        />
+                        <View className="country-card__body">
+                          <Text className="country-card__kicker">{country.editorialLabel}</Text>
+                          <Text className="country-card__name">{country.name}</Text>
+                          <Text className="country-card__flavor">{country.flavorLabel}</Text>
+                          <View className="country-card__metrics">
+                            <Text className="country-card__metric">{stats.beanCount} 豆款</Text>
+                            <Text className="country-card__metric">{stats.roasterCount} 烘焙商</Text>
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })
+                ) : (
+                  <View className="atlas-empty atlas-empty--wide">
+                    <Text className="atlas-empty__mark">⌕</Text>
+                    <Text className="atlas-empty__title">这一洲暂无匹配结果</Text>
+                    <Text className="atlas-empty__text">搜索词已经缩小到洲内国家索引，可以换一个国家、产区或处理法试试。</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          ) : null}
 
             {activeCountry ? (
               <View className="atlas__country-detail" style={buildAtlasStyle(activeCountry.accent, activeCountry.color)}>
@@ -333,23 +360,23 @@ export default function Index(): ReactElement {
 
                 <View className="detail-stats">
                   <View className="detail-stat-card">
-                    <Text className="detail-stat-card__label">Beans</Text>
+                    <Text className="detail-stat-card__label">豆款</Text>
                     <Text className="detail-stat-card__value">{activeCountryStats.beanCount}</Text>
                   </View>
                   <View className="detail-stat-card">
-                    <Text className="detail-stat-card__label">Roasters</Text>
+                    <Text className="detail-stat-card__label">烘焙商</Text>
                     <Text className="detail-stat-card__value">{activeCountryStats.roasterCount}</Text>
                   </View>
                   <View className="detail-stat-card">
-                    <Text className="detail-stat-card__label">Processes</Text>
+                    <Text className="detail-stat-card__label">处理法</Text>
                     <Text className="detail-stat-card__value">{activeCountryStats.processes.length}</Text>
                   </View>
                   <View className="detail-stat-card">
-                    <Text className="detail-stat-card__label">In Stock</Text>
+                    <Text className="detail-stat-card__label">在售</Text>
                     <Text className="detail-stat-card__value">{activeCountryStats.inStockCount}</Text>
                   </View>
                   <View className="detail-stat-card detail-stat-card--wide">
-                    <Text className="detail-stat-card__label">Avg Price</Text>
+                    <Text className="detail-stat-card__label">均价</Text>
                     <Text className="detail-stat-card__value">
                       {activeCountryStats.averagePrice ? `¥${activeCountryStats.averagePrice}` : '—'}
                     </Text>
@@ -357,7 +384,7 @@ export default function Index(): ReactElement {
                 </View>
 
                 <View className="detail-panel">
-                  <Text className="detail-panel__title">Representative Regions</Text>
+                  <Text className="detail-panel__title">代表产区</Text>
                   <View className="detail-panel__tags">
                     {(activeCountryStats.regions.length > 0 ? activeCountryStats.regions : activeCountry.notableRegions).map((region) => (
                       <Text key={region} className="detail-tag">
@@ -368,7 +395,7 @@ export default function Index(): ReactElement {
                 </View>
 
                 <View className="detail-panel">
-                  <Text className="detail-panel__title">Observed Processes</Text>
+                  <Text className="detail-panel__title">已收录处理法</Text>
                   {activeCountryStats.processes.length > 0 ? (
                     <View className="detail-panel__tags">
                       {activeCountryStats.processes.map((process) => (
@@ -383,7 +410,7 @@ export default function Index(): ReactElement {
                 </View>
 
                 <View className="detail-panel">
-                  <Text className="detail-panel__title">Cup Tags</Text>
+                  <Text className="detail-panel__title">风味标签</Text>
                   {activeCountryStats.tastingNotes.length > 0 ? (
                     <View className="detail-panel__tags">
                       {activeCountryStats.tastingNotes.map((note) => (
@@ -398,7 +425,7 @@ export default function Index(): ReactElement {
                 </View>
 
                 <View className="detail-panel">
-                  <Text className="detail-panel__title">Selected Beans</Text>
+                  <Text className="detail-panel__title">精选豆款</Text>
                   {activeCountryStats.beans.length > 0 ? (
                     <View className="detail-panel__beans">
                       {activeCountryStats.beans.slice(0, 6).map((bean, index) => (

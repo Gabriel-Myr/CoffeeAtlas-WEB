@@ -65,6 +65,13 @@ export default function AllBeans() {
     selectedContinent !== ALL_DISCOVER_VALUE ||
     selectedCountry !== ALL_DISCOVER_VALUE;
   const shouldShowDiscoverResults = hasDiscoverPath || Boolean(normalizedQuery);
+  const visibleBeans = useMemo(
+    () => (activeTab === 'new' ? beans.filter((bean) => bean.isNewArrival) : beans),
+    [activeTab, beans]
+  );
+  const hasMixedNewArrivalResults = activeTab === 'new' && visibleBeans.length !== beans.length;
+  const effectiveHasMore = hasMixedNewArrivalResults ? false : hasMore;
+  const effectiveTotal = activeTab === 'new' && hasMixedNewArrivalResults ? visibleBeans.length : total;
 
   const discoverPathItems = useMemo(() => {
     const items: Array<{ key: 'process' | 'continent' | 'country'; label: string; value: string }> = [];
@@ -101,13 +108,13 @@ export default function AllBeans() {
       return `当前路径覆盖 ${discoverPayload.resultSummary.total} 款咖啡豆`;
     }
 
-    if (total !== null) {
-      return activeTab === 'new' ? `共 ${total} 款本次上新` : `共 ${total} 款咖啡豆`;
+    if (effectiveTotal !== null) {
+      return activeTab === 'new' ? `共 ${effectiveTotal} 款本次上新` : `共 ${effectiveTotal} 款咖啡豆`;
     }
     if (loading) return '正在同步目录...';
-    if (beans.length > 0) return `已加载 ${beans.length} 款咖啡豆`;
+    if (visibleBeans.length > 0) return `已加载 ${visibleBeans.length} 款咖啡豆`;
     return '';
-  }, [activeTab, beans.length, discoverLoading, discoverPayload, loading, selectedCountry, total]);
+  }, [activeTab, discoverLoading, discoverPayload, effectiveTotal, loading, selectedCountry, visibleBeans.length]);
 
   const resetResultState = () => {
     setBeans([]);
@@ -270,7 +277,7 @@ export default function AllBeans() {
   }, [discoverPayload, selectedContinent, selectedCountry, selectedProcess]);
 
   useReachBottom(() => {
-    if (loadingRef.current || !hasMore) return;
+    if (loadingRef.current || !effectiveHasMore) return;
     if (activeTab === 'discover') {
       if (!shouldShowDiscoverResults) return;
       void loadBeanPage('discover', page);
@@ -281,6 +288,12 @@ export default function AllBeans() {
   });
 
   const handleTabChange = (tab: TabKey) => {
+    requestVersionRef.current += 1;
+    setErrorMessage('');
+    setBeans([]);
+    setPage(1);
+    setHasMore(true);
+    setTotal(null);
     setActiveTab(tab);
   };
 
@@ -661,19 +674,19 @@ export default function AllBeans() {
           )
         ) : errorMessage ? (
           <EmptyState message={errorMessage} />
-        ) : loading && beans.length === 0 ? (
+        ) : loading && visibleBeans.length === 0 ? (
           <EmptyState message="加载中..." />
-        ) : beans.length === 0 ? (
+        ) : visibleBeans.length === 0 ? (
           <EmptyState message={activeTab === 'new' ? '最近一次导入暂无新品' : '未找到咖啡豆'} />
         ) : (
           <View>
-            {beans.map((bean, index) => <BeanCard key={bean.id} bean={bean} index={index} />)}
-            {loading && beans.length > 0 ? (
+            {visibleBeans.map((bean, index) => <BeanCard key={bean.id} bean={bean} index={index} />)}
+            {loading && visibleBeans.length > 0 ? (
               <View className="all-beans__loading">
                 <Text className="all-beans__loading-text">加载中...</Text>
               </View>
             ) : null}
-            {!hasMore && beans.length > 0 ? (
+            {!effectiveHasMore && visibleBeans.length > 0 ? (
               <View className={`all-beans__end ${activeTab === 'new' ? 'all-beans__end--new' : ''}`}>
                 <Text className={`all-beans__end-text ${activeTab === 'new' ? 'all-beans__end-text--new' : ''}`}>
                   {activeTab === 'new' ? '当前无更多新品，去别处看看吧～' : '— 已加载全部 —'}

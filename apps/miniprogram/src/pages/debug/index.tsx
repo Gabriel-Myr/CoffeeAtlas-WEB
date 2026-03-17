@@ -179,6 +179,17 @@ export default function DebugPage() {
           </Button>
           <Button
             className="debug-page__probe-button"
+            loading={runningKey === 'new-arrivals'}
+            onClick={() =>
+              runProbe('new-arrivals', () =>
+                getBeans({ page: 1, pageSize: 10, isNewArrival: true })
+              )
+            }
+          >
+            新品列表
+          </Button>
+          <Button
+            className="debug-page__probe-button"
             loading={runningKey === 'roasters'}
             onClick={() => runProbe('roasters', () => getRoasters({ page: 1, pageSize: 3 }))}
           >

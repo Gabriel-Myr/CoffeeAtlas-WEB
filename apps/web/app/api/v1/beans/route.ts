@@ -5,6 +5,9 @@ import type { BeanDiscoverContinent, BeanSort } from '@coffee-atlas/shared-types
 import { apiError, apiSuccess, badRequest, parsePaginationParams } from '@/lib/server/api-helpers';
 import { listBeansV1 } from '@/lib/server/public-api';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 function parseSort(value: string | null): BeanSort | undefined {
   if (value === null) return undefined;
   if (value === 'updated_desc' || value === 'sales_desc' || value === 'price_asc' || value === 'price_desc') {

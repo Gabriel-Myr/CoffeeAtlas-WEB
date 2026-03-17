@@ -5,6 +5,9 @@ import type { BeanDiscoverContinent } from '@coffee-atlas/shared-types';
 import { apiError, apiSuccess, badRequest } from '@/lib/server/api-helpers';
 import { getBeanDiscoverV1 } from '@/lib/server/public-api';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 function parseContinent(value: string | null): BeanDiscoverContinent | undefined {
   if (value === null) return undefined;
   if (value === 'asia' || value === 'africa' || value === 'americas') {

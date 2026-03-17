@@ -25,6 +25,7 @@ import {
   ORIGIN_ATLAS_COUNTRIES_BY_CONTINENT,
   matchAtlasCountry,
 } from '@/lib/geo-data';
+import { getLatestSyncedNewArrivalBeanIds } from '@/lib/new-arrivals';
 import { hasSupabaseServerEnv, requireSupabaseServer } from '@/lib/supabase';
 
 import { BEAN_DISCOVER_EDITORIAL_CONFIGS } from './bean-discover-config';
@@ -52,14 +53,6 @@ interface CatalogViewDiscoverRow {
   roaster_bean_id: string;
   origin_country: string | null;
   process_method: string | null;
-}
-
-interface ImportJobIdRow {
-  id: string;
-}
-
-interface IngestionEventEntityRow {
-  entity_id: string | null;
 }
 
 function mapBeanCard(bean: CoffeeBean): CatalogBeanCard {
@@ -168,42 +161,6 @@ function getContinentFilterCandidates(continent: BeanDiscoverContinent | undefin
 function getNewArrivalCutoff(): string {
   const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   return cutoff.toISOString();
-}
-
-async function getLatestSyncedNewArrivalBeanIds(): Promise<string[]> {
-  const supabaseServer = requireSupabaseServer();
-
-  const { data: latestJob, error: latestJobError } = await supabaseServer
-    .from('import_jobs')
-    .select('id')
-    .eq('job_type', 'SCRAPE_SYNC')
-    .eq('file_name', 'sync-taobao-new-arrivals')
-    .in('status', ['SUCCEEDED', 'PARTIAL'])
-    .order('completed_at', { ascending: false, nullsFirst: false })
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (latestJobError) throw latestJobError;
-  const jobId = (latestJob as ImportJobIdRow | null)?.id;
-  if (!jobId) return [];
-
-  const { data: ingestionEvents, error: ingestionEventsError } = await supabaseServer
-    .from('ingestion_events')
-    .select('entity_id')
-    .eq('import_job_id', jobId)
-    .eq('entity_type', 'ROASTER_BEAN')
-    .in('action', ['INSERT', 'UPSERT']);
-
-  if (ingestionEventsError) throw ingestionEventsError;
-
-  return Array.from(
-    new Set(
-      ((ingestionEvents ?? []) as IngestionEventEntityRow[])
-        .map((row) => row.entity_id)
-        .filter((id): id is string => typeof id === 'string' && id.length > 0)
-    )
-  );
 }
 
 function applySortPlan<T extends { order: (column: string, options: { ascending: boolean; nullsFirst?: boolean }) => T }>(
