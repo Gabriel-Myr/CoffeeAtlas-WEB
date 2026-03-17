@@ -7,6 +7,8 @@ import type {
   CurrentUserProfile,
   DiscoverContinentId,
   LoginResponse,
+  NewArrivalFiltersPayload,
+  NewArrivalFiltersRequest,
   PaginatedResult,
   RoasterFeature,
   RoasterDetail,
@@ -14,10 +16,12 @@ import type {
   UserFavorite,
   V1Response,
 } from '../types';
+import { collectPaginatedItems } from './api-helpers';
 import { getToken } from '../utils/storage';
 import { getApiBaseUrlState } from '../utils/api-config';
 
 const PLACEHOLDER_PATTERN = /YOUR_LAN_IP|your-domain\.com/i;
+const ATLAS_BEAN_PAGE_SIZE = 100;
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
@@ -40,7 +44,6 @@ async function request<T>(
   if (PLACEHOLDER_PATTERN.test(baseUrl)) {
     throw new Error('当前 TARO_APP_API_URL 还是占位值，请改成真实地址。');
   }
-
 
   const token = getToken();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -71,6 +74,7 @@ export async function getBeans(params?: {
   pageSize?: number;
   page?: number;
   q?: string;
+  roasterId?: string;
   originCountry?: string;
   process?: string;
   roastLevel?: string;
@@ -83,6 +87,7 @@ export async function getBeans(params?: {
   if (params?.pageSize) query.set('pageSize', String(params.pageSize));
   if (params?.page) query.set('page', String(params.page));
   if (params?.q) query.set('q', params.q);
+  if (params?.roasterId) query.set('roasterId', params.roasterId);
   if (params?.originCountry) query.set('originCountry', params.originCountry);
   if (params?.process) query.set('process', params.process);
   if (params?.roastLevel) query.set('roastLevel', params.roastLevel);
@@ -92,6 +97,15 @@ export async function getBeans(params?: {
   if (params?.country) query.set('country', params.country);
   const qs = query.toString();
   return request<PaginatedResult<CoffeeBean>>(`/api/v1/beans${qs ? `?${qs}` : ''}`);
+}
+
+export async function getAllBeansForAtlas(): Promise<CoffeeBean[]> {
+  return collectPaginatedItems((page) =>
+    getBeans({
+      page,
+      pageSize: ATLAS_BEAN_PAGE_SIZE,
+    })
+  );
 }
 
 export async function getBeanDiscover(params?: {
@@ -107,6 +121,15 @@ export async function getBeanDiscover(params?: {
   if (params?.country) query.set('country', params.country);
   const qs = query.toString();
   return request<BeanDiscoverPayload>(`/api/v1/beans/discover${qs ? `?${qs}` : ''}`);
+}
+
+export async function getNewArrivalFilters(
+  body: NewArrivalFiltersRequest
+): Promise<NewArrivalFiltersPayload> {
+  return request<NewArrivalFiltersPayload>('/api/v1/beans/new-arrivals/filters', {
+    method: 'POST',
+    data: body,
+  });
 }
 
 export async function getBeanById(id: string): Promise<CoffeeBean> {

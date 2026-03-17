@@ -36,7 +36,6 @@ export default function RoasterCard({
     ? `${roaster.beanCount} 款豆单`
     : '豆单待补充';
   const monogram = roaster.name.trim().charAt(0).toUpperCase() || 'R';
-  const railLabel = variant === 'saved' ? 'Saved entry' : 'Atlas entry';
   const kickerLabel = variant === 'saved' ? 'Saved roaster' : 'Roaster dossier';
   const hintText = variant === 'saved'
     ? '点击回到品牌档案，继续查看豆单与外部入口。'
@@ -64,7 +63,7 @@ export default function RoasterCard({
       hoverStayTime={70}
       onClick={handleTap}
     >
-      <View className="roaster-card__rail">
+      <View className="roaster-card__media-anchor">
         <View className={`roaster-card__media-shell ${usesLogoAsCover ? 'roaster-card__media-shell--logo' : ''}`}>
           {heroImageUrl ? (
             <Image
@@ -80,11 +79,6 @@ export default function RoasterCard({
               </View>
             </View>
           )}
-        </View>
-
-        <View className="roaster-card__rail-note">
-          <Text className="roaster-card__rail-label">{railLabel}</Text>
-          <Text className="roaster-card__rail-value">No. {String(index + 1).padStart(2, '0')}</Text>
         </View>
       </View>
 
@@ -137,6 +131,8 @@ export default function RoasterCard({
 
           {trailing ? <View className="roaster-card__footer-side">{trailing}</View> : null}
         </View>
+
+        <Text className="roaster-card__watermark">Atlas</Text>
       </View>
     </View>
   );

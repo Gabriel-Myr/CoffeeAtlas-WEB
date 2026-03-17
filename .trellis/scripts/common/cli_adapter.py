@@ -64,6 +64,9 @@ class CLIAdapter:
         "opencode": {
             "plan": "trellis-plan",  # 'plan' is built-in in OpenCode
         },
+        "codex": {
+            "plan": "trellis-plan",
+        },
     }
 
     def get_agent_name(self, agent: str) -> str:
@@ -402,6 +405,8 @@ class CLIAdapter:
             return "cursor"  # Note: Cursor is IDE-only, no CLI
         elif self.platform == "iflow":
             return "iflow"
+        elif self.platform == "codex":
+            return "codex"
         elif self.platform == "kiro":
             return "kiro"
         elif self.platform == "gemini":
@@ -417,10 +422,10 @@ class CLIAdapter:
     def supports_cli_agents(self) -> bool:
         """Check if platform supports running agents via CLI.
 
-        Claude Code, OpenCode, and iFlow support CLI agent execution.
+        Claude Code, OpenCode, iFlow, and Codex support CLI agent execution.
         Cursor is IDE-only and doesn't support CLI agents.
         """
-        return self.platform in ("claude", "opencode", "iflow")
+        return self.platform in ("claude", "opencode", "iflow", "codex")
 
     # =========================================================================
     # Session ID Handling
@@ -437,9 +442,7 @@ class CLIAdapter:
         return self.platform == "claude"
 
     def extract_session_id_from_log(self, log_content: str) -> str | None:
-        """Extract session ID from log output (OpenCode only).
-
-        OpenCode generates session IDs in format: ses_xxx
+        """Extract session ID from log output.
 
         Args:
             log_content: Log file content
@@ -448,6 +451,11 @@ class CLIAdapter:
             Session ID if found, None otherwise
         """
         import re
+
+        if self.platform == "codex":
+            match = re.search(r"session id:\s*([a-zA-Z0-9-]+)", log_content, re.IGNORECASE)
+            if match:
+                return match.group(1)
 
         # OpenCode session ID pattern
         match = re.search(r"ses_[a-zA-Z0-9]+", log_content)

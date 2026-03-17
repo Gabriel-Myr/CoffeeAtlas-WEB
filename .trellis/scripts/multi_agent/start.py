@@ -9,12 +9,12 @@ This script:
 1. Creates worktree (if not exists) with dependency install
 2. Copies environment files (from worktree.yaml config)
 3. Sets .current-task in worktree
-4. Starts claude agent in background
+4. Starts the platform-specific dispatch agent in background
 5. Registers agent to registry.json
 
 Prerequisites:
     - task.json must exist with 'branch' field
-    - agents/dispatch.md must exist (in .claude/, .cursor/, .iflow/, or .opencode/)
+    - the platform-specific dispatch agent file must exist
 
 Configuration: .trellis/worktree.yaml
 """
@@ -111,6 +111,48 @@ def _write_json_file(path: Path, data: dict) -> bool:
 DEFAULT_PLATFORM = "claude"
 
 
+def get_runtime_sync_relative_paths() -> tuple[str, ...]:
+    """Paths that should be synced from the current workspace into a new worktree."""
+    return (
+        ".agents/agents",
+        ".trellis/scripts",
+        ".trellis/spec",
+    )
+
+
+def build_agent_launcher_command(
+    adapter: CLIAdapter,
+    project_root: Path,
+    worktree_path: Path,
+    agent: str,
+    prompt: str,
+    session_id: str | None,
+) -> list[str]:
+    """Build the command used to launch a task agent."""
+    if adapter.platform == "codex":
+        return [
+            sys.executable,
+            str(project_root / ".trellis" / "scripts" / "multi_agent" / "run_agent.py"),
+            "--platform",
+            "codex",
+            "--agent",
+            agent,
+            "--workdir",
+            str(worktree_path),
+            "--prompt",
+            prompt,
+        ]
+
+    return adapter.build_run_command(
+        agent=agent,
+        prompt=prompt,
+        session_id=session_id if adapter.supports_session_id_on_create else None,
+        skip_permissions=True,
+        verbose=True,
+        json_output=True,
+    )
+
+
 # =============================================================================
 # Main
 # =============================================================================
@@ -124,7 +166,7 @@ def main() -> int:
     parser.add_argument("task_dir", help="Task directory path")
     parser.add_argument(
         "--platform", "-p",
-        choices=["claude", "cursor", "iflow", "opencode", "qoder"],
+        choices=["claude", "cursor", "iflow", "opencode", "codex", "qoder"],
         default=DEFAULT_PLATFORM,
         help="Platform to use (default: claude)"
     )
@@ -294,6 +336,32 @@ def main() -> int:
         shutil.copytree(str(task_dir_abs), str(task_target_dir))
         log_success("Task directory copied to worktree")
 
+        # ----- Sync runtime files not yet committed to git -----
+        log_info("Syncing local Trellis runtime files...")
+        sync_count = 0
+        for relative_path in get_runtime_sync_relative_paths():
+            source = project_root / relative_path
+            target = Path(worktree_path) / relative_path
+
+            if not source.exists():
+                continue
+
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if target.exists():
+                if target.is_dir():
+                    shutil.rmtree(str(target))
+                else:
+                    target.unlink()
+
+            if source.is_dir():
+                shutil.copytree(str(source), str(target))
+            else:
+                shutil.copy2(str(source), str(target))
+            sync_count += 1
+
+        if sync_count > 0:
+            log_success(f"Synced {sync_count} runtime path(s)")
+
         # ----- Run post_create hooks -----
         log_info("Running post_create hooks...")
         post_create = get_worktree_post_create_hooks(project_root)
@@ -328,7 +396,7 @@ def main() -> int:
     log_success(f"Current task set: {task_dir_relative}")
 
     # =============================================================================
-    # Step 3: Prepare and Start Claude Agent
+    # Step 3: Prepare and Start Dispatch Agent
     # =============================================================================
     log_info(f"Step 3: Starting {adapter.cli_name} agent...")
 
@@ -372,13 +440,13 @@ def main() -> int:
     # Build CLI command using adapter
     # Note: Use explicit prompt to avoid confusion with CI/CD pipelines
     # Also remind the model to follow its agent definition for better cross-model compatibility
-    cli_cmd = adapter.build_run_command(
+    cli_cmd = build_agent_launcher_command(
+        adapter=adapter,
+        project_root=project_root,
+        worktree_path=Path(worktree_path),
         agent="dispatch",
         prompt="Follow your agent instructions to execute the task workflow. Start by reading .trellis/.current-task to get the task directory, then execute each action in task.json next_action array in order.",
-        session_id=session_id if adapter.supports_session_id_on_create else None,
-        skip_permissions=True,
-        verbose=True,
-        json_output=True,
+        session_id=session_id,
     )
 
     with log_file.open("w") as log_f:
@@ -447,6 +515,7 @@ def main() -> int:
     print(f"  Session:   {session_id}")
     print(f"  Worktree:  {worktree_path}")
     print(f"  Task:      {task_dir_relative}")
+    print(f"  Agent:     {dispatch_md}")
     print(f"  Log:       {log_file}")
     print(f"  Registry:  {registry_get_file(project_root)}")
     print()

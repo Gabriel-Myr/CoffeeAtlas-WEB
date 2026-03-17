@@ -1,4 +1,4 @@
-import { ScrollView, View, Text } from '@tarojs/components';
+import { View, Text } from '@tarojs/components';
 import './index.scss';
 
 export interface FilterOption {
@@ -32,8 +32,10 @@ interface FilterBarProps {
 export default function FilterBar({ processValue, roastValue, onProcessChange, onRoastChange }: FilterBarProps) {
   return (
     <View className="filter-bar">
-      <ScrollView scrollX className="filter-bar__row">
-        <View className="filter-bar__group">
+      <View className="filter-bar__panel">
+        <View className="filter-bar__section">
+          <Text className="filter-bar__label">处理法</Text>
+          <View className="filter-bar__group">
           {PROCESS_OPTIONS.map((opt) => {
             const active = processValue === opt.value;
             return (
@@ -46,7 +48,14 @@ export default function FilterBar({ processValue, roastValue, onProcessChange, o
               </View>
             );
           })}
-          <View className="filter-bar__divider" />
+          </View>
+        </View>
+
+        <View className="filter-bar__divider" />
+
+        <View className="filter-bar__section">
+          <Text className="filter-bar__label">烘焙度</Text>
+          <View className="filter-bar__group">
           {ROAST_OPTIONS.map((opt) => {
             const active = roastValue === opt.value;
             return (
@@ -59,8 +68,9 @@ export default function FilterBar({ processValue, roastValue, onProcessChange, o
               </View>
             );
           })}
+          </View>
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 }

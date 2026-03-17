@@ -12,7 +12,7 @@ This script:
 After completion, use start.py to launch the Dispatch Agent.
 
 Prerequisites:
-    - agents/plan.md must exist (in .claude/, .cursor/, .iflow/, or .opencode/)
+    - the platform-specific planning agent file must exist
     - Developer must be initialized
 """
 
@@ -63,6 +63,51 @@ def log_error(msg: str) -> None:
 DEFAULT_PLATFORM = "claude"
 
 
+def format_missing_agent_message(platform: str, agent_path: Path) -> str:
+    """Build a clear missing-agent error message for operators."""
+    lines = [
+        f"Planning agent not found for platform '{platform}'.",
+        f"Expected path: {agent_path}",
+    ]
+
+    if platform == "opencode":
+        lines.append("Create the OpenCode agent file and run plan.py again.")
+    elif platform == "codex":
+        lines.append("Create the Codex project agent file and run plan.py again.")
+    else:
+        lines.append("Create the agent definition file and run plan.py again.")
+
+    return "\n".join(lines)
+
+
+def build_codex_agent_prompt(agent_path: Path, task_prompt: str) -> str:
+    """Embed the project planning agent instructions into the Codex prompt."""
+    agent_instructions = agent_path.read_text(encoding="utf-8")
+    return f"""Follow the project planning agent instructions below.
+
+Agent file: {agent_path}
+
+<project_agent>
+{agent_instructions}
+</project_agent>
+
+User task:
+{task_prompt}
+"""
+
+
+def build_create_task_args(requirement: str, task_name: str) -> argparse.Namespace:
+    """Build the task.py create arguments expected by the current task CLI."""
+    return argparse.Namespace(
+        title=requirement,
+        slug=task_name,
+        assignee=None,
+        priority="P2",
+        description="",
+        parent=None,
+    )
+
+
 # =============================================================================
 # Main
 # =============================================================================
@@ -77,7 +122,7 @@ def main() -> int:
     parser.add_argument("--requirement", "-r", required=True, help="Requirement description")
     parser.add_argument(
         "--platform", "-p",
-        choices=["claude", "cursor", "iflow", "opencode", "qoder"],
+        choices=["claude", "cursor", "iflow", "opencode", "codex", "qoder"],
         default=DEFAULT_PLATFORM,
         help="Platform to use (default: claude)"
     )
@@ -102,8 +147,7 @@ def main() -> int:
     # Check plan agent exists (path varies by platform)
     plan_md = adapter.get_agent_path("plan", project_root)
     if not plan_md.is_file():
-        log_error(f"plan agent not found at {plan_md}")
-        log_info(f"Platform: {platform}")
+        log_error(format_missing_agent_message(platform, plan_md))
         return 1
 
     ensure_developer(project_root)
@@ -122,26 +166,23 @@ def main() -> int:
 
     # Import task module to create task
     from task import cmd_create
-    import argparse as ap
 
     # Create task using task.py's create command
-    create_args = ap.Namespace(
-        title=requirement,
-        slug=task_name,
-        assignee=None,
-        priority="P2",
-        description=""
-    )
+    create_args = build_create_task_args(requirement=requirement, task_name=task_name)
 
     # Capture stdout to get task dir
     import io
-    from contextlib import redirect_stdout
+    from contextlib import redirect_stderr, redirect_stdout
 
     stdout_capture = io.StringIO()
-    with redirect_stdout(stdout_capture):
+    stderr_capture = io.StringIO()
+    with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
         ret = cmd_create(create_args)
 
     if ret != 0:
+        create_stderr = stderr_capture.getvalue().strip()
+        if create_stderr:
+            log_error(create_stderr)
         log_error("Failed to create task directory")
         return 1
 
@@ -180,9 +221,13 @@ def main() -> int:
     env.update(adapter.get_non_interactive_env())
 
     # Build CLI command using adapter
+    cli_prompt = f"Start planning for task: {task_name}"
+    if platform == "codex":
+        cli_prompt = build_codex_agent_prompt(plan_md, cli_prompt)
+
     cli_cmd = adapter.build_run_command(
         agent="plan",  # Will be mapped to "trellis-plan" for OpenCode
-        prompt=f"Start planning for task: {task_name}",
+        prompt=cli_prompt,
         skip_permissions=True,
         verbose=True,
         json_output=True,
@@ -216,11 +261,13 @@ def main() -> int:
     print(f"  Task:  {task_name}")
     print(f"  Type:  {dev_type}")
     print(f"  Dir:   {task_dir}")
+    print(f"  Agent: {plan_md}")
     print(f"  Log:   {log_file}")
     print(f"  PID:   {agent_pid}")
     print()
     print(f"{Colors.YELLOW}To monitor:{Colors.NC}")
     print(f"  tail -f {log_file}")
+    print(f"  test -f {task_dir}/REJECTED.md && cat {task_dir}/REJECTED.md")
     print()
     print(f"{Colors.YELLOW}To check status:{Colors.NC}")
     print(f"  ps -p {agent_pid}")

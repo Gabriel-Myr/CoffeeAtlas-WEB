@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro';
 
 import BeanCard from '../../components/BeanCard';
 import SearchBar from '../../components/SearchBar';
-import { getBeans } from '../../services/api';
+import { getAllBeansForAtlas } from '../../services/api';
 import type { CoffeeBean } from '../../types';
 import {
   type CountryAtlasStats,
@@ -17,6 +17,7 @@ import {
   ORIGIN_ATLAS_CONTINENTS,
   ORIGIN_ATLAS_COUNTRY_MAP,
 } from '../../utils/origin-atlas';
+import { buildAllBeansRouteUrl } from '../all-beans/route-state';
 import './index.scss';
 
 const EMPTY_STATS: CountryAtlasStats = {
@@ -130,8 +131,7 @@ export default function Index(): ReactElement {
     setLoading(true);
     setErrorMessage('');
     try {
-      const response = await getBeans({ pageSize: 50 });
-      setBeans(response.items ?? []);
+      setBeans(await getAllBeansForAtlas());
     } catch (error) {
       const message = error instanceof Error ? error.message : '加载失败';
       setErrorMessage(message);
@@ -174,6 +174,29 @@ export default function Index(): ReactElement {
     }
 
     setSelectedContinent(null);
+  };
+
+  const handleOpenContinentBeans = (): void => {
+    if (!activeContinent) return;
+
+    Taro.navigateTo({
+      url: buildAllBeansRouteUrl({
+        tab: 'discover',
+        continent: activeContinent.id,
+      }),
+    });
+  };
+
+  const handleOpenCountryBeans = (): void => {
+    if (!activeCountry) return;
+
+    Taro.navigateTo({
+      url: buildAllBeansRouteUrl({
+        tab: 'discover',
+        continent: activeCountry.continentId,
+        country: activeCountry.name,
+      }),
+    });
   };
 
   return (
@@ -292,6 +315,14 @@ export default function Index(): ReactElement {
                 <Text className="continent-panel__description">{activeContinent.description}</Text>
               </View>
 
+              <View className="atlas-route-link" onClick={handleOpenContinentBeans}>
+                <View className="atlas-route-link__copy">
+                  <Text className="atlas-route-link__label">继续浏览</Text>
+                  <Text className="atlas-route-link__title">{`查看 ${activeContinent.name} 的完整豆单`}</Text>
+                </View>
+                <Text className="atlas-route-link__icon">↗</Text>
+              </View>
+
               <View className="country-grid">
                 {visibleCountries.length > 0 ? (
                   visibleCountries.map((country) => {
@@ -356,6 +387,14 @@ export default function Index(): ReactElement {
                     <Text className="detail-hero__summary">{activeCountry.editorialLabel}</Text>
                     <Text className="detail-hero__flavor">{activeCountry.flavorLabel}</Text>
                   </View>
+                </View>
+
+                <View className="atlas-route-link atlas-route-link--country" onClick={handleOpenCountryBeans}>
+                  <View className="atlas-route-link__copy">
+                    <Text className="atlas-route-link__label">完整结果</Text>
+                    <Text className="atlas-route-link__title">{`查看 ${activeCountry.name} 的完整豆单`}</Text>
+                  </View>
+                  <Text className="atlas-route-link__icon">↗</Text>
                 </View>
 
                 <View className="detail-stats">

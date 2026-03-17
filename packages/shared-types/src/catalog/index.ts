@@ -68,6 +68,36 @@ export interface BeanDiscoverPayload {
   resultSummary: BeanDiscoverSummary;
 }
 
+export type NewArrivalFiltersMode = 'personalized' | 'mixed' | 'fallback';
+
+export interface NewArrivalFilterOption {
+  id: string;
+  label: string;
+  count: number;
+}
+
+export interface LocalFavoriteBeanPreference {
+  originCountry?: string;
+  process?: string;
+}
+
+export interface LocalFavoriteRoasterPreference {
+  id: string;
+  name: string;
+}
+
+export interface NewArrivalFiltersRequest {
+  localBeans?: LocalFavoriteBeanPreference[];
+  localRoasters?: LocalFavoriteRoasterPreference[];
+}
+
+export interface NewArrivalFiltersPayload {
+  mode: NewArrivalFiltersMode;
+  roasterOptions: NewArrivalFilterOption[];
+  processOptions: NewArrivalFilterOption[];
+  originOptions: NewArrivalFilterOption[];
+}
+
 export interface BeanDiscoverQueryParams {
   q?: string;
   process?: string;

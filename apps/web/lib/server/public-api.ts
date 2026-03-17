@@ -29,6 +29,7 @@ import { getLatestSyncedNewArrivalBeanIds } from '@/lib/new-arrivals';
 import { hasSupabaseServerEnv, requireSupabaseServer } from '@/lib/supabase';
 
 import { BEAN_DISCOVER_EDITORIAL_CONFIGS } from './bean-discover-config';
+import { matchesBeanListFilters } from './bean-list-filters';
 import { normalizeString, sanitizeSearchTerm } from './api-helpers';
 
 const LOCAL_FALLBACK_LIMIT = 500;
@@ -36,6 +37,7 @@ const DEFAULT_BEAN_SORT: BeanSort = 'updated_desc';
 
 interface BeanListFilters {
   q?: string;
+  roasterId?: string;
   originCountry?: string;
   process?: string;
   roastLevel?: string;
@@ -188,6 +190,7 @@ function applySortPlan<T extends { order: (column: string, options: { ascending:
 
 async function queryBeanIdsFromView({
   q,
+  roasterId,
   originCountry,
   process,
   roastLevel,
@@ -212,6 +215,7 @@ async function queryBeanIdsFromView({
   query = applySortPlan(query, normalizeBeanSort(sort));
 
   if (q) query = query.or(buildSearchConditions(q));
+  if (roasterId) query = query.eq('roaster_id', roasterId);
   if (originCountry) query = query.ilike('origin_country', `%${originCountry}%`);
   if (process) query = query.ilike('process_method', `%${process}%`);
   if (roastLevel) query = query.ilike('roast_level', `%${roastLevel}%`);
@@ -242,6 +246,7 @@ async function queryBeanIdsFromView({
 
 async function countBeanIdsFromView({
   q,
+  roasterId,
   originCountry,
   process,
   roastLevel,
@@ -256,6 +261,7 @@ async function countBeanIdsFromView({
   let query = supabaseServer.from('v_catalog_active').select('roaster_bean_id', { count: 'exact', head: true });
 
   if (q) query = query.or(buildSearchConditions(q));
+  if (roasterId) query = query.eq('roaster_id', roasterId);
   if (originCountry) query = query.ilike('origin_country', `%${originCountry}%`);
   if (process) query = query.ilike('process_method', `%${process}%`);
   if (roastLevel) query = query.ilike('roast_level', `%${roastLevel}%`);
@@ -307,71 +313,6 @@ async function queryDiscoverRows({
   return (data ?? []) as CatalogViewDiscoverRow[];
 }
 
-function matchesBeanFilters(
-  bean: CoffeeBean,
-  {
-    q,
-    originCountry,
-    process,
-    roastLevel,
-    country,
-    continent,
-    isNewArrival,
-  }: BeanListFilters
-): boolean {
-  if (q) {
-    const lowered = q.toLowerCase();
-    const searchableValues = [
-      bean.name,
-      bean.roasterName,
-      bean.originCountry,
-      bean.originRegion,
-      bean.process,
-      bean.variety,
-      ...(bean.tastingNotes ?? []),
-    ].filter((value): value is string => Boolean(value));
-
-    if (!searchableValues.some((value) => value.toLowerCase().includes(lowered))) {
-      return false;
-    }
-  }
-
-  if (originCountry && !bean.originCountry.toLowerCase().includes(originCountry.toLowerCase())) {
-    return false;
-  }
-
-  if (process && !bean.process.toLowerCase().includes(process.toLowerCase())) {
-    return false;
-  }
-
-  if (roastLevel && !bean.roastLevel.toLowerCase().includes(roastLevel.toLowerCase())) {
-    return false;
-  }
-
-  const matchedCountry = matchAtlasCountry(bean.originCountry) ?? matchAtlasCountry(bean.name);
-
-  if (country) {
-    const targetCountry = matchAtlasCountry(country);
-    if (!targetCountry) {
-      if (!bean.originCountry.toLowerCase().includes(country.toLowerCase())) return false;
-    } else if (matchedCountry?.name !== targetCountry.name) {
-      return false;
-    }
-  }
-
-  if (continent && matchedCountry?.continentId !== continent) {
-    return false;
-  }
-
-  if (typeof isNewArrival === 'boolean') {
-    if (bean.isNewArrival !== isNewArrival) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 function sortBeans(beans: CoffeeBean[], sort: BeanSort): CoffeeBean[] {
   const result = [...beans];
   switch (sort) {
@@ -391,13 +332,14 @@ async function loadLocalBeans(filters: BeanListFilters): Promise<CoffeeBean[]> {
   const seed = await getCatalogBeansPage({
     limit: LOCAL_FALLBACK_LIMIT,
     offset: 0,
+    roasterId: filters.roasterId,
     origin: filters.originCountry,
     process: filters.process,
     roastLevel: filters.roastLevel,
   });
 
   return sortBeans(
-    seed.filter((bean) => matchesBeanFilters(bean, filters)),
+    seed.filter((bean) => matchesBeanListFilters(bean, filters, matchAtlasCountry)),
     normalizeBeanSort(filters.sort)
   );
 }
@@ -518,7 +460,7 @@ async function buildEditorialPicks(filters: BeanListFilters): Promise<BeanDiscov
   if (config.beanIds && config.beanIds.length > 0) {
     const manualBeans = await getCatalogBeansByIds(config.beanIds);
     for (const bean of manualBeans) {
-      if (!matchesBeanFilters(bean, filters)) continue;
+      if (!matchesBeanListFilters(bean, filters, matchAtlasCountry)) continue;
       if (selectedBeans.some((candidate) => candidate.id === bean.id)) continue;
       selectedBeans.push(bean);
       if (selectedBeans.length >= limit) break;
@@ -541,7 +483,7 @@ async function buildEditorialPicks(filters: BeanListFilters): Promise<BeanDiscov
         });
 
     const rankedCandidates = generatedCandidates
-      .filter((bean) => matchesBeanFilters(bean, filters))
+      .filter((bean) => matchesBeanListFilters(bean, filters, matchAtlasCountry))
       .sort((left, right) => scoreEditorialPick(right, filters) - scoreEditorialPick(left, filters));
 
     for (const bean of rankedCandidates) {
@@ -565,7 +507,7 @@ async function buildEditorialPicksFallback(filters: BeanListFilters): Promise<Be
   });
 
   return fallbackCandidates
-    .filter((bean) => matchesBeanFilters(bean, filters))
+    .filter((bean) => matchesBeanListFilters(bean, filters, matchAtlasCountry))
     .sort((left, right) => scoreEditorialPick(right, filters) - scoreEditorialPick(left, filters))
     .slice(0, limit)
     .map((bean) => ({
@@ -625,6 +567,7 @@ export async function listBeansV1({
   page,
   pageSize,
   q,
+  roasterId,
   originCountry,
   process,
   roastLevel,
@@ -636,6 +579,7 @@ export async function listBeansV1({
   page: number;
   pageSize: number;
   q?: string;
+  roasterId?: string;
   originCountry?: string;
   process?: string;
   roastLevel?: string;
@@ -647,6 +591,7 @@ export async function listBeansV1({
   const offset = (page - 1) * pageSize;
   const filters: BeanListFilters = {
     q: sanitizeSearchTerm(normalizeString(q)),
+    roasterId: normalizeString(roasterId),
     originCountry: normalizeString(originCountry),
     process: normalizeString(process),
     roastLevel: normalizeString(roastLevel),

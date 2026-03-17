@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       page,
       pageSize,
       q: request.nextUrl.searchParams.get('q') ?? undefined,
+      roasterId: request.nextUrl.searchParams.get('roasterId') ?? undefined,
       originCountry:
         request.nextUrl.searchParams.get('originCountry') ??
         request.nextUrl.searchParams.get('origin') ??
