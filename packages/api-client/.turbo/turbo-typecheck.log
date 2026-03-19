@@ -1,4 +1,0 @@
-
-> @coffee-atlas/api-client@0.1.0 typecheck /Users/gabi/CoffeeAtlas-Web/packages/api-client
-> tsc -p tsconfig.json --noEmit
-

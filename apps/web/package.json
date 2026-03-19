@@ -1,5 +1,5 @@
 {
-  "name": "coffeestories-webdb",
+  "name": "@coffeeatlas/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,7 +12,7 @@
     "import:taobao:bindings": "node --experimental-strip-types scripts/import-taobao-roaster-bindings.ts",
     "smoke:api": "node scripts/smoke-v1.mjs",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "pnpm --dir ../.. exec eslint apps/web --ext .js,.jsx,.ts,.tsx",
     "check:cloud-env": "node scripts/check-cloud-env.mjs"
   },
   "dependencies": {

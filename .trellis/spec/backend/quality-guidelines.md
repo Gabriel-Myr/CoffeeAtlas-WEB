@@ -9,7 +9,7 @@
 ```bash
 pnpm lint
 pnpm typecheck
-pnpm --filter coffeestories-webdb test
+pnpm --filter @coffeeatlas/web test
 ```
 
 如果只改了小程序，不需要跑 web test；如果改了 `apps/web/lib/server/**`、`apps/web/app/api/**`、`apps/web/lib/catalog.ts`，至少跑 web test。

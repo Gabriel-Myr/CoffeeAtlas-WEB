@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo \"No lint configured yet\""
+    "lint": "pnpm --dir ../.. exec eslint packages/api-client/src --ext .js,.jsx,.ts,.tsx",
+    "test": "pnpm build && node --test --experimental-strip-types src/**/*.test.ts"
   },
   "dependencies": {
     "@coffee-atlas/shared-types": "workspace:*"

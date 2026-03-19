@@ -14,7 +14,7 @@ pnpm typecheck
 如果改了 Web server/helper 或可测试的纯函数，再跑：
 
 ```bash
-pnpm --filter coffeestories-webdb test
+pnpm --filter @coffeeatlas/web test
 ```
 
 如果改了小程序，再跑：

@@ -1,47 +1,45 @@
-# CoffeeStories WebDB
+# CoffeeAtlas
 
-A standalone web data platform for roasters and coffee beans.
+A pnpm monorepo for the CoffeeAtlas web app, miniprogram, and shared contracts.
 
-## Scope
-- Database-first catalog (no map dependency)
-- Public active catalog view
-- Admin operations shell
-- Import + ingestion + change-review data model
-
-## Folder Structure
-- `app/`: Next.js App Router pages and APIs
-- `db/sql/`: SQL migration scripts for Supabase/Postgres
-- `lib/`: Type definitions and local sample data
-- `docs/`: execution roadmap
+## Workspace Layout
+- `apps/web`: Next.js 16 web app and API routes
+- `apps/miniprogram`: Taro-based WeChat miniprogram
+- `packages/shared-types`: shared API contracts
+- `packages/api-client`: shared client layer in progress
+- `packages/domain`: domain layer in progress
+- `.trellis`: project workflow and spec documents
 
 ## Quick Start
 1. Install dependencies
 ```bash
-npm install
+pnpm install
 ```
 2. Copy env
 ```bash
 cp .env.example .env.local
 ```
-3. Run dev server
+3. Start all dev tasks
 ```bash
-npm run dev
+pnpm dev
 ```
-4. Open
-- `/` homepage
-- `/admin` admin shell
-- `/api/health` health endpoint
 
-## Database Setup Order
-Run SQL files in sequence against Supabase SQL editor:
-1. `db/sql/001_extensions.sql`
-2. `db/sql/010_schema.sql`
-3. `db/sql/020_indexes.sql`
-4. `db/sql/030_rls.sql`
-5. `db/sql/040_views_and_functions.sql`
-6. `db/sql/050_seed_minimal.sql` (optional)
+Useful workspace commands:
 
-## Next Implementation Steps
-- Bind `/app/admin/page.tsx` to real Supabase queries.
-- Add auth guard and role-based API routes.
-- Add staging tables and parser worker for CSV/XLSX ingestion.
+```bash
+pnpm lint
+pnpm typecheck
+pnpm --filter @coffeeatlas/web test
+pnpm --filter @coffeeatlas/miniprogram test
+```
+
+## Main Routes
+- `/`: homepage
+- `/all-beans`: bean catalog page
+- `/api/health`: legacy health check
+- `/api/v1/health`: v1 health check
+
+## Notes
+- Root package manager is `pnpm`. Do not use `npm install` in this repo.
+- Public catalog reads can fall back to sample data when Supabase server env is missing.
+- `packages/api-client` and `packages/domain` exist, but are not yet the main runtime entry points.

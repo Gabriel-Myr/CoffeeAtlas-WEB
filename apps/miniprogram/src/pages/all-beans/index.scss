@@ -1,20 +1,29 @@
 .all-beans {
   min-height: 100vh;
-  padding: 32px 0 40px;
+  padding-bottom: 40px;
 
   &__hero {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 48px 32px 28px;
+    padding: 48px 24px 26px;
     text-align: center;
+
+    &::after {
+      content: '';
+      width: 88px;
+      height: 1px;
+      margin-top: 18px;
+      background: linear-gradient(90deg, transparent, rgba(107, 83, 68, 0.26), transparent);
+    }
   }
 
   &__title-en {
     color: var(--color-coffee-dark, #3e2a1e);
     font-size: 28px;
     font-weight: 700;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     line-height: 1;
   }
 
@@ -22,7 +31,7 @@
     margin-top: -4px;
     color: var(--color-coffee-light, #8b7355);
     font-family: var(--font-serif, Georgia, serif);
-    font-size: 32px;
+    font-size: 34px;
     font-style: italic;
     font-weight: 500;
     line-height: 1;
@@ -38,10 +47,12 @@
   }
 
   &__count {
+    display: block;
     margin-top: 12px;
     color: rgba(139, 115, 85, 0.92);
     font-size: 14px;
     font-weight: 500;
+    text-align: center;
   }
 
   &__tabs {

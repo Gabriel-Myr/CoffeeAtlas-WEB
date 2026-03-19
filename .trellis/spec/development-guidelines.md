@@ -21,8 +21,8 @@ pnpm build
 按包执行时使用 `--filter`：
 
 ```bash
-pnpm --filter coffeestories-webdb dev
-pnpm --filter coffeestories-webdb test
+pnpm --filter @coffeeatlas/web dev
+pnpm --filter @coffeeatlas/web test
 pnpm --filter @coffeeatlas/miniprogram typecheck
 ```
 
@@ -30,7 +30,7 @@ pnpm --filter @coffeeatlas/miniprogram typecheck
 
 | 路径 | 包名 | 职责 |
 |------|------|------|
-| `apps/web` | `coffeestories-webdb` | Web UI + Next API + Supabase server access |
+| `apps/web` | `@coffeeatlas/web` | Web UI + Next API + Supabase server access |
 | `apps/miniprogram` | `@coffeeatlas/miniprogram` | Taro 小程序 |
 | `packages/shared-types` | `@coffee-atlas/shared-types` | 当前权威 API 契约层 |
 | `packages/api-client` | `@coffee-atlas/api-client` | 预备中的跨端 client |
@@ -133,7 +133,7 @@ import Taro from '@tarojs/taro'; // in packages/*
 ```bash
 pnpm lint
 pnpm typecheck
-pnpm --filter coffeestories-webdb test
+pnpm --filter @coffeeatlas/web test
 pnpm --filter @coffeeatlas/miniprogram typecheck
 ```
 

@@ -1,6 +1,16 @@
 import Taro from '@tarojs/taro';
+import {
+  buildBeanDetailPath,
+  buildBeanDiscoverPath,
+  buildBeansPath,
+  buildRoasterDetailPath,
+  buildRoastersPath,
+  extractApiErrorMessage,
+  unwrapApiResponse,
+} from '@coffee-atlas/api-client';
 import type {
   ApiHealthStatus,
+  BeanDetail,
   BeanDiscoverPayload,
   BeanSort,
   CoffeeBean,
@@ -18,8 +28,8 @@ import type {
 } from '../types';
 import { getToken } from '../utils/storage';
 import { getApiBaseUrlState } from '../utils/api-config';
-
-const PLACEHOLDER_PATTERN = /YOUR_LAN_IP|your-domain\.com/i;
+import { getApiBaseUrlValidationError } from '../utils/api-base-url';
+import { buildApiRequestOptions } from '../utils/api-request';
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
@@ -39,30 +49,32 @@ async function request<T>(
     throw new Error('未配置 API 地址。可在“我的 > API 联调”里填写云端 HTTPS 域名。');
   }
 
-  if (PLACEHOLDER_PATTERN.test(baseUrl)) {
-    throw new Error('当前 TARO_APP_API_URL 还是占位值，请改成真实地址。');
+  const validationError = getApiBaseUrlValidationError(baseUrl);
+  if (validationError) {
+    throw new Error(validationError);
   }
-
 
   const token = getToken();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   try {
-    const res = await Taro.request<V1Response<T> | { error?: string }>({
+    const requestOptions = buildApiRequestOptions({
       url: `${baseUrl}${endpoint}`,
       header: headers,
-      ...options,
+      options,
+    });
+
+    const res = await Taro.request<V1Response<T> | { error?: string | { message?: string } }>({
+      ...requestOptions,
     });
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      const body = res.data as V1Response<T>;
-      if (body.ok) return body.data;
-      throw new Error((body as unknown as { error?: { message?: string } }).error?.message || '请求失败');
+      return unwrapApiResponse<T>(res.data);
     }
 
-    const data = res.data as { error?: string } | undefined;
-    throw new Error(data?.error || `请求失败: ${res.statusCode}`);
+    const message = extractApiErrorMessage(res.data);
+    throw new Error(message || `请求失败: ${res.statusCode}`);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -82,20 +94,7 @@ export async function getBeans(params?: {
   continent?: DiscoverContinentId;
   country?: string;
 }): Promise<PaginatedResult<CoffeeBean>> {
-  const query = new URLSearchParams();
-  if (params?.pageSize) query.set('pageSize', String(params.pageSize));
-  if (params?.page) query.set('page', String(params.page));
-  if (params?.q) query.set('q', params.q);
-  if (params?.roasterId) query.set('roasterId', params.roasterId);
-  if (params?.originCountry) query.set('originCountry', params.originCountry);
-  if (params?.process) query.set('process', params.process);
-  if (params?.roastLevel) query.set('roastLevel', params.roastLevel);
-  if (params?.sort) query.set('sort', params.sort);
-  if (typeof params?.isNewArrival === 'boolean') query.set('isNewArrival', String(params.isNewArrival));
-  if (params?.continent) query.set('continent', params.continent);
-  if (params?.country) query.set('country', params.country);
-  const qs = query.toString();
-  return request<PaginatedResult<CoffeeBean>>(`/api/v1/beans${qs ? `?${qs}` : ''}`);
+  return request<PaginatedResult<CoffeeBean>>(buildBeansPath(params));
 }
 
 export async function getBeanDiscover(params?: {
@@ -104,13 +103,7 @@ export async function getBeanDiscover(params?: {
   continent?: DiscoverContinentId;
   country?: string;
 }): Promise<BeanDiscoverPayload> {
-  const query = new URLSearchParams();
-  if (params?.q) query.set('q', params.q);
-  if (params?.process) query.set('process', params.process);
-  if (params?.continent) query.set('continent', params.continent);
-  if (params?.country) query.set('country', params.country);
-  const qs = query.toString();
-  return request<BeanDiscoverPayload>(`/api/v1/beans/discover${qs ? `?${qs}` : ''}`);
+  return request<BeanDiscoverPayload>(buildBeanDiscoverPath(params));
 }
 
 export async function getNewArrivalFilters(payload: NewArrivalFiltersRequest): Promise<NewArrivalFiltersPayload> {
@@ -120,8 +113,8 @@ export async function getNewArrivalFilters(payload: NewArrivalFiltersRequest): P
   });
 }
 
-export async function getBeanById(id: string): Promise<CoffeeBean> {
-  return request<CoffeeBean>(`/api/v1/beans/${id}`);
+export async function getBeanById(id: string): Promise<BeanDetail> {
+  return request<BeanDetail>(buildBeanDetailPath(id));
 }
 
 // 烘焙商
@@ -132,18 +125,11 @@ export async function getRoasters(params?: {
   city?: string;
   feature?: RoasterFeature;
 }): Promise<PaginatedResult<RoasterSummary>> {
-  const query = new URLSearchParams();
-  if (params?.pageSize) query.set('pageSize', String(params.pageSize));
-  if (params?.page) query.set('page', String(params.page));
-  if (params?.q) query.set('q', params.q);
-  if (params?.city) query.set('city', params.city);
-  if (params?.feature) query.set('feature', params.feature);
-  const qs = query.toString();
-  return request<PaginatedResult<RoasterSummary>>(`/api/v1/roasters${qs ? `?${qs}` : ''}`);
+  return request<PaginatedResult<RoasterSummary>>(buildRoastersPath(params));
 }
 
 export async function getRoasterById(id: string): Promise<RoasterDetail> {
-  return request<RoasterDetail>(`/api/v1/roasters/${id}`);
+  return request<RoasterDetail>(buildRoasterDetailPath(id));
 }
 
 export async function getApiHealth(): Promise<ApiHealthStatus> {

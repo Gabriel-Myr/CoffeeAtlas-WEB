@@ -83,13 +83,20 @@ export default function DebugPage() {
   }
 
   function handleApplyUrl() {
-    const nextState = setApiBaseUrlOverride(draftUrl);
-    setApiState(nextState);
-    setDraftUrl(nextState.baseUrl);
-    Taro.showToast({
-      title: nextState.baseUrl ? '已保存联调地址' : '已清空联调地址',
-      icon: 'none',
-    });
+    try {
+      const nextState = setApiBaseUrlOverride(draftUrl);
+      setApiState(nextState);
+      setDraftUrl(nextState.baseUrl);
+      Taro.showToast({
+        title: nextState.baseUrl ? '已保存联调地址' : '已清空联调地址',
+        icon: 'none',
+      });
+    } catch (error) {
+      Taro.showToast({
+        title: error instanceof Error ? error.message : '地址格式不正确',
+        icon: 'none',
+      });
+    }
   }
 
   function handleResetUrl() {

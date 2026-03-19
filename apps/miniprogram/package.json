@@ -4,15 +4,21 @@
   "private": true,
   "description": "CoffeeAtlas Miniprogram",
   "scripts": {
-    "build:weapp": "taro build --type weapp",
+    "build:deps": "pnpm --filter @coffee-atlas/shared-types build && pnpm --filter @coffee-atlas/api-client build && pnpm --filter @coffee-atlas/domain build",
+    "build:weapp": "pnpm build:deps && taro build --type weapp",
     "build:h5": "taro build --type h5",
-    "dev:weapp": "npm run build:weapp -- --watch",
-    "dev:h5": "npm run build:h5 -- --watch",
+    "dev:weapp": "pnpm build:deps && taro build --type weapp --watch",
+    "dev:h5": "pnpm build:h5 -- --watch",
     "generate:atlas": "python3 scripts/generate-origin-atlas-shapes.py",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "pnpm --dir ../.. exec eslint apps/miniprogram/src apps/miniprogram/tests --ext .js,.jsx,.ts,.tsx",
+    "test": "node --test --experimental-strip-types tests/**/*.test.ts"
   },
   "dependencies": {
     "@babel/runtime": "^7.20.0",
+    "@coffee-atlas/api-client": "workspace:*",
+    "@coffee-atlas/domain": "workspace:*",
+    "@coffee-atlas/shared-types": "workspace:*",
     "@tarojs/components": "3.6.30",
     "@tarojs/helper": "3.6.30",
     "@tarojs/plugin-framework-react": "3.6.30",

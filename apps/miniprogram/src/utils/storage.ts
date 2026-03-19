@@ -1,4 +1,8 @@
 import Taro from '@tarojs/taro';
+import type {
+  BeanFavoriteSnapshot as BeanSnapshot,
+  RoasterFavoriteSnapshot as RoasterSnapshot,
+} from '@coffee-atlas/domain';
 
 import type { AuthUser } from '../types';
 
@@ -11,28 +15,7 @@ const PENDING_FAVORITES_KEY = 'pending_favorites';
 const MAX_HISTORY = 20;
 type FavoriteTargetType = 'bean' | 'roaster';
 
-export interface BeanSnapshot {
-  id: string;
-  name: string;
-  roasterName: string;
-  imageUrl: string | null;
-  originCountry: string;
-  process: string;
-  price: number;
-}
-
-export interface RoasterSnapshot {
-  id: string;
-  name: string;
-  city: string;
-  description?: string | null;
-  logoUrl?: string | null;
-  coverImageUrl?: string | null;
-  taobaoUrl?: string | null;
-  xiaohongshuUrl?: string | null;
-  websiteUrl?: string | null;
-  beanCount?: number;
-}
+export type { BeanSnapshot, RoasterSnapshot };
 
 // Token
 export function getToken(): string | null {

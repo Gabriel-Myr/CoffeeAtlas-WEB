@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Image, Text, View } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
+import { toRoasterFavoriteSnapshot } from '@coffee-atlas/domain';
 
 import BeanCard from '../../components/BeanCard';
 import EmptyState from '../../components/EmptyState';
@@ -16,21 +17,6 @@ import { isLoggedIn } from '../../utils/auth';
 import { openExternalLink } from '../../utils/external-links';
 import { isRoasterFavorite, toggleRoasterFavorite } from '../../utils/storage';
 import './index.scss';
-
-function toRoasterSnapshot(roaster: RoasterDetail) {
-  return {
-    id: roaster.id,
-    name: roaster.name,
-    city: roaster.city,
-    description: roaster.description,
-    logoUrl: roaster.logoUrl,
-    coverImageUrl: roaster.coverImageUrl,
-    taobaoUrl: roaster.taobaoUrl,
-    xiaohongshuUrl: roaster.xiaohongshuUrl,
-    websiteUrl: roaster.websiteUrl,
-    beanCount: roaster.beanCount,
-  };
-}
 
 function formatLinkLabel(url: string): string {
   return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -87,7 +73,7 @@ export default function RoasterDetailPage() {
       return;
     }
 
-    const added = toggleRoasterFavorite(toRoasterSnapshot(roaster));
+    const added = toggleRoasterFavorite(toRoasterFavoriteSnapshot(roaster));
     setFavorited(added);
     Taro.showToast({ title: added ? '已收藏烘焙商' : '已取消收藏', icon: 'none', duration: 1500 });
   };

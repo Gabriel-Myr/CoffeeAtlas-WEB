@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo \"No lint configured yet\""
+    "lint": "pnpm --dir ../.. exec eslint packages/shared-types/src --ext .js,.jsx,.ts,.tsx"
   },
   "devDependencies": {
     "typescript": "5.8.2"

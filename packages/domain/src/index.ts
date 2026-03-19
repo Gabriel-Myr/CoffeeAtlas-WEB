@@ -1,4 +1,3 @@
-// Re-export all domain logic
 export * from './catalog';
 export * from './roasters';
 export * from './mappers';

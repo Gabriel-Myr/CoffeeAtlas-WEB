@@ -7,7 +7,7 @@
 Web 端当前使用 Node.js 内置测试运行器：
 
 ```bash
-pnpm --filter coffeestories-webdb test
+pnpm --filter @coffeeatlas/web test
 ```
 
 底层命令来自 `apps/web/package.json`：

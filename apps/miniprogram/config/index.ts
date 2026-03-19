@@ -1,7 +1,14 @@
+import path from 'node:path'
 import { defineConfig, type UserConfigExport } from '@tarojs/cli'
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
 import devConfig from './dev'
 import prodConfig from './prod'
+
+const workspacePackageAliases = {
+  '@coffee-atlas/shared-types': path.resolve(__dirname, '../../../packages/shared-types/dist/index.js'),
+  '@coffee-atlas/api-client': path.resolve(__dirname, '../../../packages/api-client/dist/index.js'),
+  '@coffee-atlas/domain': path.resolve(__dirname, '../../../packages/domain/dist/index.js')
+}
 
 export default defineConfig(async (merge) => {
   const baseConfig: UserConfigExport = {
@@ -24,6 +31,7 @@ export default defineConfig(async (merge) => {
     },
     framework: 'react',
     compiler: 'webpack5',
+    alias: workspacePackageAliases,
     cache: {
       enable: false
     },

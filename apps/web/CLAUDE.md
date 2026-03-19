@@ -15,7 +15,7 @@ CoffeeAtlas 的 Web 前端与 API 网关。承担三个角色：
 
 - 入口：`app/layout.tsx` → `app/page.tsx` → `app/HomePageClient.tsx`
 - 启动：`pnpm dev`（在 `apps/web` 目录下）或根目录 `pnpm dev`
-- 健康检查：`GET /api/health` → `{ ok: true, service: "coffeestories-webdb", ts: "..." }`
+- 健康检查：`GET /api/health` → `{ ok: true, service: "coffeeatlas-web", ts: "..." }`
 
 ---
 
@@ -120,7 +120,7 @@ API 响应信封（来自 `@coffee-atlas/shared-types`）：
 
 - 测试命令：`pnpm test`（`node --test --experimental-strip-types tests/**/*.test.ts`）
 - 测试目录：`tests/`（尚未创建，为主要缺口）
-- Lint：`pnpm lint`（`next lint`）
+- Lint：`pnpm lint`（`eslint .`）
 - 类型检查：`pnpm typecheck`（`tsc --noEmit`）
 
 ---

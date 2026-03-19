@@ -142,5 +142,5 @@ export function parseStringArray(value: unknown, field: string): string[] | unde
 
 export function sanitizeSearchTerm(value: string | undefined): string | undefined {
   if (!value) return undefined;
-  return value.replace(/[,%']/g, ' ').trim() || undefined;
+  return value.replace(/[,%'()]/g, ' ').trim() || undefined;
 }

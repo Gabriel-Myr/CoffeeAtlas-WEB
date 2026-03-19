@@ -4,29 +4,8 @@ import { useState, useMemo } from 'react';
 import { Search, Filter, Coffee, Palette, Settings, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import type { CoffeeBean } from '@/lib/catalog';
 import { formatSalesCount } from '@/lib/sales';
-
-interface CoffeeBean {
-  id: string;
-  name: string;
-  roasterId: string;
-  roasterName: string;
-  city: string;
-  originCountry: string;
-  originRegion: string;
-  farm: string;
-  variety: string;
-  process: string;
-  roastLevel: string;
-  price: number;
-  discountedPrice: number;
-  currency: string;
-  salesCount: number;
-  tastingNotes: string[];
-  imageUrl: string | null;
-  isNewArrival: boolean;
-  isInStock: boolean;
-}
 
 type ThemeOption = 'warm' | 'dark' | 'green' | 'minimal' | 'japanese';
 

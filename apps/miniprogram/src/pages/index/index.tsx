@@ -34,28 +34,8 @@ function buildAtlasStyle(accent: string, outline: string): string {
   return `--atlas-card-accent:${accent};--atlas-card-outline:${outline};`;
 }
 
-function getBubbleStageClassName(count: number): string {
-  if (count >= 3) return 'atlas__bubble-stage atlas__bubble-stage--trio';
-  if (count === 2) return 'atlas__bubble-stage atlas__bubble-stage--duo';
-  return 'atlas__bubble-stage atlas__bubble-stage--solo';
-}
-
-function getBubblePlacementClassName(count: number, index: number): string {
-  if (count === 2) {
-    return index === 0 ? 'atlas-bubble--duo-left' : 'atlas-bubble--duo-right';
-  }
-
-  if (count === 1) {
-    return 'atlas-bubble--solo';
-  }
-
-  return '';
-}
-
-function getBubbleDelayClassName(index: number): string {
-  if (index === 1) return 'animate-delay-2';
-  if (index >= 2) return 'animate-delay-4';
-  return '';
+function getEntryDelayStyle(index: number): string {
+  return `--entry-delay:${index * 0.08}s;`;
 }
 
 interface AtlasSilhouetteProps {
@@ -165,7 +145,6 @@ export default function Index(): ReactElement {
       return matchesAtlasQuery(country, atlasStatsMap.get(country.name) ?? EMPTY_STATS, atlasQuery);
     });
   }, [activeContinent, atlasQuery, atlasStatsMap]);
-  const bubbleStageClassName = getBubbleStageClassName(visibleContinents.length);
 
   const handleBack = (): void => {
     if (selectedCountry) {
@@ -222,47 +201,41 @@ export default function Index(): ReactElement {
             <View className="atlas__home-default">
               {visibleContinents.length > 0 ? (
                 <>
-                  <View className={bubbleStageClassName}>
-                    <View className="atlas__bubble-decor atlas__bubble-decor--1" />
-                    <View className="atlas__bubble-decor atlas__bubble-decor--2" />
-                    <View className="atlas__bubble-decor atlas__bubble-decor--3" />
-
-                    {visibleContinents.map((continent, index) => {
-                      const delayClassName = getBubbleDelayClassName(index);
-                      const placementClassName = getBubblePlacementClassName(visibleContinents.length, index);
-
-                      return (
-                        <View
-                          key={continent.id}
-                          className={`atlas-bubble atlas-bubble--${continent.id} ${placementClassName}`.trim()}
-                          style={buildAtlasStyle(continent.color, continent.color)}
-                          hoverClass="atlas-bubble--active"
-                          hoverStartTime={20}
-                          hoverStayTime={70}
-                          onClick={() => setSelectedContinent(continent.id)}
-                        >
-                          <View className="atlas-bubble__motion">
-                            <View className={`atlas-bubble__entry ${delayClassName}`.trim()}>
-                              <View className={`atlas-bubble__orb ${delayClassName}`.trim()}>
-                                <AtlasSilhouette
-                                  path={continent.path}
-                                  viewBox={continent.viewBox}
-                                  color={continent.color}
-                                  frame={continent.silhouetteFrame}
-                                  shellClassName="atlas-bubble__map-shell"
-                                  imageClassName="atlas-bubble__map"
-                                  detail
-                                />
-                                <Text className="atlas-bubble__label">{continent.name}</Text>
-                              </View>
-                            </View>
+                  <View className="atlas__continent-grid">
+                    {visibleContinents.map((continent, index) => (
+                      <View
+                        key={continent.id}
+                        className={`continent-tile continent-tile--${continent.cardVariant}`}
+                        style={`${buildAtlasStyle(continent.color, continent.color)}${getEntryDelayStyle(index)}`}
+                        hoverClass="continent-tile--active"
+                        hoverStartTime={20}
+                        hoverStayTime={70}
+                        onClick={() => setSelectedContinent(continent.id)}
+                      >
+                        <View className="continent-tile__orb">
+                          <AtlasSilhouette
+                            path={continent.path}
+                            viewBox={continent.viewBox}
+                            color={continent.color}
+                            frame={continent.silhouetteFrame}
+                            shellClassName="continent-tile__map-shell"
+                            imageClassName="continent-tile__map"
+                            detail
+                          />
+                        </View>
+                        <View className="continent-tile__body">
+                          <Text className="continent-tile__kicker">{continent.editorialLabel}</Text>
+                          <Text className="continent-tile__name">{continent.name}</Text>
+                          <Text className="continent-tile__desc">{continent.description}</Text>
+                          <View className="continent-tile__meta">
+                            <Text className="continent-tile__count">{continent.countries.length} 个产地国</Text>
                           </View>
                         </View>
-                      );
-                    })}
+                      </View>
+                    ))}
                   </View>
                   <View className="atlas__intro">
-                    <Text className="atlas__intro-text">先看三大洲轮廓，再进入国家索引，最后查看对应豆款与烘焙商。</Text>
+                    <Text className="atlas__intro-text">选择一个大洲，浏览国家索引与豆款。</Text>
                   </View>
                 </>
               ) : (

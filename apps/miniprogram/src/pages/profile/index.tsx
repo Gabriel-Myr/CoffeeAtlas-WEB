@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { View, Text, Image, Button } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
+import { toBeanFavoriteSnapshot, toRoasterFavoriteSnapshot } from '@coffee-atlas/domain';
 
 import Icon from '../../components/Icon';
 import RoasterCard from '../../components/RoasterCard';
@@ -8,9 +9,7 @@ import { getFavorites as getCloudFavorites, removeFavorite as removeCloudFavorit
 import type {
   AuthUser,
   BeanFavorite,
-  CoffeeBean,
   RoasterFavorite,
-  RoasterSummary,
   UserFavorite,
 } from '../../types';
 import { isLoggedIn, login, logout } from '../../utils/auth';
@@ -42,32 +41,6 @@ interface BeanFavoriteEntry {
 interface RoasterFavoriteEntry {
   roaster: RoasterSnapshot;
   favorite?: RoasterFavorite;
-}
-
-function toBeanSnapshot(bean: CoffeeBean): BeanSnapshot {
-  return {
-    id: bean.id,
-    name: bean.name,
-    roasterName: bean.roasterName,
-    imageUrl: bean.imageUrl,
-    originCountry: bean.originCountry,
-    process: bean.process,
-    price: bean.price,
-  };
-}
-
-function toRoasterSnapshot(roaster: RoasterSummary): RoasterSnapshot {
-  return {
-    id: roaster.id,
-    name: roaster.name,
-    city: roaster.city,
-    description: roaster.description,
-    logoUrl: roaster.logoUrl,
-    coverImageUrl: roaster.coverImageUrl,
-    taobaoUrl: roaster.taobaoUrl,
-    xiaohongshuUrl: roaster.xiaohongshuUrl,
-    beanCount: roaster.beanCount,
-  };
 }
 
 function formatHistoryTime(viewedAt: number): string {
@@ -183,7 +156,7 @@ export default function Profile() {
 
     return cloudFavorites.flatMap((favorite) => {
       if (favorite.target_type !== 'bean' || !favorite.bean) return [];
-      return [{ favorite: favorite as BeanFavorite, bean: toBeanSnapshot(favorite.bean) }];
+      return [{ favorite: favorite as BeanFavorite, bean: toBeanFavoriteSnapshot(favorite.bean) }];
     });
   }, [cloudFavorites, localBeanFavorites, loggedIn]);
 
@@ -194,7 +167,7 @@ export default function Profile() {
 
     return cloudFavorites.flatMap((favorite) => {
       if (favorite.target_type !== 'roaster' || !favorite.roaster) return [];
-      return [{ favorite: favorite as RoasterFavorite, roaster: toRoasterSnapshot(favorite.roaster) }];
+      return [{ favorite: favorite as RoasterFavorite, roaster: toRoasterFavoriteSnapshot(favorite.roaster) }];
     });
   }, [cloudFavorites, localRoasterFavorites, loggedIn]);
 

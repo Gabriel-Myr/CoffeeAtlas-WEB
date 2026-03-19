@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { View, Text, Image } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
+import { toBeanFavoriteSnapshot } from '@coffee-atlas/domain';
 import { getBeanById, addFavorite, removeFavorite, getFavorites } from '../../services/api';
-import type { CoffeeBean } from '../../types';
+import type { BeanDetail } from '../../types';
 import { formatSalesCount } from '../../utils/formatters';
 import { isBeanFavorite, toggleBeanFavorite, addToHistory } from '../../utils/storage';
 import { isLoggedIn } from '../../utils/auth';
@@ -12,7 +13,7 @@ import './index.scss';
 export default function BeanDetail() {
   const router = useRouter();
   const { id } = router.params;
-  const [bean, setBean] = useState<CoffeeBean | null>(null);
+  const [bean, setBean] = useState<BeanDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [favorited, setFavorited] = useState(false);
 
@@ -27,15 +28,7 @@ export default function BeanDetail() {
         } else {
           setFavorited(isBeanFavorite(data.id));
         }
-        addToHistory({
-          id: data.id,
-          name: data.name,
-          roasterName: data.roasterName,
-          imageUrl: data.imageUrl,
-          originCountry: data.originCountry,
-          process: data.process,
-          price: data.price,
-        });
+        addToHistory(toBeanFavoriteSnapshot(data));
       })
       .catch(() => Taro.showToast({ title: '加载失败', icon: 'none' }))
       .finally(() => setLoading(false));
@@ -58,15 +51,7 @@ export default function BeanDetail() {
         Taro.showToast({ title: '操作失败', icon: 'none' });
       }
     } else {
-      const added = toggleBeanFavorite({
-        id: bean.id,
-        name: bean.name,
-        roasterName: bean.roasterName,
-        imageUrl: bean.imageUrl,
-        originCountry: bean.originCountry,
-        process: bean.process,
-        price: bean.price,
-      });
+      const added = toggleBeanFavorite(toBeanFavoriteSnapshot(bean));
       setFavorited(added);
       Taro.showToast({ title: added ? '已收藏' : '已取消收藏', icon: 'none', duration: 1500 });
     }

@@ -9,9 +9,9 @@ import SearchBar from '../../components/SearchBar';
 import { getBeanDiscover, getBeans, getNewArrivalFilters } from '../../services/api';
 import type { BeanDiscoverPayload, CoffeeBean, DiscoverContinentId, NewArrivalFiltersPayload } from '../../types';
 import {
-  buildLocalNewArrivalFiltersFallback,
   buildNewArrivalBeanRequestParams,
   buildNewArrivalFiltersRequest,
+  resolveNewArrivalFiltersPayload,
 } from './new-arrival-filters';
 import {
   ORIGIN_ATLAS_CONTINENT_MAP,
@@ -91,9 +91,8 @@ export default function AllBeans() {
     selectedNewArrivalProcess !== EMPTY_NEW_FILTER_VALUE ||
     selectedOriginCountry !== EMPTY_NEW_FILTER_VALUE;
   const resolvedNewArrivalFilters = useMemo(() => {
-    if (newArrivalFilters) return newArrivalFilters;
-
-    return buildLocalNewArrivalFiltersFallback(
+    return resolveNewArrivalFiltersPayload(
+      newArrivalFilters,
       newArrivalFallbackSeed.length > 0 ? newArrivalFallbackSeed : visibleBeans
     );
   }, [newArrivalFallbackSeed, newArrivalFilters, visibleBeans]);
@@ -446,8 +445,8 @@ export default function AllBeans() {
         <Text className="all-beans__title-en">COFFEE</Text>
         <Text className="all-beans__title-atlas">Atlas</Text>
         <Text className="all-beans__subtitle">全部咖啡豆</Text>
-        {countLabel ? <Text className="all-beans__count">{countLabel}</Text> : null}
       </View>
+      {countLabel ? <Text className="all-beans__count">{countLabel}</Text> : null}
 
       <SearchBar value={searchQuery} placeholder="按烘焙商、产地、处理法或豆种搜索..." onInput={setSearchQuery} />
 

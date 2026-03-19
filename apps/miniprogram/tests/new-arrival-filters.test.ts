@@ -7,6 +7,7 @@ import {
   buildLocalNewArrivalFiltersFallback,
   buildNewArrivalBeanRequestParams,
   buildNewArrivalFiltersRequest,
+  resolveNewArrivalFiltersPayload,
 } from '../src/pages/all-beans/new-arrival-filters.ts';
 
 const beanFavorites: BeanSnapshot[] = [
@@ -138,4 +139,45 @@ test('buildLocalNewArrivalFiltersFallback derives hot options from current new-a
       { id: '巴拿马', label: '巴拿马', count: 1 },
     ],
   });
+});
+
+test('resolveNewArrivalFiltersPayload falls back to local beans when remote payload is empty', () => {
+  assert.deepEqual(
+    resolveNewArrivalFiltersPayload(
+      {
+        mode: 'personalized',
+        roasterOptions: [],
+        processOptions: [],
+        originOptions: [],
+      },
+      newArrivalBeans
+    ),
+    buildLocalNewArrivalFiltersFallback(newArrivalBeans)
+  );
+});
+
+test('resolveNewArrivalFiltersPayload fills missing groups from local beans', () => {
+  assert.deepEqual(
+    resolveNewArrivalFiltersPayload(
+      {
+        mode: 'mixed',
+        roasterOptions: [{ id: 'roaster-x', label: 'Remote Roaster', count: 5 }],
+        processOptions: [],
+        originOptions: [],
+      },
+      newArrivalBeans
+    ),
+    {
+      mode: 'mixed',
+      roasterOptions: [{ id: 'roaster-x', label: 'Remote Roaster', count: 5 }],
+      processOptions: [
+        { id: '水洗', label: '水洗', count: 2 },
+        { id: '日晒', label: '日晒', count: 1 },
+      ],
+      originOptions: [
+        { id: '埃塞俄比亚', label: '埃塞俄比亚', count: 2 },
+        { id: '巴拿马', label: '巴拿马', count: 1 },
+      ],
+    }
+  );
 });

@@ -11,7 +11,7 @@ function hasJwtConfig() {
 
 export async function GET() {
   return apiSuccess({
-    service: 'coffeestories-webdb',
+    service: 'coffeeatlas-web',
     ts: new Date().toISOString(),
     supabaseConfigured: hasSupabaseServerEnv,
     wechatConfigured: hasWechatConfig(),

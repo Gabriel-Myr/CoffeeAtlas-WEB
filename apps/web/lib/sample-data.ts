@@ -1,4 +1,4 @@
-import { CatalogRow } from '@/lib/types';
+import type { CatalogRow } from './types.ts';
 
 export const sampleCatalog: CatalogRow[] = [
   {

@@ -1,6 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "composite": true,
     "declaration": true,
     "declarationMap": true,
@@ -11,6 +13,7 @@
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
+  "exclude": ["dist", "src/**/*.test.ts"],
   "references": [
     { "path": "../shared-types" }
   ]

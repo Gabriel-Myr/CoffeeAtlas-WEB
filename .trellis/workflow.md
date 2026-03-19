@@ -167,7 +167,7 @@ python3 ./.trellis/scripts/task.py start .trellis/tasks/<dir>
 ```bash
 pnpm lint
 pnpm typecheck
-pnpm --filter coffeestories-webdb test
+pnpm --filter @coffeeatlas/web test
 ```
 
 Additional checks when relevant:

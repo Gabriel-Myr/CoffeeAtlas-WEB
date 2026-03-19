@@ -68,7 +68,80 @@ join public.roasters r on r.id = rb.roaster_id
 join public.beans b on b.id = rb.bean_id
 left join public.sources s on s.id = rb.source_id;
 
--- Weighted search function for catalog page and API.
+-- Weighted search helper and wrappers for catalog page and API.
+create or replace function public.search_catalog_matches(
+  p_query text
+)
+returns table (
+  roaster_bean_id uuid,
+  roaster_name text,
+  city text,
+  bean_name text,
+  display_name text,
+  process_method text,
+  roast_level text,
+  price_amount numeric,
+  price_currency char(3),
+  is_in_stock boolean,
+  rank_score real,
+  updated_at timestamptz
+)
+language sql
+stable
+as $$
+  with normalized as (
+    select btrim(coalesce(p_query, '')) as q
+  ),
+  tsq as (
+    select
+      normalized.q,
+      case
+        when normalized.q = '' then null::tsquery
+        else websearch_to_tsquery('simple', normalized.q)
+      end as query
+    from normalized
+  )
+  select
+    rb.id as roaster_bean_id,
+    r.name as roaster_name,
+    r.city,
+    b.canonical_name as bean_name,
+    rb.display_name,
+    b.process_method,
+    rb.roast_level,
+    rb.price_amount,
+    rb.price_currency,
+    rb.is_in_stock,
+    case
+      when tsq.q = '' then 0::real
+      else ts_rank_cd(
+        coalesce(rb.search_tsv, ''::tsvector) ||
+        coalesce(b.search_tsv, ''::tsvector) ||
+        coalesce(r.search_tsv, ''::tsvector),
+        tsq.query
+      )
+    end as rank_score,
+    rb.updated_at
+  from public.roaster_beans rb
+  join public.roasters r on r.id = rb.roaster_id
+  join public.beans b on b.id = rb.bean_id
+  cross join tsq
+  where rb.status = 'ACTIVE'
+    and r.is_public = true
+    and b.is_public = true
+    and (
+      tsq.q = ''
+      or (
+        coalesce(rb.search_tsv, ''::tsvector) ||
+        coalesce(b.search_tsv, ''::tsvector) ||
+        coalesce(r.search_tsv, ''::tsvector)
+      ) @@ tsq.query
+      or similarity(rb.display_name, tsq.q) > 0.2
+      or similarity(b.canonical_name, tsq.q) > 0.2
+      or similarity(r.name, tsq.q) > 0.2
+    );
+$$;
+
 create or replace function public.search_catalog(
   p_query text,
   p_limit int default 50,
@@ -87,74 +160,34 @@ returns table (
   is_in_stock boolean,
   rank_score real
 )
-language plpgsql
+language sql
 stable
 as $$
-declare
-  safe_limit int := greatest(1, least(coalesce(p_limit, 50), 200));
-  safe_offset int := greatest(0, coalesce(p_offset, 0));
-  q text := btrim(coalesce(p_query, ''));
-begin
-  if q = '' then
-    return query
-    select
-      v.roaster_bean_id,
-      v.roaster_name,
-      v.city,
-      v.bean_name,
-      v.display_name,
-      v.process_method,
-      v.roast_level,
-      v.price_amount,
-      v.price_currency,
-      v.is_in_stock,
-      0::real as rank_score
-    from public.v_catalog_active v
-    order by v.updated_at desc
-    limit safe_limit
-    offset safe_offset;
-  end if;
-
-  return query
-  with tsq as (
-    select websearch_to_tsquery('simple', q) as query
-  )
   select
-    rb.id as roaster_bean_id,
-    r.name as roaster_name,
-    r.city,
-    b.canonical_name as bean_name,
-    rb.display_name,
-    b.process_method,
-    rb.roast_level,
-    rb.price_amount,
-    rb.price_currency,
-    rb.is_in_stock,
-    ts_rank_cd(
-      coalesce(rb.search_tsv, ''::tsvector) ||
-      coalesce(b.search_tsv, ''::tsvector) ||
-      coalesce(r.search_tsv, ''::tsvector),
-      tsq.query
-    ) as rank_score
-  from public.roaster_beans rb
-  join public.roasters r on r.id = rb.roaster_id
-  join public.beans b on b.id = rb.bean_id
-  cross join tsq
-  where rb.status = 'ACTIVE'
-    and r.is_public = true
-    and b.is_public = true
-    and (
-      (
-        coalesce(rb.search_tsv, ''::tsvector) ||
-        coalesce(b.search_tsv, ''::tsvector) ||
-        coalesce(r.search_tsv, ''::tsvector)
-      ) @@ tsq.query
-      or similarity(rb.display_name, q) > 0.2
-      or similarity(b.canonical_name, q) > 0.2
-      or similarity(r.name, q) > 0.2
-    )
-  order by rank_score desc, rb.updated_at desc
-  limit safe_limit
-  offset safe_offset;
-end;
+    matches.roaster_bean_id,
+    matches.roaster_name,
+    matches.city,
+    matches.bean_name,
+    matches.display_name,
+    matches.process_method,
+    matches.roast_level,
+    matches.price_amount,
+    matches.price_currency,
+    matches.is_in_stock,
+    matches.rank_score
+  from public.search_catalog_matches(p_query) matches
+  order by matches.rank_score desc, matches.updated_at desc
+  limit greatest(1, least(coalesce(p_limit, 50), 200))
+  offset greatest(0, coalesce(p_offset, 0));
+$$;
+
+create or replace function public.search_catalog_count(
+  p_query text
+)
+returns bigint
+language sql
+stable
+as $$
+  select count(*)::bigint
+  from public.search_catalog_matches(p_query) matches;
 $$;

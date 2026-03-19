@@ -2,7 +2,7 @@
 
 ## 项目信息
 
-- **项目名称**: CoffeeAtlas / CoffeeStories WebDB
+- **项目名称**: CoffeeAtlas
 - **定位**: 精品咖啡豆、烘焙商与产地探索平台
 - **架构**: Monorepo（pnpm workspace + Turborepo）
 - **技术栈**: Next.js 16 + React 19 + Taro 3.x + Supabase + Tailwind CSS 4 + TypeScript
@@ -67,7 +67,7 @@ pnpm install
 pnpm dev
 pnpm lint
 pnpm typecheck
-pnpm --filter coffeestories-webdb test
+pnpm --filter @coffeeatlas/web test
 ```
 
 ## 环境变量

@@ -39,5 +39,5 @@ test('normalizeCountryCode uppercases valid values and rejects invalid ones', ()
 });
 
 test('sanitizeSearchTerm strips unsafe postgrest characters', () => {
-  assert.equal(sanitizeSearchTerm("peet's, coffee%"), 'peet s  coffee');
+  assert.equal(sanitizeSearchTerm("peet's, coffee%(light)"), 'peet s  coffee  light');
 });

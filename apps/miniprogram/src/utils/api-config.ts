@@ -1,4 +1,10 @@
 import Taro from '@tarojs/taro';
+import {
+  getApiBaseUrlHostname,
+  getApiBaseUrlValidationError,
+  isPrivateIpv4,
+  normalizeApiBaseUrl,
+} from './api-base-url';
 
 const API_BASE_URL_OVERRIDE_KEY = 'api_base_url_override';
 
@@ -9,34 +15,10 @@ export interface ApiBaseUrlState {
   warning: string | null;
 }
 
-function normalizeBaseUrl(url: string | null | undefined): string {
-  return (url ?? '')
-    .trim()
-    .replace(/\/+$/, '')
-    .replace(/\/api$/, '');
-}
-
-function getHostname(url: string): string {
-  return url
-    .replace(/^https?:\/\//i, '')
-    .split('/')[0]
-    .split(':')[0]
-    .toLowerCase();
-}
-
-function isPrivateIpv4(hostname: string): boolean {
-  return (
-    /^127\./.test(hostname) ||
-    /^10\./.test(hostname) ||
-    /^192\.168\./.test(hostname) ||
-    /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
-  );
-}
-
 function getMode(baseUrl: string): ApiBaseUrlState['mode'] {
   if (!baseUrl) return 'unset';
 
-  const hostname = getHostname(baseUrl);
+  const hostname = getApiBaseUrlHostname(baseUrl);
   if (
     /^http:\/\//i.test(baseUrl) ||
     hostname === 'localhost' ||
@@ -54,7 +36,12 @@ function getWarning(baseUrl: string): string | null {
     return '未配置 API 地址，可在这里填入云端 HTTPS 域名。';
   }
 
-  const hostname = getHostname(baseUrl);
+  const validationError = getApiBaseUrlValidationError(baseUrl);
+  if (validationError) {
+    return validationError;
+  }
+
+  const hostname = getApiBaseUrlHostname(baseUrl);
   if (hostname === 'localhost' || hostname.endsWith('.local') || isPrivateIpv4(hostname)) {
     return '当前仍是本地或局域网地址，切到云端联调时请改成 HTTPS 域名。';
   }
@@ -67,8 +54,8 @@ function getWarning(baseUrl: string): string | null {
 }
 
 export function getApiBaseUrlState(): ApiBaseUrlState {
-  const runtimeBaseUrl = normalizeBaseUrl(Taro.getStorageSync(API_BASE_URL_OVERRIDE_KEY));
-  const buildBaseUrl = normalizeBaseUrl(process.env.TARO_APP_API_URL);
+  const runtimeBaseUrl = normalizeApiBaseUrl(Taro.getStorageSync(API_BASE_URL_OVERRIDE_KEY));
+  const buildBaseUrl = normalizeApiBaseUrl(process.env.TARO_APP_API_URL);
   const baseUrl = runtimeBaseUrl || buildBaseUrl;
 
   return {
@@ -80,7 +67,13 @@ export function getApiBaseUrlState(): ApiBaseUrlState {
 }
 
 export function setApiBaseUrlOverride(url: string): ApiBaseUrlState {
-  const normalized = normalizeBaseUrl(url);
+  const normalized = normalizeApiBaseUrl(url);
+  const validationError = getApiBaseUrlValidationError(normalized);
+
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
   if (!normalized) {
     Taro.removeStorageSync(API_BASE_URL_OVERRIDE_KEY);
   } else {

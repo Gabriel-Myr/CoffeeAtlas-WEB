@@ -17,11 +17,15 @@
     "jsxImportSource": "react",
     "esModuleInterop": true,
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "typeRoots": ["node_modules/@types"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@coffee-atlas/domain": ["../../packages/domain/dist/index"],
+      "@coffee-atlas/shared-types": ["../../packages/shared-types/dist/index"],
+      "@coffee-atlas/api-client": ["../../packages/api-client/dist/index"]
     }
   },
   "include": ["src", "types", "config"],

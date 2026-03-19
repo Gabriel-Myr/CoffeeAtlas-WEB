@@ -125,3 +125,38 @@ export function buildLocalNewArrivalFiltersFallback(beans: CoffeeBean[]): NewArr
     originOptions: buildCountOptions(newArrivalBeans.map((bean) => bean.originCountry)),
   };
 }
+
+export function hasNewArrivalFilterOptions(payload: NewArrivalFiltersPayload | null | undefined): boolean {
+  if (!payload) return false;
+
+  return (
+    payload.roasterOptions.length > 0 ||
+    payload.processOptions.length > 0 ||
+    payload.originOptions.length > 0
+  );
+}
+
+export function resolveNewArrivalFiltersPayload(
+  remotePayload: NewArrivalFiltersPayload | null | undefined,
+  beans: CoffeeBean[]
+): NewArrivalFiltersPayload {
+  const localFallback = buildLocalNewArrivalFiltersFallback(beans);
+
+  if (!remotePayload) {
+    return localFallback;
+  }
+
+  if (!hasNewArrivalFilterOptions(remotePayload)) {
+    return localFallback;
+  }
+
+  return {
+    mode: remotePayload.mode,
+    roasterOptions:
+      remotePayload.roasterOptions.length > 0 ? remotePayload.roasterOptions : localFallback.roasterOptions,
+    processOptions:
+      remotePayload.processOptions.length > 0 ? remotePayload.processOptions : localFallback.processOptions,
+    originOptions:
+      remotePayload.originOptions.length > 0 ? remotePayload.originOptions : localFallback.originOptions,
+  };
+}

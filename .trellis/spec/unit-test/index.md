@@ -8,7 +8,7 @@
 
 | Area | Current State | Primary Command |
 |------|---------------|-----------------|
-| `apps/web/tests/**/*.test.ts` | 已接入 `node:test` | `pnpm --filter coffeestories-webdb test` |
+| `apps/web/tests/**/*.test.ts` | 已接入 `node:test` | `pnpm --filter @coffeeatlas/web test` |
 | `packages/*` | 暂无独立 test runner | `pnpm typecheck` + 按需补测试 |
 | `apps/miniprogram` | 暂无自动化测试框架 | `pnpm --filter @coffeeatlas/miniprogram typecheck` + 微信开发者工具手测 |
 | API end-to-end smoke | 通过脚本验证 | `cd apps/web && API_BASE_URL=... pnpm smoke:api` |
