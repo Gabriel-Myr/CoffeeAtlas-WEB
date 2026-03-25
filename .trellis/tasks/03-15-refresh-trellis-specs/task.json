@@ -40,8 +40,9 @@
   "parent": null,
   "relatedFiles": [
     ".trellis/workflow.md",
-    ".trellis/spec/frontend/",
-    ".trellis/spec/backend/",
+    ".trellis/spec/web/",
+    ".trellis/spec/miniprogram/",
+    ".trellis/spec/shared-types/",
     ".trellis/spec/unit-test/",
     ".agents/skills/finish-work/SKILL.md"
   ],

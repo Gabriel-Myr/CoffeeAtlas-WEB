@@ -45,15 +45,17 @@ Based on your change type, execute relevant checks below:
 
 | Layer | Common Locations |
 |-------|------------------|
-| API/Routes | `routes/`, `api/`, `handlers/`, `controllers/` |
-| Service/Business Logic | `services/`, `lib/`, `core/`, `domain/` |
-| Database/Storage | `db/`, `models/`, `repositories/`, `schema/` |
-| UI/Presentation | `components/`, `views/`, `templates/`, `pages/` |
-| Utility | `utils/`, `helpers/`, `common/` |
+| API/Routes | `apps/web/app/api/v1/**` |
+| Service/Business Logic | `apps/miniprogram/src/services/**`, `apps/web/lib/server/**`, `packages/domain/**` |
+| Contracts | `packages/shared-types/**`, `apps/miniprogram/src/types/**` |
+| UI/Presentation | `apps/miniprogram/src/pages/**`, `apps/miniprogram/src/components/**` |
+| Storage/Runtime Config | `apps/miniprogram/src/utils/storage.ts`, `apps/miniprogram/src/utils/api-config.ts` |
 
 **Checklist**:
-- [ ] Read flow: Database -> Service -> API -> UI
-- [ ] Write flow: UI -> API -> Service -> Database
+- [ ] Read flow checked end to end?
+  Typical miniprogram path: `apps/web/app/api/v1/*` -> `packages/shared-types` / mapper -> `src/services/api.ts` -> `pages/*`
+- [ ] Write flow checked end to end?
+  Typical miniprogram path: page interaction -> `src/services/api.ts` -> `/api/v1/*` -> server helper / persistence
 - [ ] Types/schemas correctly passed between layers?
 - [ ] Errors properly propagated to caller?
 - [ ] Loading/pending states handled at each layer?
@@ -74,8 +76,7 @@ Based on your change type, execute relevant checks below:
 **Checklist**:
 - [ ] Search first: How many places define this value?
   ```bash
-  # Search in source files (adjust extensions for your project)
-  grep -r "value-to-change" src/
+  rg -n "value-to-change" apps/miniprogram/src apps/web packages
   ```
 - [ ] If 2+ places define same value -> Should extract to shared constant
 - [ ] After modification, all usage sites updated?
@@ -92,7 +93,7 @@ Based on your change type, execute relevant checks below:
 **Checklist**:
 - [ ] Search for existing similar utilities first
   ```bash
-  grep -r "functionNamePattern" src/
+  rg -n "functionNamePattern" apps/miniprogram/src apps/web packages
   ```
 - [ ] If similar exists, can you extend it instead?
 - [ ] If creating new, is it in the right location (shared vs domain-specific)?
@@ -106,7 +107,7 @@ Based on your change type, execute relevant checks below:
 **Checklist**:
 - [ ] Did you check ALL files with similar patterns?
   ```bash
-  grep -r "patternYouChanged" src/
+  rg -n "patternYouChanged" apps/miniprogram/src apps/web packages
   ```
 - [ ] Any files missed that should also be updated?
 - [ ] Should this pattern be abstracted to prevent future duplication?
@@ -120,7 +121,8 @@ Based on your change type, execute relevant checks below:
 **Checklist**:
 - [ ] Using correct import paths (relative vs absolute)?
 - [ ] No circular dependencies?
-- [ ] Consistent with project's module organization?
+- [ ] Consistent with monorepo boundaries?
+- [ ] `packages/*` stayed platform-neutral?
 
 ---
 
@@ -133,7 +135,7 @@ Based on your change type, execute relevant checks below:
 **Checklist**:
 - [ ] Search for other places using same concept
   ```bash
-  grep -r "ConceptName" src/
+  rg -n "ConceptName" apps/miniprogram/src apps/web packages
   ```
 - [ ] Are these usages consistent?
 - [ ] Should they share configuration/constants?
@@ -149,7 +151,9 @@ Based on your change type, execute relevant checks below:
 | Type/schema mismatch | Cross-layer types inconsistent | Use shared type definitions |
 | UI/output inconsistent | Same concept in multiple places | Extract shared constants |
 | Similar utility exists | Didn't search first | Search before creating |
-| Batch fix incomplete | Didn't verify all occurrences | grep after fixing |
+| Batch fix incomplete | Didn't verify all occurrences | rg after fixing |
+| Miniprogram type drift | shared-types / local types / API response diverged | Check all three together |
+| Entry state mismatch | tab intent / route params / page state not aligned | Verify re-entry path |
 
 ---
 

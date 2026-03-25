@@ -23,19 +23,19 @@ Run the commands that match the files you changed:
 ```bash
 pnpm lint
 pnpm typecheck
-pnpm --filter coffeestories-webdb test
+pnpm --filter @coffeeatlas/miniprogram typecheck
 ```
 
 Additional checks when relevant:
 
 ```bash
-pnpm --filter @coffeeatlas/miniprogram typecheck
+pnpm --filter @coffeeatlas/web test
 cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
 ```
 
 - [ ] `pnpm lint` passes?
 - [ ] `pnpm typecheck` passes?
-- [ ] Web backend/helper changes -> `pnpm --filter coffeestories-webdb test` passes?
+- [ ] Web backend/helper changes -> `pnpm --filter @coffeeatlas/web test` passes?
 - [ ] Miniprogram changes -> `pnpm --filter @coffeeatlas/miniprogram typecheck` passes?
 - [ ] API changes -> smoke/manual verification done?
 - [ ] No leftover debug logging?
@@ -52,8 +52,8 @@ Check if your change needs new or updated tests (see `.trellis/spec/unit-test/co
 
 ### 2. Code-Spec Sync
 
-- [ ] Does `.trellis/spec/backend/` need updates?
-- [ ] Does `.trellis/spec/frontend/` need updates?
+- [ ] Does the relevant `.trellis/spec/<package>/<layer>/` doc need updates?
+- [ ] If the change spans web / miniprogram / shared-types, did each affected package spec stay in sync?
 - [ ] Does `.trellis/spec/unit-test/` need updates?
 - [ ] Does `.trellis/spec/guides/` need updates?
 
@@ -93,8 +93,10 @@ If you modified database schema or queries:
 If the change spans multiple layers:
 
 - [ ] Types are consistent across route/helper/client layers?
+- [ ] `packages/shared-types`、`apps/miniprogram/src/types`、实际 API 响应保持一致?
 - [ ] Error handling is consistent across boundaries?
 - [ ] Pagination/search/filter params stay aligned?
+- [ ] Entry intent / route params / page state stay aligned?
 - [ ] Required manual path was exercised?
 
 ### 6. Manual Testing
@@ -103,6 +105,7 @@ If the change spans multiple layers:
 - [ ] Error states tested?
 - [ ] Empty/loading states checked if UI changed?
 - [ ] Works after refresh or re-entry?
+- [ ] 如果改了 discover / new arrivals / onboarding / favorites，已验证 storage 与回流路径?
 
 ---
 
@@ -110,12 +113,15 @@ If the change spans multiple layers:
 
 ```bash
 pnpm lint && pnpm typecheck
+pnpm --filter @coffeeatlas/miniprogram typecheck
 
 git status
 git diff --name-only
 ```
 
 Then run the extra package-specific commands that match the changed files.
+
+Only add `pnpm --filter @coffeeatlas/web test` and `smoke:api` when the change actually touches web/API layers.
 
 ---
 

@@ -49,8 +49,7 @@ python3 ./.trellis/scripts/get_context.py
 ### Step 3: Read Project Guidelines `[AI]`
 
 ```bash
-cat .trellis/spec/frontend/index.md  # Frontend guidelines index
-cat .trellis/spec/backend/index.md   # Backend guidelines index
+python3 ./.trellis/scripts/get_context.py --mode packages
 cat .trellis/spec/guides/index.md    # Thinking guides
 ```
 
@@ -113,7 +112,7 @@ TASK_DIR=$(python3 ./.trellis/scripts/task.py create "<title>" --slug <task-name
 
 ```bash
 # Initialize jsonl context files
-python3 ./.trellis/scripts/task.py init-context "$TASK_DIR" <dev_type>
+python3 ./.trellis/scripts/task.py init-context "$TASK_DIR" <dev_type> --package <web|miniprogram|shared-types|api-client|domain>
 
 # Set branch and scope
 python3 ./.trellis/scripts/task.py set-branch "$TASK_DIR" feature/<name>

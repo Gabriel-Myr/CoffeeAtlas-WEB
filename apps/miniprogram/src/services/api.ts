@@ -30,10 +30,12 @@ import { getToken } from '../utils/storage';
 import { getApiBaseUrlState } from '../utils/api-config';
 import { getApiBaseUrlValidationError } from '../utils/api-base-url';
 import { buildApiRequestOptions } from '../utils/api-request';
+import { formatApiRequestErrorMessage } from '../utils/api-error';
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-  return '请求失败，请稍后重试';
+  return formatApiRequestErrorMessage(error, {
+    baseUrl: getApiBaseUrlState().baseUrl,
+  });
 }
 
 export { getApiBaseUrlState } from '../utils/api-config';

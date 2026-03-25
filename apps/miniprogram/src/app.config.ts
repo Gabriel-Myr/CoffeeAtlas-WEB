@@ -1,5 +1,6 @@
 export default defineAppConfig({
   pages: [
+    'pages/onboarding/index',
     'pages/index/index',
     'pages/all-beans/index',
     'pages/roasters/index',
@@ -22,7 +23,7 @@ export default defineAppConfig({
     list: [
       {
         pagePath: 'pages/index/index',
-        text: '全部',
+        text: '探索',
       },
       {
         pagePath: 'pages/all-beans/index',

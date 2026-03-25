@@ -92,7 +92,7 @@ if (!supabaseUrl || !serviceRoleKey) {
 
 查询/字段契约变动后，记得同步：
 - `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/data-layer.md`
-- `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/backend/database-guidelines.md`
+- `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/web/backend/database-guidelines.md`
 - `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/database-schema.md`
 
 ---

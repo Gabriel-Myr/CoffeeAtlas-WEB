@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Image } from '@tarojs/components';
-import Taro, { useReachBottom } from '@tarojs/taro';
+import Taro, { useDidShow, useReachBottom, useRouter } from '@tarojs/taro';
 
 import BeanCard from '../../components/BeanCard';
 import EmptyState from '../../components/EmptyState';
@@ -13,12 +13,24 @@ import {
   buildNewArrivalFiltersRequest,
   resolveNewArrivalFiltersPayload,
 } from './new-arrival-filters';
+import { consumeAllBeansEntryIntent } from './entry-intent';
+import { resolveAllBeansRouteParams, type AllBeansLandingMode } from './route-params';
+import { resolveAllBeansDidShowTransition } from './entry-transition';
 import {
   ORIGIN_ATLAS_CONTINENT_MAP,
   ORIGIN_ATLAS_COUNTRY_MAP,
   makeAtlasSvgUri,
 } from '../../utils/origin-atlas';
 import { getBeanFavorites, getRoasterFavorites } from '../../utils/storage';
+import { buildDiscoverGuidance } from './discover-guidance';
+import {
+  buildGuidedDiscoverStep,
+  resolveLandingModeAfterTabChange,
+  resolveGuidedContinentSelection,
+  resolveGuidedProcessSelection,
+  type GuidedContinentChoiceId,
+  type GuidedProcessChoiceId,
+} from './guided-discover';
 import './index.scss';
 
 const PAGE_SIZE = 20;
@@ -35,12 +47,35 @@ const TAB_LABELS: Record<TabKey, string> = {
   new: '新品',
 };
 
+const GUIDED_PROCESS_CHOICES: Array<{
+  id: GuidedProcessChoiceId;
+  title: string;
+  description: string;
+}> = [
+  { id: 'clean', title: '想先看清爽干净', description: '优先帮你锁到更干净明亮的处理法。' },
+  { id: 'fruity', title: '想先看果香甜感', description: '优先帮你锁到更有果味层次的处理法。' },
+  { id: 'adventurous', title: '想试点更特别的', description: '优先帮你锁到更实验风格的处理法。' },
+];
+
+const GUIDED_CONTINENT_CHOICES: Array<{
+  id: GuidedContinentChoiceId;
+  title: string;
+  description: string;
+}> = [
+  { id: 'floral', title: '偏花香细腻', description: '先从非洲方向继续收窄。' },
+  { id: 'balanced', title: '偏平衡甜感', description: '先从美洲方向继续收窄。' },
+  { id: 'bold', title: '偏醇厚香料感', description: '先从亚洲方向继续收窄。' },
+];
+
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : '加载失败';
 }
 
 export default function AllBeans() {
-  const [activeTab, setActiveTab] = useState<TabKey>('discover');
+  const router = useRouter();
+  const initialRouteState = resolveAllBeansRouteParams(router.params);
+  const [activeTab, setActiveTab] = useState<TabKey>(initialRouteState.activeTab);
+  const [landingMode, setLandingMode] = useState<AllBeansLandingMode>(initialRouteState.landingMode);
   const [searchQuery, setSearchQuery] = useState('');
 
   const [selectedProcess, setSelectedProcess] = useState<string>(ALL_DISCOVER_VALUE);
@@ -140,6 +175,24 @@ export default function AllBeans() {
     return '';
   }, [activeTab, discoverLoading, discoverPayload, effectiveTotal, loading, selectedCountry, visibleBeans.length]);
 
+  const discoverGuidance = useMemo(() => {
+    return buildDiscoverGuidance({
+      landingMode,
+      selectedProcess,
+      selectedContinent,
+      selectedCountry,
+      searchQuery,
+    });
+  }, [landingMode, searchQuery, selectedContinent, selectedCountry, selectedProcess]);
+
+  const guidedDiscoverStep = useMemo(() => {
+    return buildGuidedDiscoverStep({
+      selectedProcess,
+      selectedContinent,
+      selectedCountry,
+    });
+  }, [selectedContinent, selectedCountry, selectedProcess]);
+
   const resetResultState = () => {
     setBeans([]);
     setPage(1);
@@ -150,6 +203,25 @@ export default function AllBeans() {
   const setLoadingState = (value: boolean) => {
     loadingRef.current = value;
     setLoading(value);
+  };
+
+  const resetEntryPageState = () => {
+    requestVersionRef.current += 1;
+    discoverRequestVersionRef.current += 1;
+    setSearchQuery('');
+    setSelectedProcess(ALL_DISCOVER_VALUE);
+    setSelectedContinent(ALL_DISCOVER_VALUE);
+    setSelectedCountry(ALL_DISCOVER_VALUE);
+    setSelectedRoasterId(EMPTY_NEW_FILTER_VALUE);
+    setSelectedNewArrivalProcess(EMPTY_NEW_FILTER_VALUE);
+    setSelectedOriginCountry(EMPTY_NEW_FILTER_VALUE);
+    setDiscoverPayload(null);
+    setDiscoverError('');
+    setErrorMessage('');
+    setNewArrivalFallbackSeed([]);
+    resetResultState();
+    setLoadingState(false);
+    setDiscoverLoading(false);
   };
 
   const loadBeanPage = async (
@@ -372,15 +444,54 @@ export default function AllBeans() {
     void loadBeanPage(activeTab, page);
   });
 
-  const handleTabChange = (tab: TabKey) => {
+  const handleTabChange = (
+    tab: TabKey,
+    options?: {
+      preserveLandingMode?: boolean;
+      nextLandingMode?: AllBeansLandingMode;
+    }
+  ) => {
     requestVersionRef.current += 1;
     setErrorMessage('');
     setBeans([]);
     setPage(1);
     setHasMore(true);
     setTotal(null);
+    setLandingMode(
+      resolveLandingModeAfterTabChange({
+        currentMode: landingMode,
+        preserveLandingMode: Boolean(options?.preserveLandingMode),
+        nextMode: options?.nextLandingMode,
+      })
+    );
     setActiveTab(tab);
   };
+
+  useDidShow(() => {
+    const entryIntent = consumeAllBeansEntryIntent();
+    const transition = resolveAllBeansDidShowTransition({
+      params: router.params,
+      entryIntent,
+      activeTab,
+      landingMode,
+    });
+
+    if (!transition.shouldApply) return;
+
+    if (transition.shouldResetPageState) {
+      resetEntryPageState();
+    }
+
+    if (transition.shouldChangeTab) {
+      handleTabChange(transition.nextActiveTab, {
+        preserveLandingMode: true,
+        nextLandingMode: transition.nextLandingMode,
+      });
+      return;
+    }
+
+    setLandingMode(transition.nextLandingMode);
+  });
 
   const handleProcessSelect = (value: string) => {
     const nextValue = value === selectedProcess ? ALL_DISCOVER_VALUE : value;
@@ -439,6 +550,29 @@ export default function AllBeans() {
     setSelectedCountry(ALL_DISCOVER_VALUE);
   };
 
+  const handleGuidedProcessAnswer = (choice: GuidedProcessChoiceId) => {
+    if (!discoverPayload || discoverPayload.processOptions.length === 0) return;
+    const selection = resolveGuidedProcessSelection(choice, discoverPayload.processOptions);
+    if (!selection) {
+      Taro.showToast({ title: '当前没有匹配的处理法方向', icon: 'none' });
+      return;
+    }
+    setSelectedProcess(selection.id);
+    setSelectedContinent(ALL_DISCOVER_VALUE);
+    setSelectedCountry(ALL_DISCOVER_VALUE);
+  };
+
+  const handleGuidedContinentAnswer = (choice: GuidedContinentChoiceId) => {
+    if (!discoverPayload || discoverPayload.continentOptions.length === 0) return;
+    const selection = resolveGuidedContinentSelection(choice, discoverPayload.continentOptions);
+    if (!selection) {
+      Taro.showToast({ title: '当前没有匹配的大洲方向', icon: 'none' });
+      return;
+    }
+    setSelectedContinent(selection.id as DiscoverContinentId);
+    setSelectedCountry(ALL_DISCOVER_VALUE);
+  };
+
   return (
     <View className="all-beans">
       <View className="all-beans__hero">
@@ -463,27 +597,87 @@ export default function AllBeans() {
       </View>
 
       {activeTab === 'discover' ? (
-        <View className="discover-summary">
-          <View className="discover-summary__meta">
-            <Text className="discover-summary__label">当前探索路径</Text>
-            {hasDiscoverPath ? (
-              <View className="discover-summary__tokens">
-                {discoverPathItems.map((item) => (
-                  <View key={item.key} className="discover-token" onClick={() => clearDiscoverPath(item.key)}>
-                    <Text className="discover-token__text">{`${item.label} · ${item.value}`}</Text>
-                    <Text className="discover-token__close">×</Text>
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <Text className="discover-summary__hint">从处理法开始，再逐层缩小到大洲和国家。</Text>
-            )}
+        <View className="discover-top">
+          <View className="discover-guidance">
+            <Text className="discover-guidance__label">{discoverGuidance.label}</Text>
+            <Text className="discover-guidance__title">{discoverGuidance.title}</Text>
+            <Text className="discover-guidance__description">{discoverGuidance.description}</Text>
           </View>
-          {hasDiscoverPath ? (
-            <Text className="discover-summary__reset" onClick={() => clearDiscoverPath()}>
-              重新开始
-            </Text>
+
+          {landingMode === 'guided' ? (
+            <View className="guided-discover-card">
+              <Text className="guided-discover-card__label">轻问答</Text>
+              <Text className="guided-discover-card__title">{guidedDiscoverStep.title}</Text>
+              <Text className="guided-discover-card__description">{guidedDiscoverStep.description}</Text>
+
+              {guidedDiscoverStep.step === 'process' ? (
+                discoverPayload && discoverPayload.processOptions.length > 0 ? (
+                  <View className="guided-discover-card__choices">
+                    {GUIDED_PROCESS_CHOICES.map((choice) => (
+                      <View
+                        key={choice.id}
+                        className="guided-discover-card__choice"
+                        onClick={() => handleGuidedProcessAnswer(choice.id)}
+                      >
+                        <Text className="guided-discover-card__choice-title">{choice.title}</Text>
+                        <Text className="guided-discover-card__choice-description">{choice.description}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text className="guided-discover-card__hint">正在准备处理法选项...</Text>
+                )
+              ) : null}
+
+              {guidedDiscoverStep.step === 'continent' ? (
+                discoverPayload && discoverPayload.continentOptions.length > 0 ? (
+                  <View className="guided-discover-card__choices">
+                    {GUIDED_CONTINENT_CHOICES.map((choice) => (
+                      <View
+                        key={choice.id}
+                        className="guided-discover-card__choice"
+                        onClick={() => handleGuidedContinentAnswer(choice.id)}
+                      >
+                        <Text className="guided-discover-card__choice-title">{choice.title}</Text>
+                        <Text className="guided-discover-card__choice-description">{choice.description}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text className="guided-discover-card__hint">正在准备大洲选项...</Text>
+                )
+              ) : null}
+
+              {guidedDiscoverStep.step === 'done' ? (
+                <Text className="guided-discover-card__restart" onClick={() => clearDiscoverPath()}>
+                  重新回答
+                </Text>
+              ) : null}
+            </View>
           ) : null}
+
+          <View className="discover-summary">
+            <View className="discover-summary__meta">
+              <Text className="discover-summary__label">当前探索路径</Text>
+              {hasDiscoverPath ? (
+                <View className="discover-summary__tokens">
+                  {discoverPathItems.map((item) => (
+                    <View key={item.key} className="discover-token" onClick={() => clearDiscoverPath(item.key)}>
+                      <Text className="discover-token__text">{`${item.label} · ${item.value}`}</Text>
+                      <Text className="discover-token__close">×</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text className="discover-summary__hint">还没开始筛选，你可以从处理法先选一个方向。</Text>
+              )}
+            </View>
+            {hasDiscoverPath ? (
+              <Text className="discover-summary__reset" onClick={() => clearDiscoverPath()}>
+                重新开始
+              </Text>
+            ) : null}
+          </View>
         </View>
       ) : null}
 
@@ -532,18 +726,6 @@ export default function AllBeans() {
             <EmptyState message="正在加载探索路径..." />
           ) : discoverPayload ? (
             <View className="discover-panel">
-              <View className="discover-panel__section discover-panel__section--guide">
-                <Text className="discover-panel__eyebrow">使用方式</Text>
-                <Text className="discover-panel__title">
-                  {selectedCountry !== ALL_DISCOVER_VALUE
-                    ? '国家已锁定，下面直接查看这个国家的豆单结果。'
-                    : '先选处理法，再选大洲和国家；选到大洲后结果会开始收缩，选中国家后会更精准。'}
-                </Text>
-                <Text className="discover-panel__description">
-                  搜索会始终生效。在发现里输入关键词时，会基于当前探索路径继续缩小范围。
-                </Text>
-              </View>
-
               <View className="discover-panel__section">
                 <Text className="discover-panel__eyebrow">第一步 · 处理法</Text>
                 <Text className="discover-panel__title">先决定你想从哪种杯型切入</Text>

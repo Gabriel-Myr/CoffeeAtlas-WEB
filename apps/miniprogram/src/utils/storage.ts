@@ -12,6 +12,7 @@ const HISTORY_KEY = 'coffee_history';
 const TOKEN_KEY = 'app_token';
 const USER_KEY = 'auth_user';
 const PENDING_FAVORITES_KEY = 'pending_favorites';
+const ONBOARDING_PROFILE_KEY = 'onboarding_profile';
 const MAX_HISTORY = 20;
 type FavoriteTargetType = 'bean' | 'roaster';
 
@@ -155,4 +156,41 @@ export function addToHistory(bean: BeanSnapshot): void {
   const history = getHistory().filter((h) => h.id !== bean.id);
   history.unshift({ ...bean, viewedAt: Date.now() });
   Taro.setStorageSync(HISTORY_KEY, history.slice(0, MAX_HISTORY));
+}
+
+export type OnboardingExperienceLevel = 'beginner' | 'intermediate';
+
+export interface OnboardingProfile {
+  experienceLevel: OnboardingExperienceLevel;
+  completedAt: number;
+}
+
+function isOnboardingExperienceLevel(value: unknown): value is OnboardingExperienceLevel {
+  return value === 'beginner' || value === 'intermediate';
+}
+
+function isOnboardingProfile(value: unknown): value is OnboardingProfile {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const profile = value as Record<string, unknown>;
+
+  return (
+    isOnboardingExperienceLevel(profile.experienceLevel) &&
+    typeof profile.completedAt === 'number'
+  );
+}
+
+export function getOnboardingProfile(): OnboardingProfile | null {
+  const profile = Taro.getStorageSync(ONBOARDING_PROFILE_KEY);
+  return isOnboardingProfile(profile) ? profile : null;
+}
+
+export function setOnboardingProfile(profile: OnboardingProfile): void {
+  Taro.setStorageSync(ONBOARDING_PROFILE_KEY, profile);
+}
+
+export function clearOnboardingProfile(): void {
+  Taro.removeStorageSync(ONBOARDING_PROFILE_KEY);
 }

@@ -13,13 +13,21 @@ Before submitting or committing, use this checklist to ensure work completeness.
 ```bash
 # Must pass
 pnpm lint
-pnpm type-check
-pnpm test
+pnpm typecheck
+pnpm --filter @coffeeatlas/miniprogram typecheck
+```
+
+Additional checks when relevant:
+
+```bash
+pnpm --filter @coffeeatlas/web test
+cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
 ```
 
 - [ ] `pnpm lint` passes with 0 errors?
-- [ ] `pnpm type-check` passes with no type errors?
-- [ ] Tests pass?
+- [ ] `pnpm typecheck` passes with no type errors?
+- [ ] Miniprogram typecheck passes where relevant?
+- [ ] Web tests pass where relevant?
 - [ ] No `console.log` statements (use logger)?
 - [ ] No non-null assertions (the `x!` operator)?
 - [ ] No `any` types?
@@ -36,10 +44,9 @@ Check if your change needs new or updated tests (see `.trellis/spec/unit-test/co
 ### 2. Code-Spec Sync
 
 **Code-Spec Docs**:
-- [ ] Does `.trellis/spec/backend/` need updates?
+- [ ] Does the relevant `.trellis/spec/<package>/<layer>/` doc need updates?
   - New patterns, new modules, new conventions
-- [ ] Does `.trellis/spec/frontend/` need updates?
-  - New components, new hooks, new patterns
+- [ ] If multiple packages were touched, did each affected package spec stay aligned?
 - [ ] Does `.trellis/spec/guides/` need updates?
   - New cross-layer flows, lessons from bugs
 
@@ -88,6 +95,8 @@ If the change spans multiple layers:
 - [ ] Error handling works at each boundary?
 - [ ] Types are consistent across layers?
 - [ ] Loading states handled?
+- [ ] `packages/shared-types`、`apps/miniprogram/src/types`、实际 API 响应保持一致?
+- [ ] Entry intent / route params / page state stay aligned?
 
 ### 6. Manual Testing
 
@@ -95,6 +104,7 @@ If the change spans multiple layers:
 - [ ] Edge cases tested?
 - [ ] Error states tested?
 - [ ] Works after page refresh?
+- [ ] If discover / new arrivals / onboarding / favorites changed, storage and re-entry path were checked?
 
 ---
 
@@ -102,7 +112,8 @@ If the change spans multiple layers:
 
 ```bash
 # 1. Code checks
-pnpm lint && pnpm type-check
+pnpm lint && pnpm typecheck
+pnpm --filter @coffeeatlas/miniprogram typecheck
 
 # 2. View changes
 git status
@@ -110,6 +121,8 @@ git diff --name-only
 
 # 3. Based on changed files, check relevant items above
 ```
+
+Add `pnpm --filter @coffeeatlas/web test` and `smoke:api` only when the change actually touches web/API layers.
 
 ---
 
@@ -120,7 +133,7 @@ git diff --name-only
 | Code-spec docs not updated | Others don't know the change | Check .trellis/spec/ |
 | Spec text is abstract only | Easy regressions in infra/cross-layer changes | Require signature/contract/matrix/cases/tests |
 | Migration not created | Schema out of sync | Check db/migrations/ |
-| Types not synced | Runtime errors | Check shared types |
+| Types not synced | Runtime errors | Check package-scoped specs + shared types |
 | Tests not updated | False confidence | Run full test suite |
 | Console.log left in | Noisy production logs | Search for console.log |
 

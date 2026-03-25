@@ -18,11 +18,11 @@ Adapt and integrate a Claude global skill into your project's development guidel
 
 > [!] **Important**: The goal of skill integration is to update **development guidelines**, not to generate project code directly.
 >
-> - Guidelines content -> Write to `.trellis/spec/{target}/doc.md`
-> - Code examples -> Place in `.trellis/spec/{target}/examples/skills/<skill-name>/`
+> - Guidelines content -> Write to `.trellis/spec/{package}/{layer}/doc.md`
+> - Code examples -> Place in `.trellis/spec/{package}/{layer}/examples/skills/<skill-name>/`
 > - Example files -> Use `.template` suffix (e.g., `component.tsx.template`) to avoid IDE errors
 >
-> Where `{target}` is `frontend` or `backend`, determined by skill type.
+> Where `{package}` is a real package such as `web`, `miniprogram`, or `shared-types`, and `{layer}` is `frontend` or `backend`.
 
 ## Execution Steps
 
@@ -43,10 +43,10 @@ Based on skill type, determine which guidelines to update:
 
 | Skill Category | Integration Target |
 |----------------|-------------------|
-| UI/Frontend (`frontend-design`, `web-artifacts-builder`) | `.trellis/spec/frontend/` |
-| Backend/API (`mcp-builder`) | `.trellis/spec/backend/` |
+| UI/Frontend (`frontend-design`, `web-artifacts-builder`) | `.trellis/spec/<package>/frontend/` |
+| Backend/API (`mcp-builder`) | `.trellis/spec/<package>/backend/` |
 | Documentation (`doc-coauthoring`, `docx`, `pdf`) | `.trellis/` or create dedicated guidelines |
-| Testing (`webapp-testing`) | `.trellis/spec/frontend/` (E2E) |
+| Testing (`webapp-testing`) | `.trellis/spec/<package>/frontend/` or `.trellis/spec/unit-test/` |
 
 ### 3. Analyze Skill Content
 
@@ -89,8 +89,8 @@ See `examples/skills/<skill-name>/`
 #### 4.2 Create Examples Directory (if code examples exist)
 
 ```bash
-# Directory structure ({target} = frontend or backend)
-.trellis/spec/{target}/
+# Directory structure ({package}/{layer} = actual package + frontend/backend)
+.trellis/spec/{package}/{layer}/
 |-- doc.md                      # Add skill-related section
 |-- index.md                    # Update index
 +-- examples/
@@ -122,7 +122,7 @@ Add to the Quick Navigation table in `index.md`:
 
 ### # Overview
 - **Skill description**: [Functionality description]
-- **Integration target**: `.trellis/spec/{target}/`
+- **Integration target**: `.trellis/spec/{package}/{layer}/`
 
 ### # Tech Stack Compatibility
 
@@ -134,11 +134,11 @@ Add to the Quick Navigation table in `index.md`:
 
 | Type | Path |
 |------|------|
-| Guidelines doc | `.trellis/spec/{target}/doc.md` (section: `skill-<name>`) |
-| Code examples | `.trellis/spec/{target}/examples/skills/<name>/` |
-| Index update | `.trellis/spec/{target}/index.md` |
+| Guidelines doc | `.trellis/spec/{package}/{layer}/doc.md` (section: `skill-<name>`) |
+| Code examples | `.trellis/spec/{package}/{layer}/examples/skills/<name>/` |
+| Index update | `.trellis/spec/{package}/{layer}/index.md` |
 
-> `{target}` = `frontend` or `backend`
+> `{package}` = actual package; `{layer}` = `frontend` or `backend`
 
 ### # Dependencies (if needed)
 
@@ -176,9 +176,9 @@ If this skill is frequently used, create a shortcut command:
 
 | Skill | Integration Target | Examples Directory |
 |-------|-------------------|-------------------|
-| `frontend-design` | `frontend` | `examples/skills/frontend-design/` |
-| `mcp-builder` | `backend` | `examples/skills/mcp-builder/` |
-| `webapp-testing` | `frontend` | `examples/skills/webapp-testing/` |
+| `frontend-design` | `web/frontend` or `miniprogram/frontend` | `examples/skills/frontend-design/` |
+| `mcp-builder` | `web/backend` | `examples/skills/mcp-builder/` |
+| `webapp-testing` | `web/frontend` or `unit-test` | `examples/skills/webapp-testing/` |
 | `doc-coauthoring` | `.trellis/` | N/A (documentation workflow only) |
 
 ## Example: Integrating `mcp-builder` Skill
@@ -186,7 +186,7 @@ If this skill is frequently used, create a shortcut command:
 ### Directory Structure
 
 ```
-.trellis/spec/backend/
+.trellis/spec/web/backend/
 |-- doc.md                           # Add MCP section
 |-- index.md                         # Add index entry
 +-- examples/

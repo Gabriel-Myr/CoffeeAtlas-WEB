@@ -157,38 +157,39 @@ export default function Index(): ReactElement {
 
   return (
     <View className="index-page">
-      <View className="index-page__header">
-        <Text className="index-page__title-en">COFFEE</Text>
-        <Text className="index-page__title-atlas">Atlas</Text>
-        <Text className="index-page__subtitle">Discover origin, terrain, and cup character</Text>
-      </View>
+      <View className="index-page__atlas">
+        <View className="index-page__header index-page__header--atlas">
+          <Text className="index-page__title-en">COFFEE</Text>
+          <Text className="index-page__title-atlas">Atlas</Text>
+          <Text className="index-page__subtitle">Discover origin, terrain, and cup character</Text>
+        </View>
 
-      <SearchBar value={searchQuery} placeholder="按烘焙商、产地、处理法或豆种搜索..." onInput={setSearchQuery} />
+        <SearchBar value={searchQuery} placeholder="按烘焙商、产地、处理法或豆种搜索..." onInput={setSearchQuery} />
 
-      <View className="index-page__content">
-        <View className="atlas">
-          {showAtlasToolbar ? (
-            <View className="atlas__toolbar">
-              {selectedContinent || selectedCountry ? (
-                <View className="atlas__back" onClick={handleBack}>
-                  <Text className="atlas__back-icon">←</Text>
+        <View className="index-page__content">
+          <View className="atlas">
+            {showAtlasToolbar ? (
+              <View className="atlas__toolbar">
+                {selectedContinent || selectedCountry ? (
+                  <View className="atlas__back" onClick={handleBack}>
+                    <Text className="atlas__back-icon">←</Text>
+                  </View>
+                ) : null}
+                <View className="atlas__toolbar-copy">
+                  <Text className="atlas__toolbar-kicker">
+                    {selectedCountry ? '国家档案' : '洲内索引'}
+                  </Text>
+                  <Text className="atlas__toolbar-title">
+                    {selectedCountry ?? (activeContinent ? `${activeContinent.name} 索引` : '洲内索引')}
+                  </Text>
+                  <Text className="atlas__toolbar-subtitle">
+                    {selectedCountry
+                      ? '在一张产地卡中查看地貌、风味与当前豆款覆盖。'
+                      : '先浏览这一洲的国家索引，再进入具体产地查看豆款与烘焙商。'}
+                  </Text>
                 </View>
-              ) : null}
-              <View className="atlas__toolbar-copy">
-                <Text className="atlas__toolbar-kicker">
-                  {selectedCountry ? '国家档案' : '洲内索引'}
-                </Text>
-                <Text className="atlas__toolbar-title">
-                  {selectedCountry ?? (activeContinent ? `${activeContinent.name} 索引` : '洲内索引')}
-                </Text>
-                <Text className="atlas__toolbar-subtitle">
-                  {selectedCountry
-                    ? '在一张产地卡中查看地貌、风味与当前豆款覆盖。'
-                    : '先浏览这一洲的国家索引，再进入具体产地查看豆款与烘焙商。'}
-                </Text>
               </View>
-            </View>
-          ) : null}
+            ) : null}
 
           {errorMessage ? (
             <View className="atlas__notice">
@@ -311,25 +312,25 @@ export default function Index(): ReactElement {
             </View>
           ) : null}
 
-            {activeCountry ? (
-              <View className="atlas__country-detail" style={buildAtlasStyle(activeCountry.accent, activeCountry.color)}>
-                <View className="detail-hero">
-                  <AtlasSilhouette
-                    path={activeCountry.path}
-                    viewBox={activeCountry.viewBox}
-                    color={activeCountry.color}
-                    frame={activeCountry.silhouetteFrame}
-                    shellClassName="detail-hero__map-shell"
-                    imageClassName="detail-hero__map"
-                    detail
-                  />
-                  <View className="detail-hero__body">
-                    <Text className="detail-hero__kicker">{activeContinent?.name}</Text>
-                    <Text className="detail-hero__title">{activeCountry.name}</Text>
-                    <Text className="detail-hero__summary">{activeCountry.editorialLabel}</Text>
-                    <Text className="detail-hero__flavor">{activeCountry.flavorLabel}</Text>
-                  </View>
+          {activeCountry ? (
+            <View className="atlas__country-detail" style={buildAtlasStyle(activeCountry.accent, activeCountry.color)}>
+              <View className="detail-hero">
+                <AtlasSilhouette
+                  path={activeCountry.path}
+                  viewBox={activeCountry.viewBox}
+                  color={activeCountry.color}
+                  frame={activeCountry.silhouetteFrame}
+                  shellClassName="detail-hero__map-shell"
+                  imageClassName="detail-hero__map"
+                  detail
+                />
+                <View className="detail-hero__body">
+                  <Text className="detail-hero__kicker">{activeContinent?.name}</Text>
+                  <Text className="detail-hero__title">{activeCountry.name}</Text>
+                  <Text className="detail-hero__summary">{activeCountry.editorialLabel}</Text>
+                  <Text className="detail-hero__flavor">{activeCountry.flavorLabel}</Text>
                 </View>
+              </View>
 
                 <View className="detail-stats">
                   <View className="detail-stat-card">
@@ -420,9 +421,10 @@ export default function Index(): ReactElement {
                     </View>
                   )}
                 </View>
-              </View>
-            ) : null}
+            </View>
+          ) : null}
           </View>
+        </View>
       </View>
     </View>
   );

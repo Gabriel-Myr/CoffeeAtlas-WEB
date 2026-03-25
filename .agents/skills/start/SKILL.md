@@ -48,10 +48,26 @@ This shows: developer identity, git status, current task (if any), active tasks.
 ### Step 3: Read Guidelines Index
 
 ```bash
-cat .trellis/spec/frontend/index.md  # Frontend guidelines
-cat .trellis/spec/backend/index.md   # Backend guidelines
+python3 ./.trellis/scripts/get_context.py --mode packages
 cat .trellis/spec/guides/index.md    # Thinking guides
 cat .trellis/spec/unit-test/index.md # Testing guidelines
+```
+
+Then read the package-specific indexes that match the task.
+
+In this repo, `get_context.py --mode packages` marks the current default package.
+Right now that usually means `miniprogram`, so if the task is only in `apps/miniprogram`, read this first:
+
+```bash
+cat .trellis/spec/miniprogram/frontend/index.md
+```
+
+Only add other package indexes when the task truly spans them, for example:
+
+```bash
+cat .trellis/spec/web/frontend/index.md
+cat .trellis/spec/web/backend/index.md
+cat .trellis/spec/shared-types/backend/index.md
 ```
 
 > **Important**: The index files are navigation — they list the actual guideline files (e.g., `error-handling.md`, `conventions.md`, `mock-strategies.md`).
@@ -279,6 +295,12 @@ Initialize default context:
 ```bash
 python3 ./.trellis/scripts/task.py init-context "$TASK_DIR" <type>
 # type: backend | frontend | fullstack
+```
+
+If you need to override the repo default package, pass it explicitly:
+
+```bash
+python3 ./.trellis/scripts/task.py init-context "$TASK_DIR" <type> --package <miniprogram|web|shared-types|api-client|domain>
 ```
 
 Add code-spec files found by Research Agent:

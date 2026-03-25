@@ -42,13 +42,22 @@ python3 ./.trellis/scripts/add_session.py \
 cat << 'EOF' | python3 ./.trellis/scripts/add_session.py --title "Title" --commit "hash"
 | Feature | Description |
 |---------|-------------|
-| New API | Added user authentication endpoint |
-| Frontend | Updated login form |
+| Miniprogram Discovery | Refined all-beans entry flow and filter state |
+| Trellis | Updated miniprogram-focused specs and check workflow |
 
 **Updated Files**:
-- `packages/api/modules/auth/router.ts`
-- `apps/web/modules/auth/components/login-form.tsx`
+- `apps/miniprogram/src/pages/all-beans/index.tsx`
+- `.trellis/spec/miniprogram/frontend/quality-guidelines.md`
 EOF
+```
+
+如果这次工作只在小程序包里，标题和 summary 也尽量直接写出 package 与主题，例如：
+
+```bash
+python3 ./.trellis/scripts/add_session.py \
+  --title "Miniprogram discover flow" \
+  --commit "hash1,hash2" \
+  --summary "Updated all-beans entry intent, synced miniprogram Trellis specs, and verified typecheck"
 ```
 
 **Auto-completes**:

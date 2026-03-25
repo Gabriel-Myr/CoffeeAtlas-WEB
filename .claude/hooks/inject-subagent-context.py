@@ -69,6 +69,34 @@ AGENTS_REQUIRE_TASK = (AGENT_IMPLEMENT, AGENT_CHECK, AGENT_DEBUG)
 AGENTS_ALL = (AGENT_IMPLEMENT, AGENT_CHECK, AGENT_DEBUG, AGENT_RESEARCH)
 
 
+def get_trellis_command_path(repo_root: str, name: str) -> str:
+    """Resolve the current platform's Trellis command/skill path."""
+    scripts_dir = Path(repo_root) / DIR_WORKFLOW / "scripts"
+    scripts_dir_str = str(scripts_dir)
+
+    try:
+        if scripts_dir_str not in sys.path:
+            sys.path.insert(0, scripts_dir_str)
+
+        from common.cli_adapter import get_cli_adapter_auto  # type: ignore
+
+        adapter = get_cli_adapter_auto(Path(repo_root))
+        return adapter.get_trellis_command_path(name)
+    except Exception:
+        # Keep Claude as the safe fallback because this hook itself lives under .claude/.
+        return f".claude/commands/trellis/{name}.md"
+
+
+def append_trellis_command_context(
+    context_parts: list[str], repo_root: str, name: str, description: str
+) -> None:
+    """Append a Trellis command/skill file to the prompt context if it exists."""
+    file_path = get_trellis_command_path(repo_root, name)
+    content = read_file_content(repo_root, file_path)
+    if content:
+        context_parts.append(f"=== {file_path} ({description}) ===\n{content}")
+
+
 def find_repo_root(start_path: str) -> str | None:
     """
     Find git repo root from start_path upwards
@@ -335,17 +363,16 @@ def get_check_context(repo_root: str, task_dir: str) -> str:
         for file_path, content in check_entries:
             context_parts.append(f"=== {file_path} ===\n{content}")
     else:
-        # Fallback: use hardcoded check files + spec.jsonl
-        check_files = [
-            (".claude/commands/trellis/finish-work.md", "Finish work checklist"),
-            (".claude/commands/trellis/check-cross-layer.md", "Cross-layer check spec"),
-            (".claude/commands/trellis/check-backend.md", "Backend check spec"),
-            (".claude/commands/trellis/check-frontend.md", "Frontend check spec"),
-        ]
-        for file_path, description in check_files:
-            content = read_file_content(repo_root, file_path)
-            if content:
-                context_parts.append(f"=== {file_path} ({description}) ===\n{content}")
+        # Fallback: use platform-aware check files + spec.jsonl
+        append_trellis_command_context(
+            context_parts, repo_root, "finish-work", "Finish work checklist"
+        )
+        append_trellis_command_context(
+            context_parts, repo_root, "check-cross-layer", "Cross-layer check spec"
+        )
+        append_trellis_command_context(
+            context_parts, repo_root, "check", "Code quality check spec"
+        )
 
         # Add spec.jsonl
         spec_entries = read_jsonl_entries(repo_root, f"{task_dir}/spec.jsonl")
@@ -381,23 +408,15 @@ def get_finish_context(repo_root: str, task_dir: str) -> str:
         for file_path, content in finish_entries:
             context_parts.append(f"=== {file_path} ===\n{content}")
     else:
-        # Fallback: only finish-work.md (lightweight)
-        finish_work = read_file_content(
-            repo_root, ".claude/commands/trellis/finish-work.md"
+        # Fallback: only finish-work (lightweight)
+        append_trellis_command_context(
+            context_parts, repo_root, "finish-work", "Finish checklist"
         )
-        if finish_work:
-            context_parts.append(
-                f"=== .claude/commands/trellis/finish-work.md (Finish checklist) ===\n{finish_work}"
-            )
 
     # 2. Spec update process (for active spec sync)
-    update_spec = read_file_content(
-        repo_root, ".claude/commands/trellis/update-spec.md"
+    append_trellis_command_context(
+        context_parts, repo_root, "update-spec", "Spec update process"
     )
-    if update_spec:
-        context_parts.append(
-            f"=== .claude/commands/trellis/update-spec.md (Spec update process) ===\n{update_spec}"
-        )
 
     # 3. Requirements document (for verifying requirements are met)
     prd_content = read_file_content(repo_root, f"{task_dir}/prd.md")
@@ -426,20 +445,17 @@ def get_debug_context(repo_root: str, task_dir: str) -> str:
         for file_path, content in debug_entries:
             context_parts.append(f"=== {file_path} ===\n{content}")
     else:
-        # Fallback: use spec.jsonl + hardcoded check files
+        # Fallback: use spec.jsonl + platform-aware check files
         spec_entries = read_jsonl_entries(repo_root, f"{task_dir}/spec.jsonl")
         for file_path, content in spec_entries:
             context_parts.append(f"=== {file_path} (Dev spec) ===\n{content}")
 
-        check_files = [
-            (".claude/commands/trellis/check-backend.md", "Backend check spec"),
-            (".claude/commands/trellis/check-frontend.md", "Frontend check spec"),
-            (".claude/commands/trellis/check-cross-layer.md", "Cross-layer check spec"),
-        ]
-        for file_path, description in check_files:
-            content = read_file_content(repo_root, file_path)
-            if content:
-                context_parts.append(f"=== {file_path} ({description}) ===\n{content}")
+        append_trellis_command_context(
+            context_parts, repo_root, "check", "Code quality check spec"
+        )
+        append_trellis_command_context(
+            context_parts, repo_root, "check-cross-layer", "Cross-layer check spec"
+        )
 
     # 2. Codex review output (if exists)
     codex_output = read_file_content(repo_root, f"{task_dir}/codex-review-output.txt")
@@ -603,24 +619,34 @@ def get_research_context(repo_root: str, task_dir: str | None) -> str:
     """
     context_parts = []
 
-    # 1. Project structure overview (uses constants for paths)
+    # 1. Project structure overview (dynamically discover spec directories)
     spec_path = f"{DIR_WORKFLOW}/{DIR_SPEC}"
+    spec_root = Path(repo_root) / DIR_WORKFLOW / DIR_SPEC
+
+    # Build spec tree dynamically
+    tree_lines = [f"{spec_path}/"]
+    if spec_root.is_dir():
+        pkg_dirs = sorted(d for d in spec_root.iterdir() if d.is_dir())
+        for i, pkg_dir in enumerate(pkg_dirs):
+            is_last = i == len(pkg_dirs) - 1
+            prefix = "└── " if is_last else "├── "
+            layers = sorted(d.name for d in pkg_dir.iterdir() if d.is_dir())
+            layer_info = f" ({', '.join(layers)})" if layers else ""
+            tree_lines.append(f"{prefix}{pkg_dir.name}/{layer_info}")
+
+    spec_tree = "\n".join(tree_lines)
+
     project_structure = f"""## Project Spec Directory Structure
 
 ```
-{spec_path}/
-├── shared/      # Cross-project common specs (TypeScript, code quality, git)
-├── frontend/    # Frontend standards
-├── backend/     # Backend standards
-└── guides/      # Thinking guides (cross-layer, code reuse, etc.)
-
-{DIR_WORKFLOW}/big-question/  # Known issues and pitfalls
+{spec_tree}
 ```
+
+To get structured package info, run: `python3 ./{DIR_WORKFLOW}/scripts/get_context.py --mode packages`
 
 ## Search Tips
 
 - Spec files: `{spec_path}/**/*.md`
-- Known issues: `{DIR_WORKFLOW}/big-question/`
 - Code search: Use Glob and Grep tools
 - Tech solutions: Use mcp__exa__web_search_exa or mcp__exa__get_code_context_exa"""
 

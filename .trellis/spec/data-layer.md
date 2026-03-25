@@ -1,6 +1,6 @@
 # 数据层规范
 
-> 本文档是仓库级数据层总览；更细的查询、错误和契约规则请结合 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/backend/database-guidelines.md` 与 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/backend/type-safety.md` 一起看。
+> 本文档是仓库级数据层总览；更细的查询、错误和契约规则请结合 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/web/backend/database-guidelines.md` 与 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/web/backend/type-safety.md` 一起看。
 
 ---
 

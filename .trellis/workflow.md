@@ -40,30 +40,49 @@ git status && git log --oneline -10
 ### Step 2: Read Project Guidelines [MANDATORY]
 
 ```bash
-cat .trellis/spec/frontend/index.md
-cat .trellis/spec/backend/index.md
+python3 ./.trellis/scripts/get_context.py --mode packages
 cat .trellis/spec/guides/index.md
 cat .trellis/spec/unit-test/index.md
 ```
 
+根据你要改的 package，继续读取对应 index，例如：
+
+```bash
+cat .trellis/spec/miniprogram/frontend/index.md
+cat .trellis/spec/web/frontend/index.md
+cat .trellis/spec/web/backend/index.md
+```
+
+`get_context.py --mode packages` 会标出当前默认 package 和哪些 package 目前 `out of scope`。
+当前仓库默认 package 是 `miniprogram`，所以如果这轮只改小程序，先从 `miniprogram/frontend` 开始读。
+
 ### Step 3: Read Task-Specific Specs
+
+**Miniprogram UI work**
+```bash
+cat .trellis/spec/miniprogram/frontend/component-guidelines.md
+cat .trellis/spec/miniprogram/frontend/hook-guidelines.md
+cat .trellis/spec/miniprogram/frontend/state-management.md
+cat .trellis/spec/miniprogram/frontend/type-safety.md
+cat .trellis/spec/miniprogram/frontend/quality-guidelines.md
+```
 
 **Frontend work**
 ```bash
-cat .trellis/spec/frontend/component-guidelines.md
-cat .trellis/spec/frontend/hook-guidelines.md
-cat .trellis/spec/frontend/state-management.md
-cat .trellis/spec/frontend/type-safety.md
-cat .trellis/spec/frontend/quality-guidelines.md
+cat .trellis/spec/web/frontend/component-guidelines.md
+cat .trellis/spec/web/frontend/hook-guidelines.md
+cat .trellis/spec/web/frontend/state-management.md
+cat .trellis/spec/web/frontend/type-safety.md
+cat .trellis/spec/web/frontend/quality-guidelines.md
 ```
 
 **Backend work**
 ```bash
-cat .trellis/spec/backend/database-guidelines.md
-cat .trellis/spec/backend/error-handling.md
-cat .trellis/spec/backend/type-safety.md
-cat .trellis/spec/backend/logging-guidelines.md
-cat .trellis/spec/backend/quality-guidelines.md
+cat .trellis/spec/web/backend/database-guidelines.md
+cat .trellis/spec/web/backend/error-handling.md
+cat .trellis/spec/web/backend/type-safety.md
+cat .trellis/spec/web/backend/logging-guidelines.md
+cat .trellis/spec/web/backend/quality-guidelines.md
 ```
 
 **Test-sensitive work**
@@ -102,8 +121,14 @@ cat .trellis/spec/unit-test/conventions.md
 |       |-- check.jsonl
 |       +-- debug.jsonl
 |-- spec/
-|   |-- frontend/
-|   |-- backend/
+|   |-- web/
+|   |   |-- frontend/
+|   |   +-- backend/
+|   |-- miniprogram/
+|   |   +-- frontend/
+|   |-- shared-types/
+|   |   |-- frontend/
+|   |   +-- backend/
 |   |-- unit-test/
 |   +-- guides/
 +-- workflow.md
@@ -121,8 +146,12 @@ python3 ./.trellis/scripts/get_context.py
 
 ### Step 2: Read Relevant Specs
 
-- Frontend change -> `spec/frontend/`
-- Backend change -> `spec/backend/`
+- 先运行 `python3 ./.trellis/scripts/get_context.py --mode packages`
+- 先看当前 `default` package；本仓库默认通常先落到 `spec/miniprogram/frontend/`
+- Miniprogram UI -> `spec/miniprogram/frontend/`
+- Web UI -> `spec/web/frontend/`
+- Web backend / API -> `spec/web/backend/`
+- Shared contracts -> `spec/shared-types/backend/` 或 `spec/shared-types/frontend/`
 - Cross-layer change -> `spec/guides/cross-layer-thinking-guide.md`
 - 测试 / regression / helper change -> `spec/unit-test/conventions.md`
 
@@ -131,7 +160,7 @@ python3 ./.trellis/scripts/get_context.py
 ```bash
 python3 ./.trellis/scripts/task.py list
 python3 ./.trellis/scripts/task.py create "<title>" --slug <task-name>
-python3 ./.trellis/scripts/task.py init-context .trellis/tasks/<dir> <frontend|backend|fullstack|test|docs>
+python3 ./.trellis/scripts/task.py init-context .trellis/tasks/<dir> <frontend|backend|fullstack|test|docs> --package <web|miniprogram|shared-types|api-client|domain>
 python3 ./.trellis/scripts/task.py start .trellis/tasks/<dir>
 ```
 
@@ -167,13 +196,13 @@ python3 ./.trellis/scripts/task.py start .trellis/tasks/<dir>
 ```bash
 pnpm lint
 pnpm typecheck
-pnpm --filter @coffeeatlas/web test
+pnpm --filter @coffeeatlas/miniprogram typecheck
 ```
 
 Additional checks when relevant:
 
 ```bash
-pnpm --filter @coffeeatlas/miniprogram typecheck
+pnpm --filter @coffeeatlas/web test
 cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
 ```
 
@@ -224,8 +253,10 @@ python3 ./.trellis/scripts/add_session.py \
 
 Project-specific executable guidance.
 
-- `frontend/` - Web + miniprogram UI conventions
-- `backend/` - API, DB, auth, error handling, scripts
+- `miniprogram/frontend/` - 小程序前端规范，也是当前默认入口
+- `web/frontend/` - Web UI conventions
+- `web/backend/` - Web API, DB, auth, error handling, scripts
+- `shared-types/*` - 跨端契约层规范
 - `unit-test/` - Current test setup and expectations
 - `guides/` - Thinking checklists for cross-layer / reuse problems
 
@@ -266,11 +297,14 @@ Per-developer journals for session history.
 
 | Task Type | Must-read |
 |-----------|-----------|
-| Frontend | `spec/frontend/index.md` + relevant topic docs |
-| Backend | `spec/backend/index.md` + relevant topic docs |
-| API / contracts | `spec/backend/error-handling.md`, `spec/backend/type-safety.md` |
-| Query / schema | `spec/backend/database-guidelines.md` |
+| Miniprogram Frontend | `spec/miniprogram/frontend/index.md` + relevant topic docs |
+| Web Frontend | `spec/web/frontend/index.md` + relevant topic docs |
+| Web Backend | `spec/web/backend/index.md` + relevant topic docs |
+| API / contracts | `spec/web/backend/error-handling.md`, `spec/web/backend/type-safety.md` |
+| Query / schema | `spec/web/backend/database-guidelines.md` |
 | Tests / regressions | `spec/unit-test/conventions.md` |
 | Cross-layer | `spec/guides/cross-layer-thinking-guide.md` |
+
+默认先从 `get_context.py --mode packages` 标记的 package 开始读，不要一上来把所有层都读一遍。
 
 **Core Philosophy**: Read before write, document current reality, and keep Trellis in sync with the codebase.

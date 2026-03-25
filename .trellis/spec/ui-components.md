@@ -1,6 +1,6 @@
 # UI 组件规范
 
-> 这是仓库级 UI 组件总览，覆盖 web 与 miniprogram。更细的层级规则见 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/frontend/component-guidelines.md`。
+> 这是仓库级 UI 组件总览，覆盖 web 与 miniprogram。更细的层级规则见 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/web/frontend/component-guidelines.md` 和 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/miniprogram/frontend/component-guidelines.md`。
 
 ---
 

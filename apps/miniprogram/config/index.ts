@@ -57,6 +57,14 @@ export default defineConfig(async (merge) => {
       },
       webpackChain(chain) {
         chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
+
+        if (process.env.NODE_ENV === 'development') {
+          chain.watchOptions({
+            poll: 1000,
+            aggregateTimeout: 300,
+            ignored: /node_modules|dist|\.git/
+          })
+        }
       }
     },
     h5: {
