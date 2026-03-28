@@ -14,9 +14,9 @@
 
 **Files:**
 - Modify: `README.md`
-- Modify: `apps/web/package.json`
-- Modify: `apps/web/app/api/v1/health/route.ts`
-- Modify: `apps/web/app/api/health/route.ts`
+- Modify: `apps/api/package.json`
+- Modify: `apps/api/app/api/v1/health/route.ts`
+- Modify: `apps/api/app/api/health/route.ts`
 
 - [ ] Step 1: 更新 README 为 monorepo 现实，统一使用 pnpm
 - [ ] Step 2: 更新 Web 包名与健康检查 service 名称
@@ -26,7 +26,7 @@
 
 **Files:**
 - Modify: `.gitignore`
-- Delete: `apps/web/package-lock.json`
+- Delete: `apps/api/package-lock.json`
 
 - [ ] Step 1: 补齐构建产物、缓存、日志、临时文件的忽略规则
 - [ ] Step 2: 删除错误的 npm 锁文件
@@ -37,7 +37,7 @@
 **Files:**
 - Create: `eslint.config.mjs`
 - Modify: `package.json`
-- Modify: `apps/web/package.json`
+- Modify: `apps/api/package.json`
 - Modify: `apps/miniprogram/package.json`
 - Modify: `packages/api-client/package.json`
 - Modify: `packages/domain/package.json`

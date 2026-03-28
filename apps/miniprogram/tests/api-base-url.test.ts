@@ -8,8 +8,8 @@ import {
 
 test('normalizeApiBaseUrl trims trailing slash and /api suffix', () => {
   assert.equal(
-    normalizeApiBaseUrl(' https://coffee-atlas-web-web.vercel.app/api/ '),
-    'https://coffee-atlas-web-web.vercel.app'
+    normalizeApiBaseUrl(' https://coffeeatlas-api.example.com/api/ '),
+    'https://coffeeatlas-api.example.com'
   );
 });
 
@@ -22,7 +22,7 @@ test('getApiBaseUrlValidationError explains common vercel domain typo', () => {
 
 test('getApiBaseUrlValidationError accepts valid https cloud domain', () => {
   assert.equal(
-    getApiBaseUrlValidationError('https://coffee-atlas-web-web.vercel.app'),
+    getApiBaseUrlValidationError('https://coffeeatlas-api.example.com'),
     null
   );
 });

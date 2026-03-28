@@ -1,17 +1,17 @@
 # P1 Catalog Split Design
 
-**Goal:** 在不改动现有调用方行为的前提下，把 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog.ts` 从 God file 拆成几个职责明确的模块，同时保留 `catalog.ts` 作为兼容入口。
+**Goal:** 在不改动现有调用方行为的前提下，把 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog.ts` 从 God file 拆成几个职责明确的模块，同时保留 `catalog.ts` 作为兼容入口。
 
 ## 现状
 
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog.ts` 当前 659 行。
+- `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog.ts` 当前 659 行。
 - 文件里混着 5 类职责：
   - beans / roasters 对外类型
   - row -> app model mapper
   - sample fallback
   - Supabase beans 查询、计数、搜索
   - Supabase roasters 查询、聚合
-- 现有调用方主要都 import `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog.ts`：
+- 现有调用方主要都 import `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog.ts`：
   - Web 页面里的 `CoffeeBean` 类型
   - `public-api.ts`
   - `favorites-api.ts`
@@ -24,11 +24,11 @@
 
 把实现拆成 4 个 focused module，再让 `catalog.ts` 做兼容门面：
 
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog-types.ts`
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog-core.ts`
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog-beans.ts`
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog-roasters.ts`
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog.ts` 只保留类型和公开函数 re-export
+- `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog-types.ts`
+- `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog-core.ts`
+- `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog-beans.ts`
+- `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog-roasters.ts`
+- `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog.ts` 只保留类型和公开函数 re-export
 
 这样可以先把最重的查询/mapper/fallback 逻辑拆开，同时不要求调用方立刻改 import。
 
@@ -48,7 +48,7 @@
 - 保持 `catalog.ts` 的现有导出名不变
 - 保持 beans / roasters / search 的返回结构不变
 - 保持 Supabase 优先、sample fallback 兜底策略不变
-- 不改 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/public-beans.ts` 的对外行为
+- 不改 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/public-beans.ts` 的对外行为
 - 不改小程序或 Web 页面调用方式
 
 ## 模块设计
@@ -91,9 +91,9 @@
 - 只放平台无关、无业务流程状态的共享逻辑
 - 不依赖 `catalog.ts`，避免门面反向依赖
 - 允许直接依赖：
-  - `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog-types.ts`
-  - `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/sales.ts`
-  - `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/sample-data.ts`
+  - `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog-types.ts`
+  - `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/sales.ts`
+  - `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/sample-data.ts`
 
 ### 3. `catalog-beans.ts`
 
@@ -171,12 +171,12 @@
 
 这轮测试重点是“拆分后兼容 + 共享纯逻辑稳定”：
 
-- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/web/tests/catalog-core.test.ts`
+- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/api/tests/catalog-core.test.ts`
   - 锁定 beans/roaster mapper 和 sample fallback 纯逻辑
-- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/web/tests/catalog-exports.test.ts`
+- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/api/tests/catalog-exports.test.ts`
   - 锁定 `catalog.ts` 仍暴露现有公开入口
   - 只看导出契约，不绑定具体实现文件路径
-- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/web/tests/catalog-contract.typecheck.ts`
+- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/api/tests/catalog-contract.typecheck.ts`
   - 锁定 `catalog.ts` 的类型导出仍可被消费者使用
   - 显式覆盖 `CoffeeBean`、`Roaster`、`CatalogBeanFilters`、`CatalogBeansQuery`、`RoastersQuery`
   - 显式覆盖 `getRoasters` 的 overload 仍能通过 typecheck
@@ -215,5 +215,5 @@
 
 ## 默认假设
 
-- 这轮“继续 P1”指的是继续处理下一个 God file，即 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog.ts`
+- 这轮“继续 P1”指的是继续处理下一个 God file，即 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog.ts`
 - 当前更重要的是先把 `catalog.ts` 变成兼容门面，而不是立刻推动所有调用方改成新模块路径

@@ -2,26 +2,7 @@
 
 ---
 
-## Web 端组件模式
-
-### 服务端 vs 客户端
-
-- 默认服务端组件，需要交互时加 `'use client'`
-- 服务端组件负责数据获取，传 `initialData` 给客户端组件
-
-```tsx
-// page.tsx（服务端）
-export default async function Page() {
-  const beans = await getCatalogBeans(100);
-  return <PageClient initialBeans={beans} />;
-}
-
-// PageClient.tsx（客户端）
-'use client';
-export default function PageClient({ initialBeans }) {
-  const [beans, setBeans] = useState(initialBeans);
-}
-```
+## 通用组件约定
 
 ### Props 定义
 
@@ -35,6 +16,20 @@ interface BeanCardProps {
 
 export default function BeanCard({ bean, onFavorite }: BeanCardProps) {}
 ```
+
+### Stitch MCP（`stitchmcp`）使用约定
+
+- 适合场景：新页面原型、整块布局探索、多版视觉方案比较、统一设计系统
+- 不适合场景：只改一两处文案、间距、颜色，或者只是修一个现有交互 bug；这类改动优先直接改代码
+- 开始前先读现有上下文：`list_projects`、`get_project`、`list_screens`、`get_screen`
+- 新建页面草图优先用 `generate_screen_from_text`
+- 基于现有 screen 局部改稿优先用 `edit_screens`
+- 需要多版比较时用 `generate_variants`
+- 需要统一视觉 token 时先 `list_design_systems`；没有再 `create_design_system`，随后 `update_design_system`，需要批量落到 screen 时再 `apply_design_system`
+- Stitch 产物默认只当视觉和结构参考，不直接等同于仓库最终代码；落地时仍要遵守本仓库的目录、类型、数据流和平台约束
+- Stitch 生成的字段名、按钮文案、卡片结构，不要直接当成真实接口契约；涉及 API、DTO、props 时回到 `type-safety.md`
+- 生成或改稿后，必须手动补看 loading、empty、error、mobile 尺寸和长列表状态，不要只看默认展示态
+- 设计稿落地到小程序时要改写成 Taro 可运行结构，不要直接照搬 web DOM
 
 ---
 
@@ -107,5 +102,5 @@ export default function BeanCard({ bean }: BeanCardProps) {
 ## 禁止模式
 
 - 小程序中禁止使用 HTML 标签
-- 禁止在组件内直接调用 Supabase（web 端服务端组件除外）
+- 禁止在组件内直接调用 Supabase
 - 禁止在 `packages/*` 中引入平台特定依赖

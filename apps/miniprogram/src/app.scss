@@ -167,3 +167,31 @@ button {
 button::after {
   border: 0;
 }
+
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+
+  &__restart-onboarding {
+    position: fixed;
+    left: 16px;
+    z-index: 999;
+    padding: 8px 14px;
+    background: rgba(255, 252, 247, 0.96);
+    border: 1px solid rgba(107, 83, 68, 0.14);
+    border-radius: 999px;
+    box-shadow: 0 8px 18px rgba(62, 42, 30, 0.08);
+  }
+
+  &__restart-onboarding--active {
+    transform: translateY(1px);
+    opacity: 0.92;
+  }
+
+  &__restart-onboarding-text {
+    color: rgba(88, 68, 53, 0.82);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+  }
+}

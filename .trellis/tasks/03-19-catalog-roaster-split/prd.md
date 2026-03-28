@@ -2,7 +2,7 @@
 
 ## Goal
 
-在不改动现有调用方导入的前提下，把 `apps/web/lib/catalog.ts` 中的 roaster 聚合/查询逻辑抽出到 `catalog-roasters.ts`，让 `catalog.ts` 只保留类型和公开函数 re-export，保持现有行为、搜集 contract，方便后续拆 beans 逻辑。
+在不改动现有调用方导入的前提下，把 `apps/api/lib/catalog.ts` 中的 roaster 聚合/查询逻辑抽出到 `catalog-roasters.ts`，让 `catalog.ts` 只保留类型和公开函数 re-export，保持现有行为、搜集 contract，方便后续拆 beans 逻辑。
 
 ## What I already know
 
@@ -17,18 +17,18 @@
 
 ## Requirements
 
-* 创建设备 `apps/web/lib/catalog-roasters.ts`，把所有 roaster 私有 helper（`createEmptyRoasterAggregate`, `isTaobaoUrl`, `isXiaohongshuUrl`, `fetchRoasterAggregates`, `matchesRoasterFeature`, `queryRoasterRows`, `resolveRoasterCollection`）和 roaster 公开函数（`getRoasterPage`, `getRoasters`, `countRoasters`, `getRoasterById`, `getRoastersByIds`）迁入该模块。
+* 创建设备 `apps/api/lib/catalog-roasters.ts`，把所有 roaster 私有 helper（`createEmptyRoasterAggregate`, `isTaobaoUrl`, `isXiaohongshuUrl`, `fetchRoasterAggregates`, `matchesRoasterFeature`, `queryRoasterRows`, `resolveRoasterCollection`）和 roaster 公开函数（`getRoasterPage`, `getRoasters`, `countRoasters`, `getRoasterById`, `getRoastersByIds`）迁入该模块。
 * 让新模块只依赖 `catalog-types.ts`、`catalog-core.ts`、`supabase.ts`，不再引用 `catalog.ts`。
 * `catalog.ts` 仅从 `catalog-types.ts` re-export 类型，从 `catalog-roasters.ts` re-export上述 roaster 函数，并且不再保留这些函数的实现。
-* 保持调用方 import `apps/web/lib/catalog.ts` 不变，现有公共接口和返回结构全兼容。
-* 迁移完成后执行项目要求的命令：`pnpm --filter @coffeeatlas/web test`, `pnpm --filter @coffeeatlas/web typecheck`, `pnpm -w typecheck`, `pnpm -w lint`，并确认成功。
+* 保持调用方 import `apps/api/lib/catalog.ts` 不变，现有公共接口和返回结构全兼容。
+* 迁移完成后执行项目要求的命令：`pnpm --filter @coffeeatlas/api test`, `pnpm --filter @coffeeatlas/api typecheck`, `pnpm -w typecheck`, `pnpm -w lint`，并确认成功。
 
 ## Acceptance Criteria
 
 * [ ] `catalog-roasters.ts` 包含所有 roaster helper 和函数的完整迁移，内部逻辑与 `catalog.ts` 中完全一致并继续使用共享类型/map helper。
 * [ ] `catalog.ts` 变成兼容门面：从 `catalog-types.ts` 导出类型，从 `catalog-roasters.ts` 和 `catalog-beans.ts`（如果有）导出函数，没有自己实现这些逻辑。
 * [ ] 所有依赖 `catalog.ts` 的消费者（后端 API、页面）继续通过类型检查和 lint，不需要改路径。
-* [ ] 四条 pnpm 命令通过（`pnpm --filter @coffeeatlas/web test`, `pnpm --filter @coffeeatlas/web typecheck`, `pnpm -w typecheck`, `pnpm -w lint`），并把结果记录在工作日志。
+* [ ] 四条 pnpm 命令通过（`pnpm --filter @coffeeatlas/api test`, `pnpm --filter @coffeeatlas/api typecheck`, `pnpm -w typecheck`, `pnpm -w lint`），并把结果记录在工作日志。
 
 ## Definition of Done
 

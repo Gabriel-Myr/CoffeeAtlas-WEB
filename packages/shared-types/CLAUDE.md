@@ -5,7 +5,7 @@
 ## 模块职责
 
 跨平台共享的 TypeScript 类型定义包。定义 API 响应信封、分页结构、咖啡豆和烘焙商的 DTO 类型，以及查询参数接口。
-`apps/web` 和未来的 `apps/miniprogram` 均依赖此包。
+`apps/api` 和 `apps/miniprogram` 均依赖此包。
 
 ---
 

@@ -1,10 +1,5 @@
 import Taro from '@tarojs/taro';
 import {
-  buildBeanDetailPath,
-  buildBeanDiscoverPath,
-  buildBeansPath,
-  buildRoasterDetailPath,
-  buildRoastersPath,
   extractApiErrorMessage,
   unwrapApiResponse,
 } from '@coffee-atlas/api-client';
@@ -20,17 +15,29 @@ import type {
   NewArrivalFiltersPayload,
   NewArrivalFiltersRequest,
   PaginatedResult,
+  ProcessBaseId,
+  ProcessStyleId,
   RoasterFeature,
   RoasterDetail,
   RoasterSummary,
   UserFavorite,
   V1Response,
-} from '../types';
-import { getToken } from '../utils/storage';
-import { getApiBaseUrlState } from '../utils/api-config';
-import { getApiBaseUrlValidationError } from '../utils/api-base-url';
-import { buildApiRequestOptions } from '../utils/api-request';
-import { formatApiRequestErrorMessage } from '../utils/api-error';
+} from '../types/index.ts';
+import { getToken } from '../utils/storage.ts';
+import { getApiBaseUrlState } from '../utils/api-config.ts';
+import { getApiBaseUrlValidationError } from '../utils/api-base-url.ts';
+import { buildApiRequestOptions } from '../utils/api-request.ts';
+import { formatApiRequestErrorMessage } from '../utils/api-error.ts';
+import { hasSupabaseEnv, requireSupabaseClient } from '../utils/supabase.ts';
+import { requireSupabaseCatalogRead } from './catalog-read-mode.ts';
+import {
+  getBeanDetailWithSupabase,
+  getBeanDiscoverWithSupabase,
+  getNewArrivalFiltersWithSupabase,
+  getRoasterDetailWithSupabase,
+  listBeansWithSupabase,
+  listRoastersWithSupabase,
+} from './catalog-supabase.ts';
 
 function getErrorMessage(error: unknown): string {
   return formatApiRequestErrorMessage(error, {
@@ -38,7 +45,7 @@ function getErrorMessage(error: unknown): string {
   });
 }
 
-export { getApiBaseUrlState } from '../utils/api-config';
+export { getApiBaseUrlState } from '../utils/api-config.ts';
 
 async function request<T>(
   endpoint: string,
@@ -90,33 +97,33 @@ export async function getBeans(params?: {
   roasterId?: string;
   originCountry?: string;
   process?: string;
+  processBase?: ProcessBaseId;
+  processStyle?: ProcessStyleId;
   roastLevel?: string;
   sort?: BeanSort;
   isNewArrival?: boolean;
   continent?: DiscoverContinentId;
   country?: string;
 }): Promise<PaginatedResult<CoffeeBean>> {
-  return request<PaginatedResult<CoffeeBean>>(buildBeansPath(params));
+  return listBeansWithSupabase(requireSupabaseCatalogRead(hasSupabaseEnv, requireSupabaseClient), params);
 }
 
 export async function getBeanDiscover(params?: {
   q?: string;
-  process?: string;
+  processBase?: ProcessBaseId;
+  processStyle?: ProcessStyleId;
   continent?: DiscoverContinentId;
   country?: string;
 }): Promise<BeanDiscoverPayload> {
-  return request<BeanDiscoverPayload>(buildBeanDiscoverPath(params));
+  return getBeanDiscoverWithSupabase(requireSupabaseCatalogRead(hasSupabaseEnv, requireSupabaseClient), params);
 }
 
 export async function getNewArrivalFilters(payload: NewArrivalFiltersRequest): Promise<NewArrivalFiltersPayload> {
-  return request<NewArrivalFiltersPayload>('/api/v1/beans/new-arrivals/filters', {
-    method: 'POST',
-    data: payload,
-  });
+  return getNewArrivalFiltersWithSupabase(requireSupabaseCatalogRead(hasSupabaseEnv, requireSupabaseClient), payload);
 }
 
 export async function getBeanById(id: string): Promise<BeanDetail> {
-  return request<BeanDetail>(buildBeanDetailPath(id));
+  return getBeanDetailWithSupabase(requireSupabaseCatalogRead(hasSupabaseEnv, requireSupabaseClient), id);
 }
 
 // 烘焙商
@@ -127,11 +134,11 @@ export async function getRoasters(params?: {
   city?: string;
   feature?: RoasterFeature;
 }): Promise<PaginatedResult<RoasterSummary>> {
-  return request<PaginatedResult<RoasterSummary>>(buildRoastersPath(params));
+  return listRoastersWithSupabase(requireSupabaseCatalogRead(hasSupabaseEnv, requireSupabaseClient), params);
 }
 
 export async function getRoasterById(id: string): Promise<RoasterDetail> {
-  return request<RoasterDetail>(buildRoasterDetailPath(id));
+  return getRoasterDetailWithSupabase(requireSupabaseCatalogRead(hasSupabaseEnv, requireSupabaseClient), id);
 }
 
 export async function getApiHealth(): Promise<ApiHealthStatus> {

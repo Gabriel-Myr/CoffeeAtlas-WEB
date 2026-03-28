@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro';
-import { wechatLogin, syncFavorites } from '../services/api';
+import { wechatLogin, syncFavorites } from '../services/api.ts';
 import {
   setToken,
   clearToken,
@@ -8,8 +8,8 @@ import {
   clearPendingFavorites,
   setStoredUser,
   clearStoredUser,
-} from './storage';
-import type { AuthUser } from '../types';
+} from './storage.ts';
+import type { AuthUser } from '../types/index.ts';
 
 export function isLoggedIn(): boolean {
   return Boolean(getToken());

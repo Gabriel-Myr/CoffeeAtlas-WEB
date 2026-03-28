@@ -29,13 +29,13 @@ pnpm --filter @coffeeatlas/miniprogram typecheck
 Additional checks when relevant:
 
 ```bash
-pnpm --filter @coffeeatlas/web test
-cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
+pnpm --filter @coffeeatlas/api test
+cd apps/api && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
 ```
 
 - [ ] `pnpm lint` passes?
 - [ ] `pnpm typecheck` passes?
-- [ ] Web backend/helper changes -> `pnpm --filter @coffeeatlas/web test` passes?
+- [ ] API backend/helper changes -> `pnpm --filter @coffeeatlas/api test` passes?
 - [ ] Miniprogram changes -> `pnpm --filter @coffeeatlas/miniprogram typecheck` passes?
 - [ ] API changes -> smoke/manual verification done?
 - [ ] No leftover debug logging?
@@ -53,7 +53,7 @@ Check if your change needs new or updated tests (see `.trellis/spec/unit-test/co
 ### 2. Code-Spec Sync
 
 - [ ] Does the relevant `.trellis/spec/<package>/<layer>/` doc need updates?
-- [ ] If the change spans web / miniprogram / shared-types, did each affected package spec stay in sync?
+- [ ] If the change spans api / miniprogram / shared-types, did each affected package spec stay in sync?
 - [ ] Does `.trellis/spec/unit-test/` need updates?
 - [ ] Does `.trellis/spec/guides/` need updates?
 
@@ -121,7 +121,7 @@ git diff --name-only
 
 Then run the extra package-specific commands that match the changed files.
 
-Only add `pnpm --filter @coffeeatlas/web test` and `smoke:api` when the change actually touches web/API layers.
+Only add `pnpm --filter @coffeeatlas/api test` and `smoke:api` when the change actually touches API layers.
 
 ---
 

@@ -13,10 +13,10 @@
 ### Task 1: 给 catalog query sanitize 补纯 helper 和失败测试
 
 **Files:**
-- Create: `apps/web/tests/catalog-query.test.ts`
-- Create or Modify: `apps/web/lib/catalog-query.ts`
-- Modify: `apps/web/lib/catalog-beans.ts`
-- Modify: `apps/web/lib/catalog-roasters.ts`
+- Create: `apps/api/tests/catalog-query.test.ts`
+- Create or Modify: `apps/api/lib/catalog-query.ts`
+- Modify: `apps/api/lib/catalog-beans.ts`
+- Modify: `apps/api/lib/catalog-roasters.ts`
 
 - [ ] **Step 1: 写失败测试锁定 catalog 内部的 query sanitize 行为**
 
@@ -27,7 +27,7 @@
 
 - [ ] **Step 2: 运行单测确认先红**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: FAIL，且失败集中在新的 catalog query helper 或其调用点
 
 - [ ] **Step 3: 实现最小 helper 并接到 beans / roasters 查询里**
@@ -39,18 +39,18 @@ Expected: FAIL，且失败集中在新的 catalog query helper 或其调用点
 
 - [ ] **Step 4: 跑 Web 测试与 typecheck**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: PASS
 
-Run: `pnpm --filter @coffeeatlas/web typecheck`
+Run: `pnpm --filter @coffeeatlas/api typecheck`
 Expected: PASS
 
 ### Task 2: 优化 roaster 列表的无 feature 主分页路径
 
 **Files:**
-- Modify: `apps/web/lib/catalog-roasters.ts`
-- Test: `apps/web/tests/catalog-query.test.ts`
-- Review: `apps/web/lib/server/public-api.ts`
+- Modify: `apps/api/lib/catalog-roasters.ts`
+- Test: `apps/api/tests/catalog-query.test.ts`
+- Review: `apps/api/lib/server/public-api.ts`
 
 - [ ] **Step 1: 先补失败测试，锁定新的分页路径行为**
 
@@ -61,7 +61,7 @@ Expected: PASS
 
 - [ ] **Step 2: 跑测试确认红灯是主路径还没优化**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: FAIL，且失败集中在 roaster path selection / query helper
 
 - [ ] **Step 3: 实现最小改动的双路径查询**
@@ -74,19 +74,19 @@ Expected: FAIL，且失败集中在 roaster path selection / query helper
 
 - [ ] **Step 4: 跑 Web 回归**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: PASS
 
-Run: `pnpm --filter @coffeeatlas/web typecheck`
+Run: `pnpm --filter @coffeeatlas/api typecheck`
 Expected: PASS
 
 ### Task 3: 跑 workspace 验证并做双阶段审查
 
 **Files:**
-- Review: `apps/web/lib/catalog-query.ts`
-- Review: `apps/web/lib/catalog-beans.ts`
-- Review: `apps/web/lib/catalog-roasters.ts`
-- Review: `apps/web/tests/catalog-query.test.ts`
+- Review: `apps/api/lib/catalog-query.ts`
+- Review: `apps/api/lib/catalog-beans.ts`
+- Review: `apps/api/lib/catalog-roasters.ts`
+- Review: `apps/api/tests/catalog-query.test.ts`
 
 - [ ] **Step 1: 跑 workspace 回归**
 

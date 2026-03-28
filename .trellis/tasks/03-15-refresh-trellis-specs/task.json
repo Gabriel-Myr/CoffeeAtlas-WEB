@@ -40,7 +40,7 @@
   "parent": null,
   "relatedFiles": [
     ".trellis/workflow.md",
-    ".trellis/spec/web/",
+    ".trellis/spec/api/",
     ".trellis/spec/miniprogram/",
     ".trellis/spec/shared-types/",
     ".trellis/spec/unit-test/",

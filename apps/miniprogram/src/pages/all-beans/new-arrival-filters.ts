@@ -2,9 +2,9 @@ import type {
   NewArrivalFilterOption,
   NewArrivalFiltersPayload,
   NewArrivalFiltersRequest,
-} from '../../types';
-import type { BeanSnapshot, RoasterSnapshot } from '../../utils/storage';
-import type { CoffeeBean } from '../../types';
+} from '../../types/index.ts';
+import type { BeanSnapshot, RoasterSnapshot } from '../../utils/storage.ts';
+import type { CoffeeBean } from '../../types/index.ts';
 
 const MAX_OPTIONS = 3;
 

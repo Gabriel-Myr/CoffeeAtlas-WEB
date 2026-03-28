@@ -1,13 +1,13 @@
 # CoffeeAtlas
 
-A pnpm monorepo for the CoffeeAtlas web app, miniprogram, and shared contracts.
+A pnpm monorepo for the CoffeeAtlas miniprogram, API backend, and shared contracts.
 
 ## Workspace Layout
-- `apps/web`: Next.js 16 web app and API routes
+- `apps/api`: Next.js API-only backend, serving `/api/*`
 - `apps/miniprogram`: Taro-based WeChat miniprogram
 - `packages/shared-types`: shared API contracts
-- `packages/api-client`: shared client layer in progress
-- `packages/domain`: domain layer in progress
+- `packages/api-client`: shared client helpers used by the miniprogram
+- `packages/domain`: shared domain helpers
 - `.trellis`: project workflow and spec documents
 
 ## Quick Start
@@ -19,9 +19,15 @@ pnpm install
 ```bash
 cp .env.example .env.local
 ```
-3. Start all dev tasks
+3. Start miniprogram local preview helper
 ```bash
 pnpm dev
+```
+
+API local development:
+
+```bash
+pnpm dev:api
 ```
 
 Useful workspace commands:
@@ -29,17 +35,17 @@ Useful workspace commands:
 ```bash
 pnpm lint
 pnpm typecheck
-pnpm --filter @coffeeatlas/web test
 pnpm --filter @coffeeatlas/miniprogram test
+pnpm dev:miniprogram:auto
 ```
 
-## Main Routes
-- `/`: homepage
-- `/all-beans`: bean catalog page
-- `/api/health`: legacy health check
-- `/api/v1/health`: v1 health check
+Miniprogram local preview helper:
+
+- `pnpm dev:miniprogram:auto` 会监听 `apps/miniprogram` 和相关共享包改动
+- 检测到改动后会自动重启 `pnpm --filter @coffeeatlas/miniprogram dev:weapp`
+- 适合微信开发者工具经常需要重新推一次 Taro 才能看到最新预览的场景
 
 ## Notes
 - Root package manager is `pnpm`. Do not use `npm install` in this repo.
-- Public catalog reads can fall back to sample data when Supabase server env is missing.
-- `packages/api-client` and `packages/domain` exist, but are not yet the main runtime entry points.
+- `packages/api-client` and `packages/domain` are still partial abstractions. Do not move logic there unless it is truly cross-package.
+- 小程序的登录、收藏、健康检查等 `/api/v1/*` 现在由 `apps/api` 提供。

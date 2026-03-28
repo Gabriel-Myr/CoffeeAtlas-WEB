@@ -1,8 +1,38 @@
 import { PropsWithChildren } from 'react'
+import { Text, View } from '@tarojs/components'
+import Taro from '@tarojs/taro'
+
+import { restartOnboarding } from './utils/restart-onboarding'
+import { clearOnboardingProfile } from './utils/storage'
 import './app.scss'
 
 function App({ children }: PropsWithChildren) {
-  return children
+  const handleRestartOnboarding = () => {
+    restartOnboarding({
+      clearProfile: clearOnboardingProfile,
+      relaunch: (url) => {
+        Taro.reLaunch({ url })
+      },
+    })
+  }
+
+  const statusBarHeight = Taro.getSystemInfoSync().statusBarHeight ?? 0
+
+  return (
+    <View className="app-shell">
+      {children}
+      <View
+        className="app-shell__restart-onboarding"
+        hoverClass="app-shell__restart-onboarding--active"
+        hoverStartTime={20}
+        hoverStayTime={70}
+        style={{ top: `${statusBarHeight + 12}px` }}
+        onClick={handleRestartOnboarding}
+      >
+        <Text className="app-shell__restart-onboarding-text">重新进入冷启动</Text>
+      </View>
+    </View>
+  )
 }
 
 export default App

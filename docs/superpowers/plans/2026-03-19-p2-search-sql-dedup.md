@@ -13,11 +13,11 @@
 ### Task 1: 先补结构防漂移测试
 
 **Files:**
-- Create: `apps/web/tests/catalog-search-sql.test.ts`
-- Read: `apps/web/db/sql/040_views_and_functions.sql`
-- Read: `apps/web/db/setup.sql`
-- Read: `apps/web/db/migrations/004_search_catalog_count.sql`
-- Read: `apps/web/db/migrations/005_search_catalog_matches_helper.sql`
+- Create: `apps/api/tests/catalog-search-sql.test.ts`
+- Read: `apps/api/db/sql/040_views_and_functions.sql`
+- Read: `apps/api/db/setup.sql`
+- Read: `apps/api/db/migrations/004_search_catalog_count.sql`
+- Read: `apps/api/db/migrations/005_search_catalog_matches_helper.sql`
 
 - [ ] **Step 1: 写失败测试，锁定 SQL 必须通过共享 helper 收口**
 
@@ -30,17 +30,17 @@
 
 - [ ] **Step 2: 运行 Web 测试确认红灯**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: FAIL，失败集中在新加的 SQL 结构测试
 
 ### Task 2: 重构 SQL 到单一共享 helper
 
 **Files:**
-- Modify: `apps/web/db/sql/040_views_and_functions.sql`
-- Modify: `apps/web/db/setup.sql`
-- Create: `apps/web/db/migrations/005_search_catalog_matches_helper.sql`
-- Test: `apps/web/tests/catalog-search-sql.test.ts`
-- Test: `apps/web/tests/catalog-search.test.ts`
+- Modify: `apps/api/db/sql/040_views_and_functions.sql`
+- Modify: `apps/api/db/setup.sql`
+- Create: `apps/api/db/migrations/005_search_catalog_matches_helper.sql`
+- Test: `apps/api/tests/catalog-search-sql.test.ts`
+- Test: `apps/api/tests/catalog-search.test.ts`
 
 - [ ] **Step 1: 新增共享 helper 函数，承载统一搜索匹配逻辑**
 
@@ -64,19 +64,19 @@ Expected: FAIL，失败集中在新加的 SQL 结构测试
 
 - [ ] **Step 3: 跑 Web 回归**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: PASS
 
-Run: `pnpm --filter @coffeeatlas/web typecheck`
+Run: `pnpm --filter @coffeeatlas/api typecheck`
 Expected: PASS
 
 ### Task 3: 做 workspace 验证和双阶段审查
 
 **Files:**
-- Review: `apps/web/db/sql/040_views_and_functions.sql`
-- Review: `apps/web/db/setup.sql`
-- Review: `apps/web/db/migrations/005_search_catalog_matches_helper.sql`
-- Review: `apps/web/tests/catalog-search-sql.test.ts`
+- Review: `apps/api/db/sql/040_views_and_functions.sql`
+- Review: `apps/api/db/setup.sql`
+- Review: `apps/api/db/migrations/005_search_catalog_matches_helper.sql`
+- Review: `apps/api/tests/catalog-search-sql.test.ts`
 
 - [ ] **Step 1: 跑 workspace 验证**
 

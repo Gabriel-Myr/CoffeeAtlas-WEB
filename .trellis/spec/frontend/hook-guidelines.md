@@ -2,32 +2,6 @@
 
 ---
 
-## Web 端（Next.js）
-
-### 数据获取
-
-服务端组件直接 `await`，不用 hooks：
-
-```tsx
-// app/page.tsx
-export default async function Page() {
-  const beans = await getCatalogBeans(100);
-  return <HomePageClient initialBeans={beans} />;
-}
-```
-
-客户端组件需要动态加载时，用 `useState` + `useEffect`：
-
-```tsx
-'use client';
-const [results, setResults] = useState<CoffeeBean[]>([]);
-useEffect(() => {
-  searchBeans(query).then(setResults);
-}, [query]);
-```
-
----
-
 ## 小程序端（Taro）
 
 ### 页面生命周期

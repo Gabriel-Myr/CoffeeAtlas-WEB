@@ -12,16 +12,16 @@ pnpm typecheck
 pnpm --filter @coffeeatlas/miniprogram typecheck
 ```
 
-如果改了 Web server/helper、共享契约或可测试的纯函数，再补：
+如果改了 API server/helper、共享契约或可测试的纯函数，再补：
 
 ```bash
-pnpm --filter @coffeeatlas/web test
+pnpm --filter @coffeeatlas/api test
 ```
 
 API 改动且有可访问环境时，再补：
 
 ```bash
-cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
+cd apps/api && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
 ```
 
 ---
@@ -34,10 +34,25 @@ cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
 - 收藏、token、历史记录集中在 `src/utils/storage.ts`
 - tab 间入口语义优先复用 `entry-intent`
 - 页面加载与分页要防止并发请求覆盖（参考 `all-beans/index.tsx` 的 request version 模式）
+- 本地联调默认优先使用 `pnpm dev:miniprogram:auto`，它会监听 `apps/miniprogram`、`packages/shared-types`、`packages/api-client`、`packages/domain` 的改动，并自动重推 `dev:weapp`
+
+### Local Dev Helper
+
+当微信开发者工具预览经常依赖重新推一次 Taro 时，使用：
+
+```bash
+pnpm dev:miniprogram:auto
+```
+
+说明：
+- 这个命令会常驻运行，并在监听到小程序或其共享依赖目录变更后，自动重启 `pnpm --filter @coffeeatlas/miniprogram dev:weapp`
+- 已忽略 `dist/`、`node_modules/` 等输出目录，避免构建产物导致重启循环
+- 当前实现使用定时轮询目录快照，避免系统文件监听额度不足导致守护进程直接退出
+- 微信开发者工具侧的自动刷新还依赖 `apps/miniprogram/project.config.json` 中 `setting.compileHotReLoad` 为 `true`
 
 ### When The Task Also Touches Web / API
-- 如果改了 `/api/v1/*` 响应或 shared-types，额外补读 `web/backend` 规范
-- 小程序任务可以读取 web 端实现做参考，但不要把 web 组件/Next.js 约束带进 `apps/miniprogram`
+- 如果改了 `/api/v1/*` 响应或 shared-types，额外补读 `api/backend` 规范
+- 小程序任务可以读取 `apps/api` 实现做参考，但不要把服务端/Next.js 约束带进 `apps/miniprogram`
 
 ---
 

@@ -5,7 +5,7 @@ import { buildApiRequestOptions } from '../src/utils/api-request.ts';
 
 test('buildApiRequestOptions keeps caller options while forcing stable transport defaults', () => {
   const options = buildApiRequestOptions({
-    url: 'https://coffee-atlas-web-web.vercel.app/api/v1/beans',
+    url: 'https://coffeeatlas-api.example.com/api/v1/beans',
     header: {
       Authorization: 'Bearer token',
       'Content-Type': 'application/json',
@@ -20,7 +20,7 @@ test('buildApiRequestOptions keeps caller options while forcing stable transport
     },
   });
 
-  assert.equal(options.url, 'https://coffee-atlas-web-web.vercel.app/api/v1/beans');
+  assert.equal(options.url, 'https://coffeeatlas-api.example.com/api/v1/beans');
   assert.deepEqual(options.header, {
     Authorization: 'Bearer token',
     'Content-Type': 'application/json',

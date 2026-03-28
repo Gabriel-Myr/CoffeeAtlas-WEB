@@ -1,6 +1,6 @@
 # 数据层规范
 
-> 本文档是仓库级数据层总览；更细的查询、错误和契约规则请结合 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/web/backend/database-guidelines.md` 与 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/web/backend/type-safety.md` 一起看。
+> 本文档是仓库级数据层总览；更细的查询、错误和契约规则请结合 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/api/backend/database-guidelines.md` 与 `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/api/backend/type-safety.md` 一起看。
 
 ---
 
@@ -9,23 +9,23 @@
 当前仓库的数据访问主要分 4 层：
 
 1. **Supabase client 层**
-   - `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/supabase.ts`
+   - `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/supabase.ts`
    - 提供 `supabaseBrowser`、`supabaseServer`、`requireSupabaseBrowser()`、`requireSupabaseServer()`
 
 2. **内部读取模型层**
-   - `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog.ts`
+   - `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog.ts`
    - 负责公开 catalog / roaster 读取、sample fallback、row -> app model 映射
 
 3. **API 组装层**
-   - `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/public-api.ts`
-   - `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/favorites-api.ts`
-   - `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/admin-catalog.ts`
+   - `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/public-api.ts`
+   - `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/favorites-api.ts`
+   - `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/admin-catalog.ts`
    - 负责把内部模型映射成 shared-types DTO、补分页、补鉴权和收藏逻辑
 
 4. **消费层**
-   - Web 页面直接使用 `lib/catalog.ts`
-   - 小程序通过 `/api/v1/*` + `src/services/api.ts`
-   - legacy Web 接口仍保留 `/api/beans`、`/api/roasters`、`/api/health`
+   - 小程序通过 `src/services/api.ts` 调 `/api/v1/*`
+   - 目录读取可走 `catalog-supabase.ts`
+   - legacy API 接口仍保留 `/api/beans`、`/api/roasters`、`/api/health`
 
 ---
 
@@ -57,20 +57,7 @@ if (error) throw error;
 
 ## 当前主数据流
 
-### 1. Web 公开页面
-
-```text
-page.tsx / server component
-  -> lib/catalog.ts
-  -> Supabase 或 sample fallback
-  -> 传给 *Client.tsx
-```
-
-参考：
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/app/page.tsx`
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/app/all-beans/page.tsx`
-
-### 2. 小程序 / 新客户端
+### 1. 小程序 / 新客户端
 
 ```text
 apps/miniprogram/src/services/api.ts
@@ -81,9 +68,17 @@ apps/miniprogram/src/services/api.ts
 
 参考：
 - `/Users/gabi/CoffeeAtlas-Web/apps/miniprogram/src/services/api.ts`
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/app/api/v1/**`
+- `/Users/gabi/CoffeeAtlas-Web/apps/api/app/api/v1/**`
 
-### 3. legacy Web 接口
+### 2. 小程序目录直连读取
+
+```text
+apps/miniprogram/src/services/catalog-supabase.ts
+  -> 小程序 Supabase client
+  -> 公开目录只读查询
+```
+
+### 3. legacy API 接口
 
 ```text
 /api/beans or /api/roasters
@@ -105,7 +100,7 @@ apps/miniprogram/src/services/api.ts
 
 ### 内部 app model
 
-- 主要在 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog.ts`
+- 主要在 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog.ts`
 - 例如 `CoffeeBean`、`Roaster`
 - 适合页面渲染和服务端内部拼装
 
@@ -125,7 +120,7 @@ apps/miniprogram/src/services/api.ts
 - 本地开发时首页、目录、discover 体验
 
 当前 fallback 数据源：
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/sample-data.ts`
+- `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/sample-data.ts`
 
 ### 不允许 fallback 的场景
 
@@ -141,10 +136,10 @@ apps/miniprogram/src/services/api.ts
 
 ## Auth / Favorites 数据路径
 
-- 用户表与收藏表迁移：`/Users/gabi/CoffeeAtlas-Web/apps/web/db/migrations/001_app_users_and_favorites.sql`
-- JWT 逻辑：`/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/auth-jwt.ts`
-- 请求鉴权：`/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/auth-user.ts`
-- 收藏 hydration：`/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/favorites-api.ts`
+- 用户表与收藏表迁移：`/Users/gabi/CoffeeAtlas-Web/apps/api/db/migrations/001_app_users_and_favorites.sql`
+- JWT 逻辑：`/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/auth-jwt.ts`
+- 请求鉴权：`/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/auth-user.ts`
+- 收藏 hydration：`/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/favorites-api.ts`
 
 这个链路属于真实写路径；不要把 sample fallback 逻辑带进来。
 
@@ -152,7 +147,7 @@ apps/miniprogram/src/services/api.ts
 
 ## 环境变量契约
 
-### Web / server
+### API / server
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -169,8 +164,8 @@ apps/miniprogram/src/services/api.ts
 
 以下问题已经存在于仓库现实中，Trellis 需要记住，但新改动不要复制它们：
 
-1. `/Users/gabi/CoffeeAtlas-Web/apps/web/scripts/import-roasters.ts`、`/Users/gabi/CoffeeAtlas-Web/apps/web/scripts/import-beans.ts`、`/Users/gabi/CoffeeAtlas-Web/apps/web/scripts/import-sales.ts` 仍内嵌 fallback 凭据
-2. `/Users/gabi/CoffeeAtlas-Web/apps/web/scripts/import-sales.ts` 依赖绝对路径 Excel 文件
+1. `/Users/gabi/CoffeeAtlas-Web/apps/api/scripts/import-roasters.ts`、`/Users/gabi/CoffeeAtlas-Web/apps/api/scripts/import-beans.ts`、`/Users/gabi/CoffeeAtlas-Web/apps/api/scripts/import-sales.ts` 仍内嵌 fallback 凭据
+2. `/Users/gabi/CoffeeAtlas-Web/apps/api/scripts/import-sales.ts` 依赖绝对路径 Excel 文件
 3. v1 shared-types 与 miniprogram 本地镜像类型存在双份维护成本
 4. legacy `/api/beans` / `/api/roasters` 与 `/api/v1/*` 并存，后续要继续管理兼容边界
 

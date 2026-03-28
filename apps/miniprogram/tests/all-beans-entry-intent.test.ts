@@ -21,7 +21,7 @@ test('setIntent stores entry intent for all-beans', () => {
 });
 
 test('consumeIntent returns intent and clears storage', () => {
-  let stored: unknown = 'new';
+  let stored: unknown = 'direct';
   const store = createEntryIntentStore({
     get: () => stored,
     set: (value) => {
@@ -32,7 +32,7 @@ test('consumeIntent returns intent and clears storage', () => {
     },
   });
 
-  assert.equal(store.consumeIntent(), 'new');
+  assert.equal(store.consumeIntent(), 'direct');
   assert.equal(stored, null);
 });
 

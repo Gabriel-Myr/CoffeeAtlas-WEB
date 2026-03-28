@@ -1,4 +1,4 @@
-export type AllBeansEntryIntent = 'guided' | 'new' | 'direct';
+export type AllBeansEntryIntent = 'guided' | 'direct';
 
 export interface EntryIntentStore {
   setIntent: (intent: AllBeansEntryIntent) => void;
@@ -12,7 +12,7 @@ export interface EntryIntentStorageAdapter {
 }
 
 function isEntryIntent(value: unknown): value is AllBeansEntryIntent {
-  return value === 'guided' || value === 'new' || value === 'direct';
+  return value === 'guided' || value === 'direct';
 }
 
 export function createEntryIntentStore(adapter: EntryIntentStorageAdapter): EntryIntentStore {

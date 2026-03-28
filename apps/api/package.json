@@ -1,0 +1,41 @@
+{
+  "name": "@coffeeatlas/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --experimental-strip-types tests/**/*.test.ts",
+    "sync:taobao:new": "node --experimental-strip-types scripts/sync-taobao-new-arrivals.ts",
+    "sync:taobao:shop": "node --experimental-strip-types scripts/sync-taobao-single-shop.ts",
+    "cleanup:taobao:offshelf": "node --experimental-strip-types scripts/cleanup-taobao-offshelf.ts",
+    "import:taobao:bindings": "node --experimental-strip-types scripts/import-taobao-roaster-bindings.ts",
+    "smoke:api": "node scripts/smoke-v1.mjs",
+    "start": "next start",
+    "lint": "pnpm --dir ../.. exec eslint apps/api --ext .js,.jsx,.ts,.tsx",
+    "check:cloud-env": "node scripts/check-cloud-env.mjs"
+  },
+  "dependencies": {
+    "@coffee-atlas/shared-types": "workspace:*",
+    "@supabase/supabase-js": "^2.57.0",
+    "@tailwindcss/postcss": "^4.2.1",
+    "lucide-react": "^0.575.0",
+    "motion": "^12.34.3",
+    "next": "^16.0.7",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "tailwindcss": "^4.2.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.11",
+    "@types/react": "19.0.10",
+    "@types/react-dom": "19.0.4",
+    "dotenv": "^17.3.1",
+    "eslint": "9.21.0",
+    "eslint-config-next": "15.1.0",
+    "typescript": "5.8.2"
+  }
+}

@@ -2,7 +2,7 @@ import Taro from '@tarojs/taro';
 import {
   createEntryIntentStore,
   type AllBeansEntryIntent,
-} from './entry-intent-store';
+} from './entry-intent-store.ts';
 
 export type { AllBeansEntryIntent };
 

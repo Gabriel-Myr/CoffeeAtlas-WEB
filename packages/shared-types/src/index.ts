@@ -33,7 +33,8 @@ export interface PaginatedResult<T> {
 }
 
 // Re-export all types
-export * from './catalog';
-export * from './roasters';
-export * from './favorites';
-export * from './common';
+export * from './catalog/index.js';
+export * from './roasters/index.js';
+export * from './favorites/index.js';
+export * from './common/index.js';
+export * from './process.js';

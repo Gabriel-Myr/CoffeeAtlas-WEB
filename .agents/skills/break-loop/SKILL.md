@@ -124,7 +124,7 @@ Three levels of insight:
    - If it's a cross-platform issue → update `cross-platform-thinking-guide.md`
    - If it's a cross-layer issue → update `cross-layer-thinking-guide.md`
    - If it's a code reuse issue → update `code-reuse-thinking-guide.md`
-   - If it's domain-specific → update the matching package doc such as `web/backend/*.md` or `miniprogram/frontend/*.md`
+   - If it's domain-specific → update the matching package doc such as `api/backend/*.md` or `miniprogram/frontend/*.md`
 
 2. **Sync templates** - After updating `.trellis/spec/`, sync to `src/templates/markdown/spec/`
 

@@ -4,7 +4,7 @@ import test from 'node:test';
 import { createOnboardingFlow } from '../src/pages/onboarding/onboarding-logic.ts';
 import { resolveOnboardingNavigation } from '../src/pages/onboarding/navigation.ts';
 
-test('beginner onboarding resolves to guided tab action', () => {
+test('beginner onboarding resolves to guided relaunch action', () => {
   const flow = createOnboardingFlow(
     {
       getProfile: () => null,
@@ -14,13 +14,13 @@ test('beginner onboarding resolves to guided tab action', () => {
   );
 
   assert.deepEqual(resolveOnboardingNavigation(flow.complete('beginner')), {
-    type: 'switchTab',
+    type: 'reLaunch',
     url: '/pages/all-beans/index',
     entryIntent: 'guided',
   });
 });
 
-test('intermediate onboarding resolves to index tab action without entry intent', () => {
+test('intermediate onboarding resolves to direct all-beans relaunch action', () => {
   const flow = createOnboardingFlow(
     {
       getProfile: () => null,
@@ -30,13 +30,13 @@ test('intermediate onboarding resolves to index tab action without entry intent'
   );
 
   assert.deepEqual(resolveOnboardingNavigation(flow.complete('intermediate')), {
-    type: 'switchTab',
-    url: '/pages/index/index',
-    entryIntent: null,
+    type: 'reLaunch',
+    url: '/pages/all-beans/index',
+    entryIntent: 'direct',
   });
 });
 
-test('skipping onboarding resolves to index tab action without entry intent', () => {
+test('skipping onboarding resolves to index relaunch action without entry intent', () => {
   const flow = createOnboardingFlow(
     {
       getProfile: () => null,
@@ -46,7 +46,7 @@ test('skipping onboarding resolves to index tab action without entry intent', ()
   );
 
   assert.deepEqual(resolveOnboardingNavigation(flow.skip()), {
-    type: 'switchTab',
+    type: 'reLaunch',
     url: '/pages/index/index',
     entryIntent: null,
   });

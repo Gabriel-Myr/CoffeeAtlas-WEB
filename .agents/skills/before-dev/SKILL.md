@@ -13,7 +13,7 @@ Execute these steps:
    ```
 
 2. **Identify which specs apply** to your task based on:
-   - Which package you're modifying (for this repo usually `apps/miniprogram`, `apps/web`, or `packages/shared-types`)
+   - Which package you're modifying (for this repo usually `apps/miniprogram`, `apps/api`, or `packages/shared-types`)
    - What type of work (backend, frontend, unit-test, docs, etc.)
 
    In this repo, `get_context.py --mode packages` marks the current default package.

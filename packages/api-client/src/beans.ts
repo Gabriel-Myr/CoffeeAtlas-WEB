@@ -67,7 +67,8 @@ export function buildBeanDiscoverPath(params?: BeanDiscoverQueryParams): string 
   }
 
   setQueryParam(query, 'q', params.q);
-  setQueryParam(query, 'process', params.process);
+  setQueryParam(query, 'processBase', params.processBase);
+  setQueryParam(query, 'processStyle', params.processStyle);
   setQueryParam(query, 'continent', params.continent);
   setQueryParam(query, 'country', params.country);
 

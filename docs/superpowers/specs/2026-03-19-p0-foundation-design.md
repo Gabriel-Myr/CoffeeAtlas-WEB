@@ -17,11 +17,11 @@
 **Design:**
 1. 项目身份统一为 `CoffeeAtlas`
    - README 标题、介绍、启动方式改成 monorepo 现实
-   - Web 包名从 `coffeestories-webdb` 改为 `@coffeeatlas/web`
+   - Web 包名从 `coffeestories-webdb` 改为 `@coffeeatlas/api`
    - 健康检查返回统一的 `service` 名称，避免日志和监控混乱
 2. 包管理统一为 pnpm
    - README 只保留 `pnpm install` / `pnpm dev` / `pnpm lint` / `pnpm typecheck`
-   - 删除 `apps/web/package-lock.json`，避免出现双锁文件
+   - 删除 `apps/api/package-lock.json`，避免出现双锁文件
 3. 仓库忽略规则补齐
    - 新增 `.turbo`、`.next`、`dist`、`coverage`、`*.tsbuildinfo`、日志和临时目录
    - 目标是让根工作区恢复“默认干净”，不再把构建垃圾混进 git status

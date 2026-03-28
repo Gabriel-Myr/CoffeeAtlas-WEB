@@ -45,15 +45,15 @@ Based on your change type, execute relevant checks below:
 
 | Layer | Common Locations |
 |-------|------------------|
-| API/Routes | `apps/web/app/api/v1/**` |
-| Service/Business Logic | `apps/miniprogram/src/services/**`, `apps/web/lib/server/**`, `packages/domain/**` |
+| API/Routes | `apps/api/app/api/v1/**` |
+| Service/Business Logic | `apps/miniprogram/src/services/**`, `apps/api/lib/server/**`, `packages/domain/**` |
 | Contracts | `packages/shared-types/**`, `apps/miniprogram/src/types/**` |
 | UI/Presentation | `apps/miniprogram/src/pages/**`, `apps/miniprogram/src/components/**` |
 | Storage/Runtime Config | `apps/miniprogram/src/utils/storage.ts`, `apps/miniprogram/src/utils/api-config.ts` |
 
 **Checklist**:
 - [ ] Read flow checked end to end?
-  Typical miniprogram path: `apps/web/app/api/v1/*` -> `packages/shared-types` / mapper -> `src/services/api.ts` -> `pages/*`
+  Typical miniprogram path: `apps/api/app/api/v1/*` -> `packages/shared-types` / mapper -> `src/services/api.ts` -> `pages/*`
 - [ ] Write flow checked end to end?
   Typical miniprogram path: page interaction -> `src/services/api.ts` -> `/api/v1/*` -> server helper / persistence
 - [ ] Types/schemas correctly passed between layers?
@@ -76,7 +76,7 @@ Based on your change type, execute relevant checks below:
 **Checklist**:
 - [ ] Search first: How many places define this value?
   ```bash
-  rg -n "value-to-change" apps/miniprogram/src apps/web packages
+  rg -n "value-to-change" apps/miniprogram/src apps/api packages
   ```
 - [ ] If 2+ places define same value -> Should extract to shared constant
 - [ ] After modification, all usage sites updated?
@@ -93,7 +93,7 @@ Based on your change type, execute relevant checks below:
 **Checklist**:
 - [ ] Search for existing similar utilities first
   ```bash
-  rg -n "functionNamePattern" apps/miniprogram/src apps/web packages
+  rg -n "functionNamePattern" apps/miniprogram/src apps/api packages
   ```
 - [ ] If similar exists, can you extend it instead?
 - [ ] If creating new, is it in the right location (shared vs domain-specific)?
@@ -107,7 +107,7 @@ Based on your change type, execute relevant checks below:
 **Checklist**:
 - [ ] Did you check ALL files with similar patterns?
   ```bash
-  rg -n "patternYouChanged" apps/miniprogram/src apps/web packages
+  rg -n "patternYouChanged" apps/miniprogram/src apps/api packages
   ```
 - [ ] Any files missed that should also be updated?
 - [ ] Should this pattern be abstracted to prevent future duplication?
@@ -135,7 +135,7 @@ Based on your change type, execute relevant checks below:
 **Checklist**:
 - [ ] Search for other places using same concept
   ```bash
-  rg -n "ConceptName" apps/miniprogram/src apps/web packages
+  rg -n "ConceptName" apps/miniprogram/src apps/api packages
   ```
 - [ ] Are these usages consistent?
 - [ ] Should they share configuration/constants?

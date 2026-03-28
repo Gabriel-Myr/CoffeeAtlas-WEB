@@ -1,4 +1,4 @@
-import type { CatalogBeanCard } from '../catalog';
+import type { CatalogBeanCard } from '../catalog/index.js';
 
 export type RoasterFeature = 'has_image' | 'has_beans' | 'taobao' | 'xiaohongshu';
 

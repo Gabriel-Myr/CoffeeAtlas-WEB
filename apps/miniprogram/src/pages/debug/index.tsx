@@ -50,7 +50,7 @@ export default function DebugPage() {
   const [storedUser, setStoredUser] = useState(getStoredUser());
 
   useDidShow(() => {
-    Taro.setNavigationBarTitle({ title: 'API 联调' });
+    Taro.setNavigationBarTitle({ title: '连接诊断' });
 
     const nextState = getApiBaseUrlState();
     setApiState(nextState);
@@ -116,22 +116,22 @@ export default function DebugPage() {
   return (
     <View className="debug-page">
       <View className="debug-page__hero">
-        <Text className="debug-page__eyebrow">Cloud Debug</Text>
-        <Text className="debug-page__title">小程序 API 联调面板</Text>
+        <Text className="debug-page__eyebrow">Connection Debug</Text>
+        <Text className="debug-page__title">小程序连接诊断面板</Text>
         <Text className="debug-page__subtitle">
-          在微信开发者工具里把地址切到云端域名，直接验证健康检查、列表和登录态。
+          目录数据默认直连 Supabase；这里主要保留用户态 API 和故障探针，方便排查登录、收藏等接口。
         </Text>
       </View>
 
       <View className="debug-page__card">
         <View className="debug-page__card-head">
-          <Text className="debug-page__card-title">当前地址</Text>
+          <Text className="debug-page__card-title">用户态 API 地址</Text>
           <Text className={`debug-page__badge debug-page__badge--${apiState.mode}`}>
             {getModeLabel(apiState.mode)}
           </Text>
         </View>
         <Text className="debug-page__value">
-          {apiState.baseUrl || '未配置，建议填写你的云端 HTTPS 域名'}
+          {apiState.baseUrl || '未配置；目录页不依赖这里，但登录/收藏接口仍会使用 API'}
         </Text>
         <Text className="debug-page__meta">
           {apiState.source === 'runtime' ? '来源：本机覆盖配置' : '来源：编译配置 TARO_APP_API_URL'}
@@ -143,13 +143,13 @@ export default function DebugPage() {
         <Input
           className="debug-page__input"
           value={draftUrl}
-          placeholder="https://your-cloud-domain.com"
+          placeholder="https://your-user-api-domain.com"
           onInput={(event) => setDraftUrl(event.detail.value)}
         />
 
         <View className="debug-page__actions">
           <Button className="debug-page__button debug-page__button--primary" onClick={handleApplyUrl}>
-            保存联调地址
+            保存 API 地址
           </Button>
           <Button className="debug-page__button" onClick={handleResetUrl}>
             恢复编译配置
@@ -162,7 +162,7 @@ export default function DebugPage() {
         <Text className="debug-page__value">{loginLabel}</Text>
         <Text className="debug-page__meta">
           {isLoggedIn()
-            ? '可继续测试 /api/v1/me 和收藏接口。'
+            ? '目录页已走 Supabase，可继续测试 /api/v1/me 和收藏接口。'
             : '先去“我的”页登录，再回来验证个人信息和收藏接口。'}
         </Text>
       </View>
@@ -182,7 +182,7 @@ export default function DebugPage() {
             loading={runningKey === 'beans'}
             onClick={() => runProbe('beans', () => getBeans({ page: 1, pageSize: 3 }))}
           >
-            豆款列表
+            豆款列表（Supabase）
           </Button>
           <Button
             className="debug-page__probe-button"
@@ -193,14 +193,14 @@ export default function DebugPage() {
               )
             }
           >
-            新品列表
+            新品列表（Supabase）
           </Button>
           <Button
             className="debug-page__probe-button"
             loading={runningKey === 'roasters'}
             onClick={() => runProbe('roasters', () => getRoasters({ page: 1, pageSize: 3 }))}
           >
-            烘焙商列表
+            烘焙商列表（Supabase）
           </Button>
           <Button
             className="debug-page__probe-button"
@@ -234,7 +234,7 @@ export default function DebugPage() {
           </View>
         ) : (
           <Text className="debug-page__meta">
-            还没有执行探针。建议先测健康检查，再测豆款/烘焙商列表。
+            还没有执行探针。建议先测豆款/烘焙商列表，再按需测试健康检查和用户态接口。
           </Text>
         )}
       </View>

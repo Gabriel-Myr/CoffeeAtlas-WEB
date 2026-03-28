@@ -4,7 +4,6 @@ import Taro, { useDidShow } from '@tarojs/taro';
 import { toBeanFavoriteSnapshot, toRoasterFavoriteSnapshot } from '@coffee-atlas/domain';
 
 import Icon from '../../components/Icon';
-import RoasterCard from '../../components/RoasterCard';
 import { getFavorites as getCloudFavorites, removeFavorite as removeCloudFavorite } from '../../services/api';
 import type {
   AuthUser,
@@ -13,19 +12,18 @@ import type {
   UserFavorite,
 } from '../../types';
 import { isLoggedIn, login, logout } from '../../utils/auth';
-import { getApiBaseUrlState } from '../../utils/api-config';
 import {
   getBeanFavorites,
   getHistory,
   getRoasterFavorites,
   getStoredUser,
   toggleBeanFavorite,
-  toggleRoasterFavorite,
 } from '../../utils/storage';
 import type { BeanSnapshot, HistoryItem, RoasterSnapshot } from '../../utils/storage';
+import { getBadgeRecordCopy } from './badge-record';
 import './index.scss';
 
-type TabKey = 'beans' | 'roasters' | 'history';
+type TabKey = 'beans' | 'history';
 
 interface BeanRowProps {
   bean: BeanSnapshot;
@@ -113,11 +111,19 @@ function EmptyPane({ icon, message }: { icon: 'heart' | 'coffee'; message: strin
   );
 }
 
+function FavoriteEmptyPane({ message }: { message: string }) {
+  return (
+    <View className="profile__empty profile__empty--favorite">
+      <View className="profile__favorite-empty-illustration" />
+      <Text className="profile__empty-text">{message}</Text>
+    </View>
+  );
+}
+
 export default function Profile() {
   const [activeTab, setActiveTab] = useState<TabKey>('beans');
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
-  const [apiState, setApiState] = useState(getApiBaseUrlState());
   const [localBeanFavorites, setLocalBeanFavorites] = useState<BeanSnapshot[]>([]);
   const [localRoasterFavorites, setLocalRoasterFavorites] = useState<RoasterSnapshot[]>([]);
   const [cloudFavorites, setCloudFavorites] = useState<UserFavorite[]>([]);
@@ -128,7 +134,6 @@ export default function Profile() {
     const authed = isLoggedIn();
     setLoggedIn(authed);
     setUser(authed ? getStoredUser() : null);
-    setApiState(getApiBaseUrlState());
     setLocalBeanFavorites(getBeanFavorites());
     setLocalRoasterFavorites(getRoasterFavorites());
     setHistory(getHistory());
@@ -200,11 +205,6 @@ export default function Profile() {
     setLocalBeanFavorites(getBeanFavorites());
   };
 
-  const handleUnfavoriteLocalRoaster = (roaster: RoasterSnapshot) => {
-    toggleRoasterFavorite(roaster);
-    setLocalRoasterFavorites(getRoasterFavorites());
-  };
-
   const handleUnfavoriteCloud = async (favorite: UserFavorite) => {
     try {
       await removeCloudFavorite(favorite.target_type, favorite.target_id);
@@ -218,21 +218,21 @@ export default function Profile() {
   const summaryLabel = loggedIn ? '已同步至云端' : '本地收藏，登录后自动同步';
   const heroName = user?.nickname || (loggedIn ? '咖啡爱好者' : '你的咖啡私藏');
   const heroInitial = heroName.charAt(0).toUpperCase();
-  const apiModeLabel = apiState.mode === 'cloud' ? '云端' : apiState.mode === 'local' ? '本地' : '未配置';
+  const badgeRecordCopy = getBadgeRecordCopy({ loggedIn, totalSaved });
 
   return (
     <View className="profile">
       <View className="profile__hero">
-        <View className="profile__hero-top">
-          <View className="profile__identity">
-            <Text className="profile__eyebrow">Private Shelf</Text>
-            <Text className="profile__name">{heroName}</Text>
-            <Text className="profile__status">{summaryLabel}</Text>
+        <View className="profile__avatar-shell">
+          <View className="profile__avatar">
+            <Text className="profile__avatar-text">{heroInitial}</Text>
           </View>
+        </View>
 
-          <View className="profile__seal">
-            <Text className="profile__seal-text">{heroInitial}</Text>
-          </View>
+        <View className="profile__identity">
+          <Text className="profile__eyebrow">Private Shelf</Text>
+          <Text className="profile__name">{heroName}</Text>
+          <Text className="profile__status">{summaryLabel}</Text>
         </View>
 
         <View className="profile__hero-actions">
@@ -265,25 +265,36 @@ export default function Profile() {
         </View>
       </View>
 
-      <View
-        className="profile__debug-card"
-        onClick={() => Taro.navigateTo({ url: '/pages/debug/index' })}
-      >
-        <View className="profile__debug-copy">
-          <Text className="profile__debug-title">API 联调</Text>
-          <Text className="profile__debug-desc">
-            {apiState.baseUrl || '点击配置云端联调地址'}
-          </Text>
+      <View className="profile__badge-record">
+        <View className="profile__badge-record-head">
+          <View>
+            <Text className="profile__badge-record-eyebrow">{badgeRecordCopy.eyebrow}</Text>
+            <Text className="profile__badge-record-title">{badgeRecordCopy.title}</Text>
+          </View>
+
+          <View className="profile__badge-record-icon">
+            <Icon name="heart" size={18} color="rgba(78, 52, 46, 0.8)" />
+          </View>
         </View>
-        <View className={`profile__debug-pill profile__debug-pill--${apiState.mode}`}>
-          <Text className="profile__debug-pill-text">{apiModeLabel}</Text>
+
+        <Text className="profile__badge-record-description">{badgeRecordCopy.description}</Text>
+
+        <View className="profile__badge-record-track">
+          {[0, 1, 2].map((slot) => (
+            <View key={slot} className="profile__badge-record-slot">
+              <View className="profile__badge-record-slot-ring">
+                <Icon name="coffee" size={18} color="rgba(139, 115, 85, 0.45)" />
+              </View>
+            </View>
+          ))}
         </View>
+
+        <Text className="profile__badge-record-hint">{badgeRecordCopy.hint}</Text>
       </View>
 
       <View className="profile__tabs">
         {([
           { key: 'beans', label: '豆款收藏' },
-          { key: 'roasters', label: '烘焙商收藏' },
           { key: 'history', label: '最近浏览' },
         ] as Array<{ key: TabKey; label: string }>).map((tab) => (
           <View
@@ -299,7 +310,7 @@ export default function Profile() {
       <View className="profile__list">
         {activeTab === 'beans' ? (
           beanFavorites.length === 0 ? (
-            <EmptyPane icon="heart" message="先挑几款喜欢的豆子，私藏夹会慢慢成形。" />
+            <FavoriteEmptyPane message="先挑几款喜欢的豆子，私藏夹会慢慢成形。" />
           ) : (
             beanFavorites.map((item) => (
               <BeanRow
@@ -314,40 +325,6 @@ export default function Profile() {
                 }}
               />
             ))
-          )
-        ) : null}
-
-        {activeTab === 'roasters' ? (
-          roasterFavorites.length === 0 ? (
-            <EmptyPane icon="heart" message="把喜欢的烘焙品牌留下来，日后会更好回看。" />
-          ) : (
-            <View className="profile__roaster-list">
-              {roasterFavorites.map((item, index) => (
-                <RoasterCard
-                  key={item.roaster.id}
-                  roaster={item.roaster}
-                  index={index}
-                  variant="saved"
-                  hideArrow
-                  showQuickActions={false}
-                  trailing={(
-                    <View
-                      className="profile__fav-action"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (loggedIn && item.favorite) {
-                          void handleUnfavoriteCloud(item.favorite);
-                        } else {
-                          handleUnfavoriteLocalRoaster(item.roaster);
-                        }
-                      }}
-                    >
-                      <Icon name="heart-filled" size={15} color="#c85c3d" />
-                    </View>
-                  )}
-                />
-              ))}
-            </View>
           )
         ) : null}
 

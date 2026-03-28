@@ -17,10 +17,10 @@
 - Modify: `packages/shared-types/src/common/index.ts`
 - Modify: `packages/shared-types/src/index.ts`
 - Modify: `apps/miniprogram/src/types/index.ts`
-- Modify: `apps/web/lib/catalog.ts`
-- Modify: `apps/web/app/all-beans/AllBeansClient.tsx`
+- Modify: `apps/api/lib/catalog.ts`
+- Modify: `apps/api/app/all-beans/AllBeansClient.tsx`
 - Test: `apps/miniprogram/tests/new-arrival-filters.test.ts`
-- Test: `apps/web/tests/**/*.test.ts`
+- Test: `apps/api/tests/**/*.test.ts`
 
 - [ ] **Step 1: 先写/补测试，锁定共享 CoffeeBean 契约被 web 和 miniprogram 共同消费**
 - [ ] **Step 2: 跑对应测试，确认在改类型前会因重复定义或不一致暴露问题**
@@ -51,10 +51,10 @@
 ### Task 3: 抽出 beans 路由公共解析逻辑
 
 **Files:**
-- Create: `apps/web/lib/server/bean-query-params.ts`
-- Modify: `apps/web/app/api/beans/route.ts`
-- Modify: `apps/web/app/api/v1/beans/route.ts`
-- Test: `apps/web/tests/bean-query-params.test.ts`
+- Create: `apps/api/lib/server/bean-query-params.ts`
+- Modify: `apps/api/app/api/beans/route.ts`
+- Modify: `apps/api/app/api/v1/beans/route.ts`
+- Test: `apps/api/tests/bean-query-params.test.ts`
 
 - [ ] **Step 1: 先写失败测试，锁定 `parseSort` / `parseContinent` / `parseBooleanFlag` 的期望行为**
 - [ ] **Step 2: 运行新测试，确认在 helper 还没抽出前失败**

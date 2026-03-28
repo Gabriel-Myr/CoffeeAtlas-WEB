@@ -1,6 +1,6 @@
 # 导入与数据运维脚本规范
 
-> 这里记录的是 `apps/web/scripts/**` 的当前现实，以及新增/修改脚本时应遵守的约束。
+> 这里记录的是 `apps/api/scripts/**` 的当前现实，以及新增/修改脚本时应遵守的约束。
 
 ---
 
@@ -20,12 +20,12 @@
 ## 目录与执行现实
 
 脚本位于：
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/scripts/`
+- `/Users/gabi/CoffeeAtlas-Web/apps/api/scripts/`
 
 当前 package.json 里已经封装的命令：
 
 ```bash
-cd apps/web
+cd apps/api
 pnpm smoke:api
 pnpm check:cloud-env
 ```
@@ -92,7 +92,7 @@ if (!supabaseUrl || !serviceRoleKey) {
 
 查询/字段契约变动后，记得同步：
 - `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/data-layer.md`
-- `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/web/backend/database-guidelines.md`
+- `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/api/backend/database-guidelines.md`
 - `/Users/gabi/CoffeeAtlas-Web/.trellis/spec/database-schema.md`
 
 ---

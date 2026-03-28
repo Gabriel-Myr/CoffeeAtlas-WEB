@@ -26,7 +26,7 @@
 | `src/catalog.ts` | 空骨架 | 目录领域规则（价格计算、库存判断等） |
 | `src/roasters.ts` | 空骨架 | 烘焙商领域规则 |
 | `src/mappers.ts` | 空骨架 | DB Row → Domain Model 映射函数 |
-| `src/validation.ts` | 空骨架 | 输入校验（当前在 `apps/web/lib/server/admin-catalog.ts` 中内联） |
+| `src/validation.ts` | 空骨架 | 输入校验（当前在 `apps/api/lib/server/admin-catalog.ts` 中内联） |
 
 ---
 
@@ -48,7 +48,7 @@
 ## 常见问题 (FAQ)
 
 **Q: 为什么 domain 包是空的？**
-A: Monorepo 迁移时先建立包结构，实际逻辑仍在 `apps/web/lib/catalog.ts` 和 `apps/web/lib/server/admin-catalog.ts` 中。
+A: Monorepo 迁移时先建立包结构，实际逻辑仍在 `apps/api/lib/catalog.ts` 和 `apps/api/lib/server/admin-catalog.ts` 中。
 Phase 2 重构时将逐步将 mapper 和 validation 逻辑迁移至此包。
 
 ---

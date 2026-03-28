@@ -6,7 +6,7 @@
 
 ## 项目背景
 
-CoffeeAtlas-Web 是一个精品咖啡豆目录平台。当前已完成 Turborepo Monorepo 迁移，目标是同时支持 Web 端（Next.js）和微信小程序（Taro）。
+CoffeeAtlas-Web 是一个精品咖啡豆目录平台。当前已完成 Turborepo Monorepo 迁移，目标是同时支持 API 后端（Next.js Route Handlers）和微信小程序（Taro）。
 
 ---
 
@@ -14,16 +14,14 @@ CoffeeAtlas-Web 是一个精品咖啡豆目录平台。当前已完成 Turborepo
 
 1. 微信小程序可以浏览咖啡豆目录、烘焙商列表
 2. 支持微信登录和收藏功能
-3. Web 端和小程序共用同一套 API（`/api/v1/`）
+3. API 后端和小程序共用同一套 API（`/api/v1/`）
 
 ---
 
 ## 架构
 
 ```
-微信小程序 (Taro)  ──┐
-                     ├──> apps/web API Routes (/api/v1/) ──> Supabase
-Web 端 (Next.js)    ──┘
+微信小程序 (Taro)  ──> apps/api API Routes (/api/v1/) ──> Supabase
 ```
 
 共享包（`packages/*`）不引入平台特定依赖，供两端复用。
@@ -48,7 +46,7 @@ Web 端 (Next.js)    ──┘
 
 ### 🔲 待完成
 
-**Web 端 API Routes（`apps/web/app/api/v1/`）**
+**API Routes（`apps/api/app/api/v1/`）**
 
 | 端点 | 方法 | 说明 | 状态 |
 |------|------|------|------|
@@ -83,7 +81,7 @@ Web 端 (Next.js)    ──┘
 { "ok": false, "error": { "code": "...", "message": "..." }, "meta": { "requestId": "..." } }
 ```
 
-实现参考 `apps/web/lib/server/api-helpers.ts`，数据访问复用 `apps/web/lib/catalog.ts`。
+实现参考 `apps/api/lib/server/api-helpers.ts`，数据访问复用 `apps/api/lib/catalog.ts`。
 
 ---
 

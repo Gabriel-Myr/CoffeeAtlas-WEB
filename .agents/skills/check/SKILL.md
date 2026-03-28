@@ -17,7 +17,7 @@ Execute these steps:
    python3 ./.trellis/scripts/get_context.py --mode packages
    ```
    Start from the package marked as `default`.
-   In this repo, if the task only touches `apps/miniprogram`, read `miniprogram/frontend` first and only add `web/*` or `shared-types/*` when the change truly spans them.
+   In this repo, if the task only touches `apps/miniprogram`, read `miniprogram/frontend` first and only add `api/*` or `shared-types/*` when the change truly spans them.
 
 3. **Read the spec index** for each relevant module:
    ```bash
@@ -38,8 +38,8 @@ Execute these steps:
 
    Add these only when relevant:
    ```bash
-   pnpm --filter @coffeeatlas/web test
-   cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
+   pnpm --filter @coffeeatlas/api test
+   cd apps/api && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
    ```
 
 6. **Report any violations** and fix them if found.

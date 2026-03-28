@@ -37,6 +37,21 @@ test('completing onboarding writes profile and routes beginner to guided entry',
   assert.equal(result.entryIntent, 'guided');
 });
 
+test('completing onboarding routes intermediate to direct all-beans entry', () => {
+  const flow = createOnboardingFlow(
+    {
+      getProfile: () => null,
+      setProfile: () => {},
+    },
+    () => 1711111111
+  );
+
+  const result = flow.complete('intermediate');
+
+  assert.equal(result.url, '/pages/all-beans/index?entry=direct');
+  assert.equal(result.entryIntent, 'direct');
+});
+
 test('skipping onboarding does not write profile and routes to index', () => {
   let setCalls = 0;
   const flow = createOnboardingFlow(

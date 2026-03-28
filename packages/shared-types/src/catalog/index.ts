@@ -1,3 +1,5 @@
+import type { ProcessBaseId, ProcessStyleId } from '../process.js';
+
 export type BeanSort = 'updated_desc' | 'sales_desc' | 'price_asc' | 'price_desc';
 export type BeanDiscoverContinent = 'asia' | 'africa' | 'americas';
 
@@ -10,6 +12,9 @@ export interface CatalogBeanCard {
   city: string;
   originCountry: string;
   process: string;
+  processBase: ProcessBaseId;
+  processStyle: ProcessStyleId;
+  processRaw?: string;
   roastLevel: string;
   price: number;
   currency: string;
@@ -54,13 +59,15 @@ export interface BeanDiscoverEditorialPick {
 
 export interface BeanDiscoverSummary {
   total: number;
-  process?: string;
+  processBase?: ProcessBaseId;
+  processStyle?: ProcessStyleId;
   continent?: BeanDiscoverContinent;
   country?: string;
 }
 
 export interface BeanDiscoverPayload {
-  processOptions: BeanDiscoverOption[];
+  processBaseOptions: BeanDiscoverOption[];
+  processStyleOptions: BeanDiscoverOption[];
   continentOptions: BeanDiscoverOption[];
   countryOptions: BeanDiscoverOption[];
   editorial: BeanDiscoverEditorial;
@@ -70,7 +77,8 @@ export interface BeanDiscoverPayload {
 
 export interface BeanDiscoverQueryParams {
   q?: string;
-  process?: string;
+  processBase?: ProcessBaseId;
+  processStyle?: ProcessStyleId;
   continent?: BeanDiscoverContinent;
   country?: string;
 }
@@ -85,6 +93,8 @@ export interface NewArrivalFilterOption {
 
 export interface LocalFavoriteBeanPreference {
   process?: string;
+  processBase?: ProcessBaseId;
+  processStyle?: ProcessStyleId;
   originCountry?: string;
 }
 
@@ -113,6 +123,8 @@ export interface BeansQueryParams {
   roasterId?: string;
   originCountry?: string;
   process?: string;
+  processBase?: ProcessBaseId;
+  processStyle?: ProcessStyleId;
   roastLevel?: string;
   inStock?: boolean;
   sort?: BeanSort;

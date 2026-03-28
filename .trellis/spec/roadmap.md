@@ -8,14 +8,8 @@
 
 ### Monorepo 与基础能力
 - pnpm workspace + Turborepo 已落地
-- `apps/web`、`apps/miniprogram`、`packages/shared-types`、`packages/api-client`、`packages/domain` 结构已建立
+- `apps/api`、`apps/miniprogram`、`packages/shared-types`、`packages/api-client`、`packages/domain` 结构已建立
 - 根级 `lint` / `typecheck` / `build` 流程可用
-
-### Web 体验
-- 首页 Atlas 产地探索页
-- 全部豆款页
-- 主题切换和 Atlas 风格视觉变量体系
-- 开发辅助页：`geo-preview`、`geo-compare`
 
 ### v1 API
 - `/api/v1/beans`
@@ -30,7 +24,7 @@
 - `/api/v1/auth/wechat/login`
 
 ### 数据与鉴权基础
-- 基础 SQL schema、索引、RLS、视图与函数已在 `apps/web/db/sql/**`
+- 基础 SQL schema、索引、RLS、视图与函数已在 `apps/api/db/sql/**`
 - `app_users` / `user_favorites` 迁移已存在
 - `roaster_beans.image_url` 迁移已存在
 - JWT、收藏、微信登录 server helper 已落地
@@ -89,7 +83,7 @@
 - 质量评分与监控能力
 
 ### 前端与客户端
-- 继续统一 Web 与小程序在 beans / roasters / discover 上的契约与行为
+- 继续统一 API 与小程序在 beans / roasters / discover 上的契约与行为
 - 如果 `packages/api-client` 成熟，再把小程序逐步迁移过去
 - 针对大列表与图片做性能优化
 

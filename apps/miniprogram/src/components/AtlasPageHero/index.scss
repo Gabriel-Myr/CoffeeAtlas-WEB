@@ -1,0 +1,40 @@
+.atlas-page-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 24px 18px;
+  text-align: center;
+
+  &__title-en {
+    color: var(--color-coffee-dark, #3e2a1e);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1;
+  }
+
+  &__title-atlas {
+    margin-top: -2px;
+    color: var(--color-coffee-light, #8b7355);
+    font-family: var(--font-serif, Georgia, serif);
+    font-size: 30px;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  &__subtitle {
+    margin-top: 10px;
+    color: rgba(139, 115, 85, 0.84);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  &__extra {
+    margin-top: 14px;
+  }
+}

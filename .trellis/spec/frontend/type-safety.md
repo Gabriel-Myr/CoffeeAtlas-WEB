@@ -19,11 +19,11 @@
 
 ---
 
-## Web Type Layers
+## API Type Layers
 
-### 1. Internal app models (`apps/web/lib/catalog.ts`)
+### 1. Internal app models (`apps/api/lib/catalog.ts`)
 
-`CoffeeBean`、`Roaster` 属于 Web 内部读取模型：
+`CoffeeBean`、`Roaster` 属于 API 内部读取模型：
 
 - 来源：Supabase + sample fallback
 - 用途：页面渲染、v1 DTO 组装、favorites hydration
@@ -62,7 +62,7 @@ v1 route 出口必须尽量对齐 shared-types，而不是直接返回 `lib/cata
 
 ## Row Shape Never Leaks Into UI
 
-数据库 row 在 Web server 侧保持 snake_case，本地模型 / props / DTO 用 camelCase。
+数据库 row 在 API server 侧保持 snake_case，本地模型 / props / DTO 用 camelCase。
 
 ### Good
 
@@ -115,6 +115,6 @@ const ids = rows.map((row) => row.roaster_bean_id as string);
 
 ## Platform Type Boundaries
 
-- Next.js 类型只留在 `apps/web/**`
+- Next.js 类型只留在 `apps/api/**`
 - Taro 类型只留在 `apps/miniprogram/**`
 - `packages/*` 保持平台无关

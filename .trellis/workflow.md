@@ -49,8 +49,9 @@ cat .trellis/spec/unit-test/index.md
 
 ```bash
 cat .trellis/spec/miniprogram/frontend/index.md
-cat .trellis/spec/web/frontend/index.md
-cat .trellis/spec/web/backend/index.md
+cat .trellis/spec/api/backend/index.md
+cat .trellis/spec/shared-types/frontend/index.md
+cat .trellis/spec/shared-types/backend/index.md
 ```
 
 `get_context.py --mode packages` 会标出当前默认 package 和哪些 package 目前 `out of scope`。
@@ -67,22 +68,15 @@ cat .trellis/spec/miniprogram/frontend/type-safety.md
 cat .trellis/spec/miniprogram/frontend/quality-guidelines.md
 ```
 
-**Frontend work**
+**Shared contract work**
 ```bash
-cat .trellis/spec/web/frontend/component-guidelines.md
-cat .trellis/spec/web/frontend/hook-guidelines.md
-cat .trellis/spec/web/frontend/state-management.md
-cat .trellis/spec/web/frontend/type-safety.md
-cat .trellis/spec/web/frontend/quality-guidelines.md
+cat .trellis/spec/shared-types/frontend/index.md
+cat .trellis/spec/shared-types/backend/index.md
 ```
 
-**Backend work**
+**API backend work**
 ```bash
-cat .trellis/spec/web/backend/database-guidelines.md
-cat .trellis/spec/web/backend/error-handling.md
-cat .trellis/spec/web/backend/type-safety.md
-cat .trellis/spec/web/backend/logging-guidelines.md
-cat .trellis/spec/web/backend/quality-guidelines.md
+cat .trellis/spec/api/backend/index.md
 ```
 
 **Test-sensitive work**
@@ -121,9 +115,6 @@ cat .trellis/spec/unit-test/conventions.md
 |       |-- check.jsonl
 |       +-- debug.jsonl
 |-- spec/
-|   |-- web/
-|   |   |-- frontend/
-|   |   +-- backend/
 |   |-- miniprogram/
 |   |   +-- frontend/
 |   |-- shared-types/
@@ -149,8 +140,7 @@ python3 ./.trellis/scripts/get_context.py
 - 先运行 `python3 ./.trellis/scripts/get_context.py --mode packages`
 - 先看当前 `default` package；本仓库默认通常先落到 `spec/miniprogram/frontend/`
 - Miniprogram UI -> `spec/miniprogram/frontend/`
-- Web UI -> `spec/web/frontend/`
-- Web backend / API -> `spec/web/backend/`
+- API backend / route handlers -> `spec/api/backend/`
 - Shared contracts -> `spec/shared-types/backend/` 或 `spec/shared-types/frontend/`
 - Cross-layer change -> `spec/guides/cross-layer-thinking-guide.md`
 - 测试 / regression / helper change -> `spec/unit-test/conventions.md`
@@ -160,7 +150,7 @@ python3 ./.trellis/scripts/get_context.py
 ```bash
 python3 ./.trellis/scripts/task.py list
 python3 ./.trellis/scripts/task.py create "<title>" --slug <task-name>
-python3 ./.trellis/scripts/task.py init-context .trellis/tasks/<dir> <frontend|backend|fullstack|test|docs> --package <web|miniprogram|shared-types|api-client|domain>
+python3 ./.trellis/scripts/task.py init-context .trellis/tasks/<dir> <frontend|backend|fullstack|test|docs> --package <api|miniprogram|shared-types|api-client|domain>
 python3 ./.trellis/scripts/task.py start .trellis/tasks/<dir>
 ```
 
@@ -199,12 +189,13 @@ pnpm typecheck
 pnpm --filter @coffeeatlas/miniprogram typecheck
 ```
 
-Additional checks when relevant:
+如果当前主要在做小程序联调，开发时优先开一个单独终端运行：
 
 ```bash
-pnpm --filter @coffeeatlas/web test
-cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
+pnpm dev:miniprogram:auto
 ```
+
+它会监听小程序和共享包改动，并自动重启 `dev:weapp`。
 
 ### Commit Convention
 
@@ -254,8 +245,7 @@ python3 ./.trellis/scripts/add_session.py \
 Project-specific executable guidance.
 
 - `miniprogram/frontend/` - 小程序前端规范，也是当前默认入口
-- `web/frontend/` - Web UI conventions
-- `web/backend/` - Web API, DB, auth, error handling, scripts
+- `api/backend/` - API 路由、服务端逻辑、SQL、脚本
 - `shared-types/*` - 跨端契约层规范
 - `unit-test/` - Current test setup and expectations
 - `guides/` - Thinking checklists for cross-layer / reuse problems
@@ -298,10 +288,8 @@ Per-developer journals for session history.
 | Task Type | Must-read |
 |-----------|-----------|
 | Miniprogram Frontend | `spec/miniprogram/frontend/index.md` + relevant topic docs |
-| Web Frontend | `spec/web/frontend/index.md` + relevant topic docs |
-| Web Backend | `spec/web/backend/index.md` + relevant topic docs |
-| API / contracts | `spec/web/backend/error-handling.md`, `spec/web/backend/type-safety.md` |
-| Query / schema | `spec/web/backend/database-guidelines.md` |
+| API Backend | `spec/api/backend/index.md` + relevant topic docs |
+| Shared contracts | `spec/shared-types/backend/index.md` or `spec/shared-types/frontend/index.md` |
 | Tests / regressions | `spec/unit-test/conventions.md` |
 | Cross-layer | `spec/guides/cross-layer-thinking-guide.md` |
 

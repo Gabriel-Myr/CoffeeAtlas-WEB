@@ -4,7 +4,7 @@
 
 ## 模块职责
 
-封装对 CoffeeAtlas API 网关（`/api/v1/*`）的 fetch 调用，供 Web 端 CSR 组件和未来的 Taro 小程序共用。
+封装对 CoffeeAtlas API 网关（`/api/v1/*`）的 fetch 调用，供小程序和其他客户端共用。
 使用 `@coffee-atlas/shared-types` 的类型定义，保证请求/响应类型安全。
 
 ---

@@ -1,8 +1,9 @@
-import type { AllBeansLandingMode } from './route-params';
+import type { AllBeansLandingMode } from './route-params.ts';
 
 const ALL_DISCOVER_VALUE = 'all';
 
-export type GuidedProcessChoiceId = 'clean' | 'fruity' | 'adventurous';
+export type GuidedProcessChoiceId = 'clean' | 'fruity' | 'sweet';
+export type GuidedProcessStyleChoiceId = 'classic' | 'anaerobic' | 'experimental';
 export type GuidedContinentChoiceId = 'floral' | 'balanced' | 'bold';
 
 export interface GuidedDiscoverOption {
@@ -11,13 +12,14 @@ export interface GuidedDiscoverOption {
 }
 
 export interface GuidedDiscoverStepInput {
-  selectedProcess: string;
+  selectedProcessBase: string;
+  selectedProcessStyle: string;
   selectedContinent: string;
   selectedCountry: string;
 }
 
 export interface GuidedDiscoverStep {
-  step: 'process' | 'continent' | 'done';
+  step: 'process_base' | 'process_style' | 'continent' | 'done';
   title: string;
   description: string;
 }
@@ -31,13 +33,22 @@ const PROCESS_KEYWORD_GROUPS: Record<GuidedProcessChoiceId, KeywordGroups> = {
   ],
   fruity: [
     ['natural', '日晒'],
-    ['honey', '蜜处理'],
     ['fruit', 'fruity', '果'],
   ],
-  adventurous: [
-    ['anaerobic', '厌氧'],
-    ['experimental', '实验'],
-    ['coferment', 'co-ferment', 'infused', '特殊发酵'],
+  sweet: [
+    ['honey', '蜜处理'],
+    ['sweet', '甜感'],
+  ],
+};
+
+const PROCESS_STYLE_KEYWORD_GROUPS: Record<GuidedProcessStyleChoiceId, KeywordGroups> = {
+  classic: [['traditional', '传统']],
+  anaerobic: [['anaerobic', '厌氧']],
+  experimental: [
+    ['yeast', '酵母'],
+    ['carbonic', '二氧化碳'],
+    ['thermal', '热冲击'],
+    ['other', '其他'],
   ],
 };
 
@@ -87,6 +98,13 @@ export function resolveGuidedProcessSelection(
   return pickOptionByKeywordGroups(options, PROCESS_KEYWORD_GROUPS[choice]);
 }
 
+export function resolveGuidedProcessStyleSelection(
+  choice: GuidedProcessStyleChoiceId,
+  options: GuidedDiscoverOption[]
+): GuidedDiscoverOption | null {
+  return pickOptionByKeywordGroups(options, PROCESS_STYLE_KEYWORD_GROUPS[choice]);
+}
+
 export function resolveGuidedContinentSelection(
   choice: GuidedContinentChoiceId,
   options: GuidedDiscoverOption[]
@@ -103,29 +121,29 @@ export function buildGuidedDiscoverStep(input: GuidedDiscoverStepInput): GuidedD
     };
   }
 
-  if (!isSelected(input.selectedProcess)) {
+  if (!isSelected(input.selectedProcessBase)) {
     return {
-      step: 'process',
-      title: '先告诉我你更想从哪种杯感开始',
-      description: '我会先帮你定一个处理法方向，再继续缩小到更适合的产地区域。',
+      step: 'process_base',
+      title: '先告诉我你想从哪种基础处理法开始',
+      description: '我会先帮你定一个基础处理法方向，再继续收窄到处理风格和产地区域。',
+    };
+  }
+
+  if (!isSelected(input.selectedProcessStyle)) {
+    return {
+      step: 'process_style',
+      title: '第二步，再选一个处理风格',
+      description: '基础处理法已经定好了，现在继续缩小到更具体的处理风格。',
     };
   }
 
   return {
     step: 'continent',
     title: '下一步，选一个更接近你期待风味的区域',
-    description: '处理法已经帮你定好了，现在再用产地区域把结果继续缩小。',
+    description: '处理风格已经定好了，现在再用大洲和国家把结果继续缩小。',
   };
 }
 
-export function resolveLandingModeAfterTabChange(input: {
-  currentMode: AllBeansLandingMode;
-  preserveLandingMode: boolean;
-  nextMode?: AllBeansLandingMode;
-}): AllBeansLandingMode {
-  if (input.preserveLandingMode) {
-    return input.nextMode ?? input.currentMode;
-  }
-
-  return 'default';
+export function shouldExpandGuidedDiscoverCard(landingMode: AllBeansLandingMode): boolean {
+  return landingMode === 'guided';
 }

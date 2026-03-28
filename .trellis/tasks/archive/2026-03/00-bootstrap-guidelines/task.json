@@ -49,7 +49,7 @@
   "children": [],
   "parent": null,
   "relatedFiles": [
-    ".trellis/spec/web/frontend/",
+    ".trellis/spec/frontend/",
     ".trellis/spec/miniprogram/frontend/",
     ".trellis/spec/shared-types/"
   ],

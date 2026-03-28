@@ -4,13 +4,13 @@
 
 ## Current Runner
 
-Web 端当前使用 Node.js 内置测试运行器：
+API 端当前使用 Node.js 内置测试运行器：
 
 ```bash
-pnpm --filter @coffeeatlas/web test
+pnpm --filter @coffeeatlas/api test
 ```
 
-底层命令来自 `apps/web/package.json`：
+底层命令来自 `apps/api/package.json`：
 
 ```bash
 node --test --experimental-strip-types tests/**/*.test.ts
@@ -18,7 +18,7 @@ node --test --experimental-strip-types tests/**/*.test.ts
 
 这意味着：
 
-- 测试文件写在 `apps/web/tests/**/*.test.ts`
+- 测试文件写在 `apps/api/tests/**/*.test.ts`
 - 可以直接 import `.ts` 源文件
 - 断言库用 `node:assert/strict`
 - 测试框架用 `node:test`
@@ -27,7 +27,7 @@ node --test --experimental-strip-types tests/**/*.test.ts
 
 ## Existing Pattern
 
-参考：`apps/web/tests/api-helpers.test.ts`
+参考：`apps/api/tests/api-helpers.test.ts`
 
 ```ts
 import test from 'node:test';
@@ -70,8 +70,8 @@ test('parsePaginationParams supports pageSize and legacy limit', () => {
 
 优先覆盖低耦合模块：
 
-- `apps/web/lib/server/api-primitives.ts`
-- `apps/web/lib/sales.ts`
+- `apps/api/lib/server/api-primitives.ts`
+- `apps/api/lib/sales.ts`
 - 未来 `packages/domain/**` 中的纯函数
 - 独立的 mapper / sanitizer / parser
 

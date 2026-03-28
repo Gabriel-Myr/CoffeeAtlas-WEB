@@ -1,34 +1,6 @@
 # State Management
 
-> 本项目不使用全局状态库（Redux/Zustand/Jotai）。状态管理策略因平台而异。
-
----
-
-## Web 端（Next.js）
-
-### 原则
-
-- 服务端组件：无状态，直接从数据库获取数据
-- 客户端组件：`useState` 管理本地 UI 状态
-- URL 参数：搜索词、筛选条件等可分享状态用 `useSearchParams`
-
-### 模式
-
-```tsx
-// 搜索状态通过 URL 管理
-'use client';
-import { useSearchParams, useRouter } from 'next/navigation';
-
-export default function AllBeansClient({ initialBeans }) {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const query = searchParams.get('q') ?? '';
-
-  const handleSearch = (value: string) => {
-    router.push(`/all-beans?q=${encodeURIComponent(value)}`);
-  };
-}
-```
+> 本项目不使用全局状态库（Redux/Zustand/Jotai）。当前前端状态管理以小程序为主。
 
 ---
 

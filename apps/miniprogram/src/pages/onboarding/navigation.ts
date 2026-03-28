@@ -1,4 +1,4 @@
-import type { AllBeansEntryIntent } from '../all-beans/entry-intent-store';
+import type { AllBeansEntryIntent } from '../all-beans/entry-intent-store.ts';
 
 export interface OnboardingNavigationInput {
   url: string;
@@ -6,7 +6,7 @@ export interface OnboardingNavigationInput {
 }
 
 export interface OnboardingNavigationAction {
-  type: 'switchTab';
+  type: 'reLaunch';
   url: string;
   entryIntent: AllBeansEntryIntent | null;
 }
@@ -19,7 +19,7 @@ export function resolveOnboardingNavigation(
   result: OnboardingNavigationInput
 ): OnboardingNavigationAction {
   return {
-    type: 'switchTab',
+    type: 'reLaunch',
     url: stripQuery(result.url),
     entryIntent: result.entryIntent,
   };

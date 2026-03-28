@@ -8,8 +8,8 @@
 
 当小程序任务需要联动接口契约或查现有实现时，常会顺手读到：
 
-- `apps/web/app/api/v1/**`
-- `apps/web/lib/server/**`
+- `apps/api/app/api/v1/**`
+- `apps/api/lib/server/**`
 - `packages/shared-types/src/**`
 
 这些目录是理解上下游所需，但不是当前小程序代码的主要落点。

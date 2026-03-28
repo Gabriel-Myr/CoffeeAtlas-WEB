@@ -4,7 +4,8 @@ import {
   getApiBaseUrlValidationError,
   isPrivateIpv4,
   normalizeApiBaseUrl,
-} from './api-base-url';
+} from './api-base-url.ts';
+import { getCompiledEnv } from './compiled-env.ts';
 
 const API_BASE_URL_OVERRIDE_KEY = 'api_base_url_override';
 
@@ -55,7 +56,7 @@ function getWarning(baseUrl: string): string | null {
 
 export function getApiBaseUrlState(): ApiBaseUrlState {
   const runtimeBaseUrl = normalizeApiBaseUrl(Taro.getStorageSync(API_BASE_URL_OVERRIDE_KEY));
-  const buildBaseUrl = normalizeApiBaseUrl(process.env.TARO_APP_API_URL);
+  const buildBaseUrl = normalizeApiBaseUrl(getCompiledEnv('TARO_APP_API_URL'));
   const baseUrl = runtimeBaseUrl || buildBaseUrl;
 
   return {

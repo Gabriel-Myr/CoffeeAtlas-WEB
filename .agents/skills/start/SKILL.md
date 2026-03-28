@@ -62,11 +62,18 @@ Right now that usually means `miniprogram`, so if the task is only in `apps/mini
 cat .trellis/spec/miniprogram/frontend/index.md
 ```
 
+如果这轮主要是微信小程序联调，同时建议开一个独立终端运行：
+
+```bash
+pnpm dev:miniprogram:auto
+```
+
+这样在改动 `apps/miniprogram` 和相关共享包后，会自动重启 `dev:weapp`，减少手动重推。
+
 Only add other package indexes when the task truly spans them, for example:
 
 ```bash
-cat .trellis/spec/web/frontend/index.md
-cat .trellis/spec/web/backend/index.md
+cat .trellis/spec/api/backend/index.md
 cat .trellis/spec/shared-types/backend/index.md
 ```
 

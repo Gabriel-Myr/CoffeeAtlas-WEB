@@ -1,16 +1,16 @@
 # P1 Public API Beans Split Design
 
-**Goal:** 在不改变现有 API 行为的前提下，把 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/public-api.ts` 里的 beans 公开读取逻辑拆成更小的后端模块，先把最容易继续膨胀的 beans/discover 部分从 God file 中拿出来。
+**Goal:** 在不改变现有 API 行为的前提下，把 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/public-api.ts` 里的 beans 公开读取逻辑拆成更小的后端模块，先把最容易继续膨胀的 beans/discover 部分从 God file 中拿出来。
 
 ## 现状
 
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/public-api.ts` 已经有 800+ 行。
+- `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/public-api.ts` 已经有 800+ 行。
 - 文件里混着 4 类职责：
   - beans DTO 映射
   - beans 列表/明细查询
   - beans discover/editorial/fallback 组装
   - roasters 列表/明细公开接口
-- Web 路由当前都直接 import `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/public-api.ts` 的导出：
+- Web 路由当前都直接 import `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/public-api.ts` 的导出：
   - `listBeansV1`
   - `getBeanDetailV1`
   - `getBeanDiscoverV1`
@@ -23,11 +23,11 @@
 
 只拆 beans 相关逻辑：
 
-- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/public-beans.ts`
-- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/public-bean-discover.ts`
-- `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/public-api.ts` 保留 roasters 逻辑，并转发 beans 相关导出
+- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/public-beans.ts`
+- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/public-bean-discover.ts`
+- `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/public-api.ts` 保留 roasters 逻辑，并转发 beans 相关导出
 
-这样可以先把最重的 beans/discover 逻辑切开，同时不扩大到 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog.ts`。
+这样可以先把最重的 beans/discover 逻辑切开，同时不扩大到 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog.ts`。
 
 ### 不采用的方案
 
@@ -43,7 +43,7 @@
 - 不改变 legacy 路由和 v1 路由的响应格式
 - 不改变 beans/discover/roasters 的返回字段
 - 不改变 Supabase 优先、sample fallback 兜底的策略
-- 不改 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog.ts`
+- 不改 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog.ts`
 - 不顺手改 roasters 行为
 
 ## 设计
@@ -63,8 +63,8 @@
 
 约束：
 
-- 继续复用 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog.ts`
-- 继续复用 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/new-arrivals.ts`
+- 继续复用 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog.ts`
+- 继续复用 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/new-arrivals.ts`
 - 不引入 Next.js 平台类型
 
 ### 2. `public-bean-discover.ts`
@@ -115,10 +115,10 @@
 
 本轮优先保证“拆分后行为不变”，因此测试以纯函数和导出边界为主：
 
-- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/web/tests/public-api-beans.test.ts`
+- 新增 `/Users/gabi/CoffeeAtlas-Web/apps/api/tests/public-api-beans.test.ts`
   - 锁定 beans 相关导出仍可从 `public-api.ts` 使用
   - 锁定 mapper / fallback helper 的稳定行为（只测纯逻辑）
-- 保留现有 `/Users/gabi/CoffeeAtlas-Web/apps/web/tests/bean-query-params.test.ts`
+- 保留现有 `/Users/gabi/CoffeeAtlas-Web/apps/api/tests/bean-query-params.test.ts`
 - 跑完整 Web test/typecheck/lint，防止拆分后 import 断裂
 
 ## 风险与控制

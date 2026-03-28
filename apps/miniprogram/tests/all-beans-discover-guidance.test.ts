@@ -3,45 +3,58 @@ import test from 'node:test';
 
 import { buildDiscoverGuidance } from '../src/pages/all-beans/discover-guidance.ts';
 
-test('guided landing starts with a softer first step', () => {
-  assert.deepEqual(
+test('guided landing does not show the extra first-step guidance card', () => {
+  assert.equal(
     buildDiscoverGuidance({
       landingMode: 'guided',
-      selectedProcess: 'all',
+      selectedProcessBase: 'all',
+      selectedProcessStyle: 'all',
       selectedContinent: 'all',
       selectedCountry: 'all',
       searchQuery: '',
     }),
-    {
-      label: '推荐下一步',
-      title: '先选一个处理法方向',
-      description: '不用一次决定太多，先从杯型方向开始，后面再慢慢缩小到大洲和国家。',
-    }
+    null
   );
 });
 
-test('direct landing tells users they can filter immediately', () => {
-  assert.deepEqual(
+test('direct landing also skips the extra initial guidance card', () => {
+  assert.equal(
     buildDiscoverGuidance({
       landingMode: 'direct',
-      selectedProcess: 'all',
+      selectedProcessBase: 'all',
+      selectedProcessStyle: 'all',
+      selectedContinent: 'all',
+      selectedCountry: 'all',
+      searchQuery: '',
+    }),
+    null
+  );
+});
+
+test('selected process base highlights style as the next step', () => {
+  assert.deepEqual(
+    buildDiscoverGuidance({
+      landingMode: 'guided',
+      selectedProcessBase: 'washed',
+      selectedProcessStyle: 'all',
       selectedContinent: 'all',
       selectedCountry: 'all',
       searchQuery: '',
     }),
     {
-      label: '当前可操作',
-      title: '直接选处理法，或先搜你熟悉的关键词',
-      description: '如果你已经知道自己想看什么，可以马上叠加大洲和国家继续收窄结果。',
+      label: '下一步',
+      title: '再选一个处理风格，让路径更清楚',
+      description: '基础处理法已经确定了，接下来再选传统、厌氧或其他特殊风格，结果会更贴近你的口味。',
     }
   );
 });
 
-test('selected process highlights continent as the next step', () => {
+test('selected process style highlights continent as the next step', () => {
   assert.deepEqual(
     buildDiscoverGuidance({
       landingMode: 'guided',
-      selectedProcess: '水洗',
+      selectedProcessBase: 'washed',
+      selectedProcessStyle: 'anaerobic',
       selectedContinent: 'all',
       selectedCountry: 'all',
       searchQuery: '',
@@ -49,7 +62,7 @@ test('selected process highlights continent as the next step', () => {
     {
       label: '下一步',
       title: '选一个大洲，让结果更聚焦',
-      description: '你已经选了处理法，接下来选风土区域，国家列表也会跟着缩小。',
+      description: '你已经定好了基础处理法和风格，接下来选风土区域，国家列表也会跟着缩小。',
     }
   );
 });
@@ -58,7 +71,8 @@ test('selected continent explains the optional country step', () => {
   assert.deepEqual(
     buildDiscoverGuidance({
       landingMode: 'direct',
-      selectedProcess: 'all',
+      selectedProcessBase: 'all',
+      selectedProcessStyle: 'all',
       selectedContinent: 'africa',
       selectedCountry: 'all',
       searchQuery: '',
@@ -75,7 +89,8 @@ test('selected country tells users to continue browsing results', () => {
   assert.deepEqual(
     buildDiscoverGuidance({
       landingMode: 'guided',
-      selectedProcess: 'all',
+      selectedProcessBase: 'all',
+      selectedProcessStyle: 'all',
       selectedContinent: 'africa',
       selectedCountry: '埃塞俄比亚',
       searchQuery: '',

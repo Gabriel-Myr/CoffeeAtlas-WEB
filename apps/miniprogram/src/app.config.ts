@@ -1,11 +1,9 @@
 export default defineAppConfig({
   pages: [
     'pages/onboarding/index',
-    'pages/index/index',
     'pages/all-beans/index',
-    'pages/roasters/index',
+    'pages/index/index',
     'pages/profile/index',
-    'pages/debug/index',
     'pages/bean-detail/index',
     'pages/roaster-detail/index',
   ],
@@ -22,16 +20,12 @@ export default defineAppConfig({
     borderStyle: 'white',
     list: [
       {
-        pagePath: 'pages/index/index',
-        text: '探索',
-      },
-      {
         pagePath: 'pages/all-beans/index',
-        text: '豆子',
+        text: '选豆',
       },
       {
-        pagePath: 'pages/roasters/index',
-        text: '烘焙商',
+        pagePath: 'pages/index/index',
+        text: '新品',
       },
       {
         pagePath: 'pages/profile/index',

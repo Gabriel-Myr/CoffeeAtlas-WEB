@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 把 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/public-api.ts` 里的 beans/discover 公开读取逻辑拆出去，先缓解 God file 问题，同时保持现有 API 行为不变。
+**Goal:** 把 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/public-api.ts` 里的 beans/discover 公开读取逻辑拆出去，先缓解 God file 问题，同时保持现有 API 行为不变。
 
-**Architecture:** 这轮只拆 beans 相关逻辑，不动 `/Users/gabi/CoffeeAtlas-Web/apps/web/lib/catalog.ts`，也不改 roasters 对外行为。新增 focused server modules 承接 beans 列表/明细和 discover 逻辑，`/Users/gabi/CoffeeAtlas-Web/apps/web/lib/server/public-api.ts` 保留 roasters 逻辑并转发 beans 导出，避免路由 import 大改。
+**Architecture:** 这轮只拆 beans 相关逻辑，不动 `/Users/gabi/CoffeeAtlas-Web/apps/api/lib/catalog.ts`，也不改 roasters 对外行为。新增 focused server modules 承接 beans 列表/明细和 discover 逻辑，`/Users/gabi/CoffeeAtlas-Web/apps/api/lib/server/public-api.ts` 保留 roasters 逻辑并转发 beans 导出，避免路由 import 大改。
 
 **Tech Stack:** Next.js 16, TypeScript, node:test, pnpm workspace
 
@@ -13,10 +13,10 @@
 ### Task 1: 先用失败测试锁定“新模块 + 关键纯逻辑”契约
 
 **Files:**
-- Create: `apps/web/tests/public-beans.test.ts`
-- Create: `apps/web/tests/public-bean-discover.test.ts`
-- Read: `apps/web/lib/server/public-api.ts`
-- Read: `apps/web/tests/**/*.test.ts`
+- Create: `apps/api/tests/public-beans.test.ts`
+- Create: `apps/api/tests/public-bean-discover.test.ts`
+- Read: `apps/api/lib/server/public-api.ts`
+- Read: `apps/api/tests/**/*.test.ts`
 
 - [ ] **Step 1: 先给未来的新模块写失败测试，而不是给现有 `public-api.ts` 写“天然就会绿”的测试**
 
@@ -48,7 +48,7 @@ test('mapBeanCard keeps catalog card contract stable', () => {
 
 - [ ] **Step 3: 运行新测试，确认在新模块还不存在前先失败**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: FAIL，且失败集中在：
 - `../lib/server/public-beans.ts`
 - `../lib/server/public-bean-discover.ts`
@@ -62,9 +62,9 @@ Expected: FAIL，且失败集中在：
 ### Task 2: 抽离 beans 列表/明细公共逻辑
 
 **Files:**
-- Create: `apps/web/lib/server/public-beans.ts`
-- Modify: `apps/web/lib/server/public-api.ts`
-- Test: `apps/web/tests/public-beans.test.ts`
+- Create: `apps/api/lib/server/public-beans.ts`
+- Modify: `apps/api/lib/server/public-api.ts`
+- Test: `apps/api/tests/public-beans.test.ts`
 
 - [ ] **Step 1: 在新文件里定义 beans 过滤类型和 mapper 边界**
 
@@ -76,7 +76,7 @@ Expected: FAIL，且失败集中在：
 
 - [ ] **Step 2: 先让 `public-beans.test.ts` 变绿，只实现 mapper 和最小导出**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: `public-beans.test.ts` PASS，其余测试保持原状
 
 - [ ] **Step 3: 把 beans 列表查询/本地 fallback helper 挪到 `public-beans.ts`**
@@ -105,16 +105,16 @@ export { listBeansV1, getBeanDetailV1 } from './public-beans';
 
 - [ ] **Step 6: 跑 Web 测试，确认 beans 基础拆分后仍然通过**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: PASS
 
 ### Task 3: 抽离 discover/editorial/fallback 逻辑
 
 **Files:**
-- Create: `apps/web/lib/server/public-bean-discover.ts`
-- Modify: `apps/web/lib/server/public-api.ts`
-- Modify: `apps/web/lib/server/public-beans.ts`
-- Test: `apps/web/tests/public-bean-discover.test.ts`
+- Create: `apps/api/lib/server/public-bean-discover.ts`
+- Modify: `apps/api/lib/server/public-api.ts`
+- Modify: `apps/api/lib/server/public-beans.ts`
+- Test: `apps/api/tests/public-bean-discover.test.ts`
 
 - [ ] **Step 1: 在 discover 模块里搬运 rows/options/editorial 相关 helper**
 
@@ -148,7 +148,7 @@ Expected: PASS
 
 - [ ] **Step 3: 先让 `public-bean-discover.test.ts` 变绿，只实现纯逻辑 helper 和服务层 seam**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: `public-bean-discover.test.ts` PASS，且不需要数据库
 
 - [ ] **Step 4: 让 discover 模块只依赖 `public-beans.ts` 的最小必要导出**
@@ -176,15 +176,15 @@ export { getBeanDiscoverV1 } from './public-bean-discover';
 
 - [ ] **Step 7: 跑 Web 测试，确认 discover 拆分后仍然通过**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: PASS
 
 ### Task 4: 用兼容测试和搬运清单收口 `public-api.ts`
 
 **Files:**
-- Modify: `apps/web/lib/server/public-api.ts`
-- Create: `apps/web/tests/public-api-beans.test.ts`
-- Test: `apps/web/tests/**/*.test.ts`
+- Modify: `apps/api/lib/server/public-api.ts`
+- Create: `apps/api/tests/public-api-beans.test.ts`
+- Test: `apps/api/tests/**/*.test.ts`
 
 - [ ] **Step 1: 新增兼容测试，锁定 `public-api.ts` 仍然导出 beans 公共入口**
 
@@ -232,21 +232,21 @@ test('public-api keeps bean exports after split', () => {
 - [ ] **Step 4: 检查 route 侧是否无需改 import 即可继续工作**
 
 关注：
-- `apps/web/app/api/beans/route.ts`
-- `apps/web/app/api/beans/[id]/route.ts`
-- `apps/web/app/api/v1/beans/route.ts`
-- `apps/web/app/api/v1/beans/[id]/route.ts`
-- `apps/web/app/api/v1/beans/discover/route.ts`
+- `apps/api/app/api/beans/route.ts`
+- `apps/api/app/api/beans/[id]/route.ts`
+- `apps/api/app/api/v1/beans/route.ts`
+- `apps/api/app/api/v1/beans/[id]/route.ts`
+- `apps/api/app/api/v1/beans/discover/route.ts`
 
 - [ ] **Step 5: 跑 Web 全量验证**
 
-Run: `pnpm --filter @coffeeatlas/web test`
+Run: `pnpm --filter @coffeeatlas/api test`
 Expected: PASS
 
-Run: `pnpm --filter @coffeeatlas/web typecheck`
+Run: `pnpm --filter @coffeeatlas/api typecheck`
 Expected: PASS
 
-Run: `pnpm --filter @coffeeatlas/web lint`
+Run: `pnpm --filter @coffeeatlas/api lint`
 Expected: PASS with existing `<img>` warnings only
 
 - [ ] **Step 6: 跑 workspace 回归验证**

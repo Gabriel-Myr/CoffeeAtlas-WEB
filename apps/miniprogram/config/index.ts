@@ -1,8 +1,8 @@
 import path from 'node:path'
 import { defineConfig, type UserConfigExport } from '@tarojs/cli'
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
-import devConfig from './dev'
-import prodConfig from './prod'
+import devConfig from './dev.ts'
+import prodConfig from './prod.ts'
 
 const workspacePackageAliases = {
   '@coffee-atlas/shared-types': path.resolve(__dirname, '../../../packages/shared-types/dist/index.js'),

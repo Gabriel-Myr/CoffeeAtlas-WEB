@@ -184,9 +184,9 @@ If this skill is frequently used, create a shortcut command:
 
 | Skill | Integration Target | Examples Directory |
 |-------|-------------------|-------------------|
-| `frontend-design` | `web/frontend` or `miniprogram/frontend` | `examples/skills/frontend-design/` |
-| `mcp-builder` | `web/backend` | `examples/skills/mcp-builder/` |
-| `webapp-testing` | `web/frontend` or `unit-test` | `examples/skills/webapp-testing/` |
+| `frontend-design` | `frontend` or `miniprogram/frontend` | `examples/skills/frontend-design/` |
+| `mcp-builder` | `api/backend` | `examples/skills/mcp-builder/` |
+| `webapp-testing` | `frontend` or `unit-test` | `examples/skills/webapp-testing/` |
 | `doc-coauthoring` | `.trellis/` | N/A (documentation workflow only) |
 
 ## Example: Integrating `mcp-builder` Skill
@@ -194,7 +194,7 @@ If this skill is frequently used, create a shortcut command:
 ### Directory Structure
 
 ```
-.trellis/spec/web/backend/
+.trellis/spec/api/backend/
 |-- doc.md                           # Add MCP section
 |-- index.md                         # Add index entry
 +-- examples/

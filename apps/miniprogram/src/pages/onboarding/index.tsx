@@ -6,7 +6,7 @@ import { setAllBeansEntryIntent } from '../all-beans/entry-intent';
 import { getOnboardingProfile, setOnboardingProfile } from '../../utils/storage';
 import { createOnboardingFlow } from './onboarding-logic';
 import { resolveOnboardingNavigation } from './navigation';
-import { getOnboardingSelectionNote, ONBOARDING_OPTION_COPY } from './copy';
+import { ONBOARDING_OPTION_COPY } from './copy';
 import './index.scss';
 
 export default function Onboarding() {
@@ -27,7 +27,7 @@ export default function Onboarding() {
         url: redirectUrl,
         entryIntent: null,
       });
-      Taro.switchTab({ url: navigation.url });
+      Taro.reLaunch({ url: navigation.url });
     }
   });
 
@@ -39,30 +39,26 @@ export default function Onboarding() {
     if (navigation.entryIntent) {
       setAllBeansEntryIntent(navigation.entryIntent);
     }
-    Taro.switchTab({ url: navigation.url });
+    Taro.reLaunch({ url: navigation.url });
   };
-
-  const handleSkip = () => {
-    const result = flow.skip();
-    const navigation = resolveOnboardingNavigation(result);
-    Taro.switchTab({ url: navigation.url });
-  };
-
-  const selectionNote = getOnboardingSelectionNote(selectedLevel);
 
   return (
     <View className="onboarding">
       <View className="onboarding__frame">
+        <View className="onboarding__hero-visual" />
+        <View className="onboarding__hero-wordmark" aria-hidden>
+          <Text className="onboarding__hero-wordmark-en">COFFEE</Text>
+          <Text className="onboarding__hero-wordmark-atlas">Atlas</Text>
+        </View>
+        <View className="onboarding__hero-scrim" />
         <View className="onboarding__hero">
-          <View className="onboarding__brand">
-            <Text className="onboarding__brand-en">COFFEE</Text>
-            <Text className="onboarding__brand-atlas">Atlas</Text>
-          </View>
-          <View className="onboarding__hero-copy">
-            <Text className="onboarding__title">进入咖啡地图</Text>
-            <Text className="onboarding__subtitle">
-              从零开始或自由探索
-            </Text>
+          <View className="onboarding__hero-header">
+            <View className="onboarding__hero-copy">
+              <Text className="onboarding__title">进入咖啡地图</Text>
+              <Text className="onboarding__subtitle">
+                从零开始或自由探索
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -98,13 +94,6 @@ export default function Onboarding() {
           </View>
         </View>
 
-        <View className="onboarding__selection-note">
-          <Text className="onboarding__selection-note-label">
-            {selectedLevel ? '已选择的开始方式' : '开始前说明'}
-          </Text>
-          <Text className="onboarding__selection-note-text">{selectionNote}</Text>
-        </View>
-
         <View
           className={`onboarding__confirm ${
             selectedLevel ? 'onboarding__confirm--enabled' : 'onboarding__confirm--disabled'
@@ -115,10 +104,6 @@ export default function Onboarding() {
           onClick={handleConfirm}
         >
           <Text className="onboarding__confirm-text">开始进入</Text>
-        </View>
-
-        <View className="onboarding__skip" onClick={handleSkip}>
-          <Text className="onboarding__skip-text">先跳过</Text>
         </View>
       </View>
     </View>

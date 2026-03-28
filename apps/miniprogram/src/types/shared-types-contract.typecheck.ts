@@ -15,7 +15,7 @@ import type {
   PaginatedResult,
   V1Error,
   V1Response,
-} from './index';
+} from './index.ts';
 
 type AssertTrue<T extends true> = T;
 type IsMutuallyAssignable<Left, Right> =

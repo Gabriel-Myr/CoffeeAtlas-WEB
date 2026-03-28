@@ -27,6 +27,19 @@ test('buildBeanDiscoverPath omits empty query string when params missing', () =>
   assert.equal(buildBeanDiscoverPath(), '/api/v1/beans/discover');
 });
 
+test('buildBeanDiscoverPath serializes process base and style params', () => {
+  assert.equal(
+    buildBeanDiscoverPath({
+      q: '花香',
+      processBase: 'washed',
+      processStyle: 'anaerobic',
+      continent: 'africa',
+      country: '埃塞俄比亚',
+    }),
+    '/api/v1/beans/discover?q=%E8%8A%B1%E9%A6%99&processBase=washed&processStyle=anaerobic&continent=africa&country=%E5%9F%83%E5%A1%9E%E4%BF%84%E6%AF%94%E4%BA%9A'
+  );
+});
+
 test('build detail paths append the resource id', () => {
   assert.equal(buildBeanDetailPath('bean-1'), '/api/v1/beans/bean-1');
   assert.equal(buildRoasterDetailPath('roaster-9'), '/api/v1/roasters/roaster-9');

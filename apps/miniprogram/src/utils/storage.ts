@@ -4,7 +4,7 @@ import type {
   RoasterFavoriteSnapshot as RoasterSnapshot,
 } from '@coffee-atlas/domain';
 
-import type { AuthUser } from '../types';
+import type { AuthUser } from '../types/index.ts';
 
 const FAVORITES_KEY = 'coffee_favorites';
 const ROASTER_FAVORITES_KEY = 'roaster_favorites';

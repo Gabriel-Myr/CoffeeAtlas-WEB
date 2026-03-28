@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import test from 'node:test';
+
+const repoRoot = path.resolve(import.meta.dirname, '../../..');
+const rootProjectConfigPath = path.join(repoRoot, 'project.config.json');
+
+test('root project.config.json points miniprogramRoot at a directory containing app.json', () => {
+  const projectConfig = JSON.parse(readFileSync(rootProjectConfigPath, 'utf8')) as {
+    miniprogramRoot?: string;
+  };
+
+  const miniprogramRoot = projectConfig.miniprogramRoot ?? '';
+  const appJsonPath = path.join(repoRoot, miniprogramRoot, 'app.json');
+
+  assert.notEqual(miniprogramRoot, '', 'root project.config.json must declare miniprogramRoot');
+  assert.equal(
+    existsSync(appJsonPath),
+    true,
+    `expected app.json at ${path.relative(repoRoot, appJsonPath)}`
+  );
+});

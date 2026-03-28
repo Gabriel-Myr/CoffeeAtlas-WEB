@@ -8,10 +8,10 @@ Bring the Trellis workflow, code-spec docs, and local skill instructions in this
 - Add unit-test guidance that matches the current test setup.
 - Replace stale bootstrap wording and flat-spec references with repo-specific, package-scoped guidance.
 - Correct workflow and checklist references that currently point to missing docs or wrong commands.
-- Keep examples grounded in the current codebase under `apps/web`, `apps/miniprogram`, and `packages/*`.
+- Keep examples grounded in the current codebase under `apps/api`, `apps/miniprogram`, and `packages/*`.
 
 ## Acceptance Criteria
-- [ ] `.trellis/spec/web/`, `.trellis/spec/miniprogram/`, and `.trellis/spec/shared-types/` match the docs and skill references they expose.
+- [ ] `.trellis/spec/api/`, `.trellis/spec/miniprogram/`, and `.trellis/spec/shared-types/` match the docs and skill references they expose.
 - [ ] `.trellis/spec/unit-test/` exists and describes the current test runner and expectations.
 - [ ] Entry docs and local Trellis skills reference package-scoped docs and valid commands.
 - [ ] No updated Trellis doc still claims core implemented paths are missing when they already exist.

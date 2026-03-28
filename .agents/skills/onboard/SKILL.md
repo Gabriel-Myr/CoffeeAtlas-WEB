@@ -87,8 +87,7 @@ Even after injecting guidelines, AI has limited context window. As conversation 
 |-- spec/                   # "AI Training Data" - project knowledge
 |   |-- miniprogram/
 |   |   +-- frontend/       # 默认小程序规范入口
-|   |-- web/
-|   |   |-- frontend/
+|   |-- api/
 |   |   +-- backend/
 |   |-- shared-types/
 |   |   |-- frontend/
@@ -102,13 +101,7 @@ Even after injecting guidelines, AI has limited context window. As conversation 
 **miniprogram/frontend/** - 当前默认的小程序前端知识：
 - 页面、组件、分页、入口状态、storage、联调约束
 
-**web/frontend/** - Web 前端知识：
-- Component patterns (how to write components in THIS project)
-- State management rules (Redux? Zustand? Context?)
-- Styling conventions (CSS modules? Tailwind? Styled-components?)
-- Hook patterns (custom hooks, data fetching)
-
-**web/backend/** - 单层后端知识：
+**api/backend/** - 单层后端知识：
 - API design patterns (REST? GraphQL? tRPC?)
 - Database conventions (query patterns, migrations)
 - Error handling standards
@@ -251,7 +244,7 @@ All the context AI built during this session will be lost when session ends. The
 ### Example 3: Code Review Fixes
 
 **[1/6] /trellis:start** - Resume context from previous session
-**[2/6] /trellis:before-dev** - 重新读当前任务 package 的 spec；如果这次 fix 牵涉 API/契约，再补读 shared-types / web backend
+**[2/6] /trellis:before-dev** - 重新读当前任务 package 的 spec；如果这次 fix 牵涉 API/契约，再补读 shared-types / api backend
 **[3/6] Fix each CR issue** - Address feedback with guidelines in context
 **[4/6] /trellis:check** - Verify fixes didn't introduce new issues
 **[5/6] /trellis:finish-work** - Document lessons from CR
@@ -321,7 +314,7 @@ For example, if you're currently only working in miniprogram, start from `.trell
 - API 调用集中在哪里？
 - entry intent、分页、discover 流程有什么现成模式？
 
-If the task also touches API or contracts, then continue into `.trellis/spec/web/backend/` or `.trellis/spec/shared-types/`.
+If the task also touches API or contracts, then continue into `.trellis/spec/api/backend/` or `.trellis/spec/shared-types/`.
 
 Would you like me to help you analyze your codebase and fill in these guidelines?"
 
@@ -360,8 +353,7 @@ Work through one file at a time:
   - `miniprogram/frontend/quality-guidelines.md`
   - `miniprogram/frontend/type-safety.md`
 - Only after that, expand to:
-  - `web/backend/*.md`
-  - `web/frontend/*.md`
+  - `api/backend/*.md`
   - `shared-types/*.md`
 
 ---

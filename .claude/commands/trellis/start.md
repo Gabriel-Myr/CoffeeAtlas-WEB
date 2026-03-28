@@ -52,6 +52,14 @@ Right now that usually means `miniprogram`, so if the task is only in `apps/mini
 cat .trellis/spec/miniprogram/frontend/index.md
 ```
 
+If this session is mainly for WeChat miniprogram local preview, also start this helper in a separate terminal:
+
+```bash
+pnpm dev:miniprogram:auto
+```
+
+It watches miniprogram and shared package changes, then automatically restarts `dev:weapp`.
+
 Only add other package indexes when the task truly spans them:
 
 ```bash

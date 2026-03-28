@@ -1,9 +1,9 @@
-import type { CoffeeBean } from '../types';
+import type { CoffeeBean } from '../types/index.ts';
 import {
   type AtlasSilhouetteFrame,
   GENERATED_CONTINENT_SHAPES,
   GENERATED_COUNTRY_SHAPES,
-} from './origin-atlas-shapes.generated';
+} from './origin-atlas-shapes.generated.ts';
 
 export interface OriginAtlasContinent {
   id: 'asia' | 'africa' | 'americas';

@@ -25,16 +25,16 @@ Codex note: Trellis command equivalents are available as local skills under `.ag
 
 ### 角色定位
 
-- 你在这个仓库里的默认角色是全栈开发高手，既能处理前端页面，也能处理后端 API、数据库、脚本和跨端协作问题。
-- 你应熟悉当前技术栈：Next.js 16、React、Tailwind CSS、TypeScript、Supabase、Taro、pnpm workspace、Turborepo。
+- 你在这个仓库里的默认角色是小程序、API 与共享层开发高手，能处理页面、接口调用、服务端逻辑、数据库脚本、共享类型和跨层协作问题。
+- 你应熟悉当前技术栈：Taro、React、TypeScript、Next.js Route Handler、Supabase、pnpm workspace、Turborepo。
 - 你面对的是编程基础较弱但追求效率的用户，回复要简洁平实、专业直接，不卖弄术语。
 
 ### 工作范围
 
-- Web 主体在 `apps/web`，包括页面、组件、API 路由、服务端逻辑和数据读取。
 - 小程序主体在 `apps/miniprogram`，涉及页面、组件、Taro 运行时适配和接口调用。
+- API 主体在 `apps/api`，包括 `/api/*` 路由、服务端逻辑、SQL、导入脚本和联调脚本。
 - 共享契约层在 `packages/shared-types`，跨端接口类型优先复用这里，避免各端自行发明一套。
-- 服务端逻辑优先放在 `apps/web/lib/server`，公开目录读取与 sample fallback 逻辑重点看 `apps/web/lib/catalog.ts`。
+- 共享 client 在 `packages/api-client`，共享领域逻辑在 `packages/domain`；只有真正跨端且稳定的逻辑才往这里放。
 - 遇到问题时不要只修表面症状，要顺手检查相关的数据流、类型、接口契约和上下游影响。
 
 ### 协作方式
@@ -51,8 +51,6 @@ Codex note: Trellis command equivalents are available as local skills under `.ag
 
 - 遵守 monorepo 边界：`packages/*` 保持平台无关，不要把 `next/*`、`@tarojs/*` 之类的平台代码带进去。
 - 优先做最小必要改动，尽量复用已有模式，不为“看起来更优雅”随意扩大重构范围。
-- 不要破坏 `apps/web/lib/catalog.ts` 里的 sample fallback 机制；没有真实后端时，公开目录仍应可降级工作。
-- Next.js route handler 保持轻量：解析请求、鉴权、调用 service、返回响应；复杂逻辑不要直接堆在 `route.ts`。
 - 涉及跨端接口、共享类型、数据库字段时，要保证命名、返回结构和现有契约一致。
 
 ### 输出要求

@@ -29,5 +29,5 @@ export function formatApiRequestErrorMessage(
     return '请求超时：小程序没能在 15 秒内连上 API。请先到“我的 > API 联调”确认地址是否填写正确，然后重试。';
   }
 
-  return `请求超时：小程序没能在 15 秒内连上 API。请先到“我的 > API 联调”确认当前地址可访问，再在浏览器打开 ${healthCheckUrl} 检查服务是否正常。`;
+  return `请求超时：小程序没能在 15 秒内连上 API。请先到“我的 > API 联调”确认当前地址可访问，再在浏览器或接口工具打开 ${healthCheckUrl} 检查服务是否正常。`;
 }

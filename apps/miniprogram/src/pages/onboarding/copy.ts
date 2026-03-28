@@ -1,4 +1,4 @@
-import type { OnboardingExperienceLevel } from '../../utils/storage';
+import type { OnboardingExperienceLevel } from '../../utils/storage.ts';
 
 export const ONBOARDING_OPTION_COPY = {
   beginner: {
@@ -17,8 +17,8 @@ export function getOnboardingSelectionNote(level: OnboardingExperienceLevel | nu
   }
 
   if (level === 'intermediate') {
-    return '会先进入探索首页，你可以从快捷入口继续进入发现区，自行筛选目标豆子。';
+    return '会进入同一个发现页，引导卡默认收起；需要时再展开，用自己的节奏筛选豆子。';
   }
 
-  return '如果你还不熟悉咖啡豆，就先走引导入口；已经有目标的话，可以直接筛选。';
+  return '两种方式都会进入同一个发现页，只是默认引导强度不同。';
 }

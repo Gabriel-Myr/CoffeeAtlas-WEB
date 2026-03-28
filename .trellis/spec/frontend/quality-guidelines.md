@@ -11,10 +11,10 @@ pnpm lint
 pnpm typecheck
 ```
 
-如果改了 Web server/helper 或可测试的纯函数，再跑：
+如果改了 API server/helper 或可测试的纯函数，再跑：
 
 ```bash
-pnpm --filter @coffeeatlas/web test
+pnpm --filter @coffeeatlas/api test
 ```
 
 如果改了小程序，再跑：
@@ -26,17 +26,12 @@ pnpm --filter @coffeeatlas/miniprogram typecheck
 API 改动且有可访问环境时，再补：
 
 ```bash
-cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
+cd apps/api && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
 ```
 
 ---
 
 ## Frontend Reality Rules
-
-### Web
-- 优先服务端页面取数，再把 `initial*` 数据传给客户端组件
-- 交互状态留在客户端组件，不把 server-only helper 引进 `use client` 文件
-- Atlas 风格页面依赖 CSS 变量、衬线标题、地图卡片层次，不要无关任务里改成泛化模板风格
 
 ### Miniprogram
 - 所有 API 调用集中在 `src/services/api.ts`
@@ -47,11 +42,6 @@ cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
 ---
 
 ## Manual Verification Checklist
-
-### Web
-- 首页 `/` 可以正常渲染、搜索、切 tab、切主题
-- `/all-beans` 搜索与列表正常
-- 如果改了 `/api/v1/*`，至少验证一次返回 envelope 与字段结构
 
 ### Miniprogram
 - 页面能在微信开发者工具打开
@@ -73,6 +63,5 @@ cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
 
 ## Notes On Current Exceptions
 
-- `HomePageClient.tsx` 和 `AllBeansClient.tsx` 仍有内联 `BeanCard`，属于当前现实，不是默认推荐的新模式。
 - `packages/api-client` 还未成为小程序主入口，因此不要把“已经有 package”误写成“全项目都在使用”。
 - 小程序 `services/api.ts` 有 placeholder / 本地地址检测，这是一个必须保留的安全网。

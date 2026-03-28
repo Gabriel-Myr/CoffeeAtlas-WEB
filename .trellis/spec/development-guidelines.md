@@ -21,8 +21,8 @@ pnpm build
 按包执行时使用 `--filter`：
 
 ```bash
-pnpm --filter @coffeeatlas/web dev
-pnpm --filter @coffeeatlas/web test
+pnpm --filter @coffeeatlas/api dev
+pnpm --filter @coffeeatlas/api test
 pnpm --filter @coffeeatlas/miniprogram typecheck
 ```
 
@@ -30,7 +30,7 @@ pnpm --filter @coffeeatlas/miniprogram typecheck
 
 | 路径 | 包名 | 职责 |
 |------|------|------|
-| `apps/web` | `@coffeeatlas/web` | Web UI + Next API + Supabase server access |
+| `apps/api` | `@coffeeatlas/api` | Next API + Supabase server access |
 | `apps/miniprogram` | `@coffeeatlas/miniprogram` | Taro 小程序 |
 | `packages/shared-types` | `@coffee-atlas/shared-types` | 当前权威 API 契约层 |
 | `packages/api-client` | `@coffee-atlas/api-client` | 预备中的跨端 client |
@@ -40,9 +40,8 @@ pnpm --filter @coffeeatlas/miniprogram typecheck
 
 ## 代码归属原则
 
-- **Web 页面与 Web 专属 UI** -> `apps/web/app/`、`apps/web/components/`
-- **Web 服务端逻辑** -> `apps/web/lib/server/`
-- **公开目录读取与 sample fallback** -> `apps/web/lib/catalog.ts`
+- **API 路由与服务端逻辑** -> `apps/api/app/api/`、`apps/api/lib/server/`
+- **公开目录读取与 sample fallback** -> `apps/api/lib/catalog.ts`
 - **小程序页面与组件** -> `apps/miniprogram/src/pages/`、`apps/miniprogram/src/components/`
 - **小程序 API / storage / auth** -> `apps/miniprogram/src/services/`、`apps/miniprogram/src/utils/`
 - **跨层 API DTO / query params** -> `packages/shared-types/src/`
@@ -64,7 +63,7 @@ import { apiSuccess } from '@/lib/server/api-helpers';
 ### 不允许
 
 ```ts
-import { something } from '../../apps/web/lib/catalog';
+import { something } from '../../apps/api/lib/catalog';
 import { NextRequest } from 'next/server'; // in packages/*
 import Taro from '@tarojs/taro'; // in packages/*
 ```
@@ -72,7 +71,7 @@ import Taro from '@tarojs/taro'; // in packages/*
 规则：
 
 - `packages/*` 必须保持平台无关
-- Web / miniprogram 不直接跨 app 引内部文件
+- api / miniprogram 不直接跨 app 引内部文件
 - 跨层契约优先走 `@coffee-atlas/shared-types`
 
 ---
@@ -82,7 +81,7 @@ import Taro from '@tarojs/taro'; // in packages/*
 ### 共享基础
 
 - 根 `tsconfig.base.json` 提供 `@coffee-atlas/*` 路径映射
-- `apps/web/tsconfig.json` 提供 `@/*`
+- `apps/api/tsconfig.json` 提供 `@/*`
 - `apps/miniprogram/tsconfig.json` 提供 `@/* -> src/*`
 
 ### 类型要求
@@ -121,7 +120,7 @@ import Taro from '@tarojs/taro'; // in packages/*
 ## 路由与服务端逻辑拆分
 
 - route handler 负责：解析请求、鉴权、调用 service、返回响应
-- 复杂查询和 DTO 组装放到 `apps/web/lib/server/**` 或 `apps/web/lib/catalog.ts`
+- 复杂查询和 DTO 组装放到 `apps/api/lib/server/**` 或 `apps/api/lib/catalog.ts`
 - 不要把大段 DB 查询、鉴权、转换逻辑直接堆进 `route.ts`
 
 ---
@@ -133,14 +132,14 @@ import Taro from '@tarojs/taro'; // in packages/*
 ```bash
 pnpm lint
 pnpm typecheck
-pnpm --filter @coffeeatlas/web test
+pnpm --filter @coffeeatlas/api test
 pnpm --filter @coffeeatlas/miniprogram typecheck
 ```
 
 API 改动且环境可用时：
 
 ```bash
-cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
+cd apps/api && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
 ```
 
 ---

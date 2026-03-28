@@ -1,33 +1,18 @@
 # Directory Structure
 
-> 当前仓库是 monorepo。前端代码主要分布在 `apps/web`、`apps/miniprogram` 和 `packages/shared-types`。
+> 当前仓库是 monorepo。前端代码主要分布在 `apps/miniprogram`、`apps/api` 和 `packages/shared-types`。
 
 ---
 
-## Web (`apps/web`)
+## API Reference (`apps/api`)
 
 ```
-apps/web/
-├── app/
-│   ├── layout.tsx
-│   ├── globals.css
-│   ├── page.tsx
-│   ├── HomePageClient.tsx
-│   ├── all-beans/
-│   │   ├── page.tsx
-│   │   └── AllBeansClient.tsx
-│   ├── geo-preview/
-│   ├── geo-compare/
-│   ├── api/
-│   │   ├── health/route.ts
-│   │   ├── beans/route.ts
-│   │   ├── roasters/route.ts
-│   │   └── v1/**
-├── components/
-│   ├── AddBeanForm.tsx
-│   └── atlas/
-│       ├── MapSilhouette.tsx
-│       └── OriginAtlasExplorer.tsx
+apps/api/
+├── app/api/
+│   ├── health/route.ts
+│   ├── beans/route.ts
+│   ├── roasters/route.ts
+│   └── v1/**
 ├── lib/
 │   ├── catalog.ts
 │   ├── supabase.ts
@@ -52,9 +37,7 @@ apps/web/
 
 ### Placement Rules
 
-- 页面入口放 `app/**/page.tsx`
-- 页面专属客户端壳放同目录或 `app/*Client.tsx`
-- 可复用视图组件放 `components/`
+- API 路由放 `app/api/**`
 - 公开目录数据访问放 `lib/catalog.ts`
 - API 参数解析 / 鉴权 / envelope helper 放 `lib/server/`
 - CLI / smoke / env 检查脚本放 `scripts/`

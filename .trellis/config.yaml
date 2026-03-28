@@ -54,10 +54,10 @@ max_journal_lines: 2000
 
 # Auto-detected monorepo packages
 packages:
+  api:
+    path: apps/api
   miniprogram:
     path: apps/miniprogram
-  web:
-    path: apps/web
   api-client:
     path: packages/api-client
   domain:

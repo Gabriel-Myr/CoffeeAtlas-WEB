@@ -1,9 +1,10 @@
-import type { AllBeansEntryIntent } from '../all-beans/entry-intent-store';
-import type { OnboardingExperienceLevel, OnboardingProfile } from '../../utils/storage';
+import type { AllBeansEntryIntent } from '../all-beans/entry-intent-store.ts';
+import type { OnboardingExperienceLevel, OnboardingProfile } from '../../utils/storage.ts';
 
 export const ONBOARDING_INDEX_URL = '/pages/index/index';
 export const ONBOARDING_ALL_BEANS_URL = '/pages/all-beans/index';
 export const ONBOARDING_ALL_BEANS_GUIDED_URL = '/pages/all-beans/index?entry=guided';
+export const ONBOARDING_ALL_BEANS_DIRECT_URL = '/pages/all-beans/index?entry=direct';
 
 export interface OnboardingStorageAdapter {
   getProfile: () => OnboardingProfile | null;
@@ -28,7 +29,7 @@ function resolveDestination(level: OnboardingExperienceLevel): {
     return { url: ONBOARDING_ALL_BEANS_GUIDED_URL, entryIntent: 'guided' };
   }
 
-  return { url: ONBOARDING_INDEX_URL, entryIntent: null };
+  return { url: ONBOARDING_ALL_BEANS_DIRECT_URL, entryIntent: 'direct' };
 }
 
 export function createOnboardingFlow(
