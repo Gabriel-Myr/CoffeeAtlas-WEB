@@ -149,15 +149,15 @@ export function buildGuidedDiscoverStep(input: GuidedDiscoverStepInput): GuidedD
   if (!isSelected(input.selectedCountry)) {
     return {
       step: 'country',
-      title: '先看下要不要继续缩小到具体国家',
+      title: '最后一步，再缩小到具体国家',
       description: '大洲已经定好了，再选一个国家，就能直接看到更聚焦的豆单。',
     };
   }
 
   return {
     step: 'variety',
-    title: '最后一步，可以再按豆种细分',
-    description: '这一步是可选的。你可以直接看结果，也可以再按豆种把范围缩小一点。',
+    title: '如果你已经有目标豆种，可以继续细分',
+    description: '这一步是可选的，不选也可以直接看结果。',
   };
 }
 

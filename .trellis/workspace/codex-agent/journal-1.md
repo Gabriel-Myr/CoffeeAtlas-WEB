@@ -107,3 +107,37 @@ Updated all-beans discover so bean variety becomes an optional final filter step
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: Miniprogram multi-value bean filters
+
+**Date**: 2026-03-30
+**Task**: Miniprogram multi-value bean filters
+**Package**: miniprogram
+**Branch**: `main`
+
+### Summary
+
+Updated miniprogram catalog filtering so multi-value varieties and processes match on inclusion, refreshed discover option counts, and verified test plus typecheck.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `99398e7` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

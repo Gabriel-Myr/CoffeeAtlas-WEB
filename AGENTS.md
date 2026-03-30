@@ -17,7 +17,7 @@ Keep this managed block so 'trellis update' can refresh the instructions.
 
 <!-- TRELLIS:END -->
 
-Codex note: Trellis command equivalents are available as local skills under `.agents/skills/` (for example `start`, `before-dev`, `check`, `finish-work`, `record-session`).
+Codex note: Trellis command equivalents are available as local skills under `.agents/skills/` (for example `start`, `before-dev`, `check`, `finish-work`, `record-session`). 在 Codex 里更接近官方用法的入口是 `$start`；本仓库文档里写的 `/trellis:start` 表示同一类“开始会话”流程。
 
 ## Codex 补充角色说明
 

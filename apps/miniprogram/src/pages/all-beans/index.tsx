@@ -645,7 +645,7 @@ export default function AllBeans() {
                         ))}
                       </View>
                       <Text className="guided-discover-card__restart" onClick={() => setSelectedVariety(ALL_DISCOVER_VALUE)}>
-                        先看结果
+                        跳过
                       </Text>
                     </>
                   ) : (
@@ -794,7 +794,7 @@ export default function AllBeans() {
             </View>
 
             <View className="discover-panel__section">
-              <Text className="discover-panel__eyebrow">第五步 · 豆种（可选）</Text>
+              <Text className="discover-panel__eyebrow">豆种（可选）</Text>
               <Text className="discover-panel__title">
                 {selectedCountry === ALL_DISCOVER_VALUE
                   ? '这一步可以跳过；如果你已经有目标豆种，也可以在这里继续缩小。'
@@ -828,11 +828,9 @@ export default function AllBeans() {
               <View className="discover-panel__section">
                 <View className="discover-results">
                   <View className="discover-results__heading">
-                    <Text className="discover-panel__eyebrow">第六步 · 结果</Text>
+                    <Text className="discover-panel__eyebrow">第五步 · 结果</Text>
                     <Text className="discover-panel__title">
-                      {selectedVariety !== ALL_DISCOVER_VALUE
-                        ? `当前豆种路径共 ${discoverPayload.resultSummary.total} 款，继续向下浏览完整豆单`
-                        : selectedCountry !== ALL_DISCOVER_VALUE
+                      {selectedCountry !== ALL_DISCOVER_VALUE
                         ? `共 ${discoverPayload.resultSummary.total} 款，继续向下浏览完整豆单`
                         : `当前路径共 ${discoverPayload.resultSummary.total} 款，先看结果再决定是否缩到国家`}
                     </Text>
@@ -844,18 +842,14 @@ export default function AllBeans() {
                   ) : beans.length === 0 ? (
                     <View className="discover-results__empty">
                       <Text className="discover-results__empty-title">
-                        {selectedVariety !== ALL_DISCOVER_VALUE
-                          ? `${selectedVariety} 暂时没有匹配豆子`
-                          : selectedCountry !== ALL_DISCOVER_VALUE
+                        {selectedCountry !== ALL_DISCOVER_VALUE
                           ? `${selectedCountry} 暂时没有匹配豆子`
                           : activeContinentMeta
                             ? `${activeContinentMeta.name} 暂时没有匹配豆子`
                             : '当前探索路径下暂无豆子'}
                       </Text>
                       <Text className="discover-results__empty-text">
-                        {selectedVariety !== ALL_DISCOVER_VALUE
-                          ? '可以先退回当前路径的全部豆种，或者换一个国家继续探索。'
-                          : selectedCountry !== ALL_DISCOVER_VALUE
+                        {selectedCountry !== ALL_DISCOVER_VALUE
                           ? '可以退回当前大洲的全部国家，或者换一个处理法继续探索。'
                           : activeContinentMeta
                             ? '可以先切回全部大洲，或者保留搜索词继续换一个处理法。'
