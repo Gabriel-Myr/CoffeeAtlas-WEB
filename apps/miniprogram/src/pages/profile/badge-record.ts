@@ -1,6 +1,13 @@
+interface NextBadgeSummary {
+  title: string;
+  detail: string;
+}
+
 interface BadgeRecordCopyInput {
   loggedIn: boolean;
-  totalSaved: number;
+  unlockedCount: number;
+  totalCount: number;
+  nextBadge?: NextBadgeSummary;
 }
 
 interface BadgeRecordCopy {
@@ -10,20 +17,34 @@ interface BadgeRecordCopy {
   hint: string;
 }
 
-export function getBadgeRecordCopy({ loggedIn, totalSaved }: BadgeRecordCopyInput): BadgeRecordCopy {
+export function getBadgeRecordCopy({
+  loggedIn,
+  unlockedCount,
+  totalCount,
+  nextBadge,
+}: BadgeRecordCopyInput): BadgeRecordCopy {
   if (!loggedIn) {
     return {
       eyebrow: 'BADGE RECORD',
       title: '徽章记录',
-      description: '登录后，你的收藏、浏览和探索会逐步点亮这里的徽章。',
-      hint: '先登录，后面再慢慢收集。',
+      description: '登录后就能开始点亮你的咖啡探索徽章。',
+      hint: '先解锁「入馆访客」，后面的探索记录会继续累积。',
+    };
+  }
+
+  if (unlockedCount >= totalCount) {
+    return {
+      eyebrow: 'BADGE RECORD',
+      title: '徽章记录',
+      description: `已解锁 ${unlockedCount} / ${totalCount} 枚徽章，这一页已经被你点亮。`,
+      hint: '首批徽章已全部拿下，后续新的探索徽章会继续加入。',
     };
   }
 
   return {
     eyebrow: 'BADGE RECORD',
     title: '徽章记录',
-    description: '你的徽章位已经准备好，继续收藏和浏览，记录会慢慢变丰富。',
-    hint: `当前已沉淀 ${totalSaved} 条足迹，后续会在这里解锁展示。`,
+    description: `已解锁 ${unlockedCount} / ${totalCount} 枚徽章，继续把你的咖啡足迹补完整。`,
+    hint: nextBadge ? `下一枚是「${nextBadge.title}」：${nextBadge.detail}` : '继续收藏和浏览，新的徽章会逐步点亮。',
   };
 }

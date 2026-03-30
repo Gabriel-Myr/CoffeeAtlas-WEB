@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { getTaobaoSyncConfig, randomDelayMs } from '../lib/taobao-sync/config.ts';
 import { TaobaoMcpClient } from '../lib/taobao-sync/mcp-client.ts';
-import { mergeVisibleProductsWithSearchProducts } from '../lib/taobao-sync/sync.ts';
+import { mergeVisibleProductsWithSearchProducts, toPublishStatus } from '../lib/taobao-sync/sync.ts';
 import {
   applyOcrProcessFallback,
   buildShopListingIdentity,
@@ -483,6 +483,62 @@ test('parseBeanCandidateFromSources parses from title, page, OCR, and vision fal
   });
   assert.equal(visionCandidate.parseSource, 'vision');
   assert.equal(visionCandidate.beanName, 'Kenya Nyeri');
+});
+
+test('parseBeanCandidateFromSources prefers visual candidate and records blocking conflicts when title disagrees', () => {
+  const candidate = parseBeanCandidateFromSources({
+    displayName: '肯尼亚 涅里 水洗 227g',
+    titleText: '埃塞俄比亚 耶加雪菲 水洗 227g',
+    ocrText: '肯尼亚 涅里 水洗 227g',
+    visionCandidate: {
+      beanName: 'Kenya Nyeri',
+      originCountry: 'Kenya',
+      originRegion: 'Nyeri',
+      processMethod: 'Washed',
+      weightGrams: 227,
+    },
+  });
+
+  assert.equal(candidate.parseSource, 'vision');
+  assert.equal(candidate.beanName, 'Kenya Nyeri');
+  assert.ok(candidate.conflicts?.some((conflict) => conflict.field === 'beanName' && conflict.severity === 'blocking'));
+  assert.ok(candidate.parseWarnings.includes('conflict:blocking:beanName:title:vision'));
+});
+
+test('parseBeanCandidateFromSources keeps warning-level conflicts without forcing visual takeover', () => {
+  const candidate = parseBeanCandidateFromSources({
+    displayName: '哥伦比亚 慧兰 100g',
+    titleText: '哥伦比亚 慧兰 水洗 100g',
+    visionCandidate: {
+      beanName: 'Colombia Huila',
+      originCountry: 'Colombia',
+      originRegion: 'Huila',
+      processMethod: 'Natural',
+      weightGrams: 100,
+    },
+  });
+
+  assert.equal(candidate.originCountry, 'Colombia');
+  assert.ok(candidate.conflicts?.some((conflict) => conflict.field === 'processMethod' && conflict.severity === 'warning'));
+  assert.ok(candidate.parseWarnings.includes('conflict:warning:processMethod:title:vision'));
+  assert.equal(toPublishStatus(candidate), 'ACTIVE');
+});
+
+test('toPublishStatus marks blocking source conflicts as draft', () => {
+  const candidate = parseBeanCandidateFromSources({
+    displayName: '肯尼亚 涅里 水洗 227g',
+    titleText: '埃塞俄比亚 耶加雪菲 水洗 227g',
+    ocrText: '肯尼亚 涅里 水洗 227g',
+    visionCandidate: {
+      beanName: 'Kenya Nyeri',
+      originCountry: 'Kenya',
+      originRegion: 'Nyeri',
+      processMethod: 'Washed',
+      weightGrams: 227,
+    },
+  });
+
+  assert.equal(toPublishStatus(candidate), 'DRAFT');
 });
 
 test('evaluateTaobaoArrivalEligibility skips espresso blend listings before detail enrichment', () => {

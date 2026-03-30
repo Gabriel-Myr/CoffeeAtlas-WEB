@@ -49,10 +49,11 @@ function confidenceToAliasScore(confidence: ParsedBeanCandidate['confidence']) {
   return 0.45;
 }
 
-function toPublishStatus(candidate: ParsedBeanCandidate): TaobaoPublishStatus {
+export function toPublishStatus(candidate: ParsedBeanCandidate): TaobaoPublishStatus {
   const blockingWarnings = new Set(['bean_name_missing', 'display_name_fallback']);
   if (candidate.confidence === 'low') return 'DRAFT';
   if (candidate.parseWarnings.some((warning) => blockingWarnings.has(warning))) return 'DRAFT';
+  if (candidate.conflicts?.some((conflict) => conflict.severity === 'blocking')) return 'DRAFT';
   return 'ACTIVE';
 }
 

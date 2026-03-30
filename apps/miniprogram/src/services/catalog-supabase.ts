@@ -301,6 +301,50 @@ function matchesProcessFilters(
   return true;
 }
 
+function matchesCountryFilter(bean: CoffeeBean, country: string | undefined): boolean {
+  if (!country) return true;
+
+  const normalizedCandidates = new Set(
+    getCountryFilterCandidates(country)
+      .map((value) => normalizeString(value).toLowerCase())
+      .filter((value) => value.length > 0)
+  );
+  if (normalizedCandidates.size === 0) return true;
+
+  const atlasCountry = matchAtlasCountry(bean.originCountry);
+  if (atlasCountry) {
+    const beanCandidates = [atlasCountry.name, atlasCountry.id, ...atlasCountry.aliases]
+      .map((value) => normalizeString(value).toLowerCase())
+      .filter((value) => value.length > 0);
+    return beanCandidates.some((value) => normalizedCandidates.has(value));
+  }
+
+  return normalizedCandidates.has(normalizeString(bean.originCountry).toLowerCase());
+}
+
+function matchesContinentFilter(bean: CoffeeBean, continent: DiscoverContinentId | undefined): boolean {
+  if (!continent) return true;
+  const atlasCountry = matchAtlasCountry(bean.originCountry);
+  return atlasCountry?.continentId === continent;
+}
+
+function filterBeansForDiscover(
+  beans: CoffeeBean[],
+  filters: {
+    processBase?: ProcessBaseId;
+    processStyle?: ProcessStyleId;
+    continent?: DiscoverContinentId;
+    country?: string;
+  }
+): CoffeeBean[] {
+  return beans.filter((bean) => {
+    if (!matchesProcessFilters(bean, filters)) return false;
+    if (!matchesContinentFilter(bean, filters.continent)) return false;
+    if (!matchesCountryFilter(bean, filters.country)) return false;
+    return true;
+  });
+}
+
 function applyBeanSort(
   query: any,
   sort: 'updated_desc' | 'sales_desc' | 'price_asc' | 'price_desc' | undefined
@@ -469,28 +513,36 @@ function buildDiscoverOptions(
   beans: CoffeeBean[],
   filters: {
     processBase?: ProcessBaseId;
+    processStyle?: ProcessStyleId;
+    continent?: DiscoverContinentId;
+    country?: string;
   }
 ): Pick<BeanDiscoverPayload, 'processBaseOptions' | 'processStyleOptions' | 'continentOptions' | 'countryOptions'> {
-  const processBaseOptions = buildProcessBaseOptions(beans);
-  const normalizedScopedBeans = filters.processBase
-    ? beans.filter((bean) => {
-        const normalizedProcess = normalizeProcess(bean.processRaw ?? bean.process, {
-          base: bean.processBase,
-          style: bean.processStyle,
-        });
-        return normalizedProcess.base === filters.processBase;
-      })
-    : beans;
-  const processStyleOptions = buildProcessStyleOptions(normalizedScopedBeans, filters.processBase);
+  const processBaseScopedBeans = filterBeansForDiscover(beans, {
+    continent: filters.continent,
+    country: filters.country,
+  });
+  const processBaseOptions = buildProcessBaseOptions(processBaseScopedBeans);
+
+  const processStyleScopedBeans = filterBeansForDiscover(beans, {
+    processBase: filters.processBase,
+    continent: filters.continent,
+    country: filters.country,
+  });
+  const processStyleOptions = buildProcessStyleOptions(processStyleScopedBeans, filters.processBase);
+
+  const continentScopedBeans = filterBeansForDiscover(beans, {
+    processBase: filters.processBase,
+    processStyle: filters.processStyle,
+  });
 
   const continentCounts = new Map<DiscoverContinentId, number>();
   const countryCounts = new Map<string, number>();
 
-  for (const bean of beans) {
+  for (const bean of continentScopedBeans) {
     const country = matchAtlasCountry(bean.originCountry);
     if (!country) continue;
     continentCounts.set(country.continentId, (continentCounts.get(country.continentId) ?? 0) + 1);
-    countryCounts.set(country.name, (countryCounts.get(country.name) ?? 0) + 1);
   }
 
   const continentOptions = ORIGIN_ATLAS_CONTINENTS
@@ -501,6 +553,18 @@ function buildDiscoverOptions(
       description: continent.editorialLabel,
     }))
     .filter((option) => option.count > 0);
+
+  const countryScopedBeans = filterBeansForDiscover(beans, {
+    processBase: filters.processBase,
+    processStyle: filters.processStyle,
+    continent: filters.continent,
+  });
+
+  for (const bean of countryScopedBeans) {
+    const country = matchAtlasCountry(bean.originCountry);
+    if (!country) continue;
+    countryCounts.set(country.name, (countryCounts.get(country.name) ?? 0) + 1);
+  }
 
   const countryOptions = [...countryCounts.entries()]
     .sort(sortByCountThenLabel)
@@ -680,9 +744,10 @@ export function buildBeanDiscoverPayload({
     country?: string;
   };
 }): BeanDiscoverPayload {
+  const resultBeans = filterBeansForDiscover(beans, filters);
   const options = buildDiscoverOptions(beans, filters);
   const editorial = buildDiscoverEditorial(filters);
-  const editorPicks = [...beans]
+  const editorPicks = [...resultBeans]
     .sort((left, right) => scoreDiscoverPick(right, filters) - scoreDiscoverPick(left, filters))
     .slice(0, filters.country ? 3 : 4)
     .map((bean) => ({
@@ -695,7 +760,7 @@ export function buildBeanDiscoverPayload({
     editorial,
     editorPicks,
     resultSummary: {
-      total: beans.length,
+      total: resultBeans.length,
       processBase: filters.processBase,
       processStyle: filters.processStyle,
       continent: filters.continent,
@@ -990,23 +1055,22 @@ export async function getBeanDiscoverWithSupabase(
   }
 ): Promise<BeanDiscoverPayload> {
   const filters = params ?? {};
+  const queryFilters = filters.q ? { q: filters.q } : {};
   const runQuery = async (legacyProcessColumns: boolean) =>
     applyBeanFilters(
       client
         .from('v_catalog_active')
         .select(legacyProcessColumns ? CATALOG_VIEW_LEGACY_SELECT : CATALOG_VIEW_SELECT)
         .order('updated_at', { ascending: false }),
-      filters,
+      queryFilters,
       {
         supportsNormalizedProcessColumns: !legacyProcessColumns,
       }
     );
 
   let result = await runQuery(false);
-  let usedLegacyProcessColumns = false;
 
   if (result.error && isMissingNormalizedProcessColumnError(result.error)) {
-    usedLegacyProcessColumns = true;
     result = await runQuery(true);
   }
 
@@ -1019,18 +1083,9 @@ export async function getBeanDiscoverWithSupabase(
     rows.filter((row) => isRecentUpdatedAt(row.updated_at)).map((row) => row.roaster_bean_id)
   );
   const beans = rows.map((row) => mapCatalogBeanRow(row, newArrivalIds));
-  const filteredBeans =
-    usedLegacyProcessColumns && (filters.processBase || filters.processStyle)
-      ? beans.filter((bean) =>
-          matchesProcessFilters(bean, {
-            processBase: filters.processBase,
-            processStyle: filters.processStyle,
-          })
-        )
-      : beans;
 
   return buildBeanDiscoverPayload({
-    beans: filteredBeans,
+    beans,
     filters,
   });
 }

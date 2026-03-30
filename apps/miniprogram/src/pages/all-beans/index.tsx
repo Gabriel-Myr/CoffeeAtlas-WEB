@@ -4,6 +4,7 @@ import Taro, { useDidShow, useReachBottom, useRouter } from '@tarojs/taro';
 import { getProcessBaseLabel, getProcessStyleLabel } from '@coffee-atlas/shared-types';
 
 import BeanCard from '../../components/BeanCard';
+import AtlasPageHero from '../../components/AtlasPageHero';
 import EmptyState from '../../components/EmptyState';
 import SearchBar from '../../components/SearchBar';
 import { getBeanDiscover, getBeans } from '../../services/api';
@@ -22,7 +23,6 @@ import {
   ORIGIN_ATLAS_COUNTRY_MAP,
   makeAtlasSvgUri,
 } from '../../utils/origin-atlas';
-import { buildDiscoverGuidance } from './discover-guidance';
 import {
   buildGuidedDiscoverStep,
   resolveGuidedContinentSelection,
@@ -46,9 +46,9 @@ const GUIDED_PROCESS_CHOICES: Array<{
   title: string;
   description: string;
 }> = [
-  { id: 'clean', title: '清爽干净', description: '先从水洗开始：干净明亮，酸质更清楚。' },
-  { id: 'fruity', title: '果香甜美', description: '先从日晒开始：果汁感和发酵甜感更明显。' },
-  { id: 'sweet', title: '甜感圆润', description: '先从蜜处理开始：甜感和触感会更圆一点。' },
+  { id: 'clean', title: '清爽干净', description: '水洗处理：干净明亮，酸质清稀。' },
+  { id: 'fruity', title: '果香馥郁', description: '日晒处理：具有果汁感和发酵甜感。' },
+  { id: 'sweet', title: '酸甜圆润', description: '蜜处理：甜感和酸质共存。' },
 ];
 
 const GUIDED_PROCESS_STYLE_CHOICES: Array<{
@@ -94,8 +94,8 @@ function getCollapsedGuidanceCopy(landingMode: AllBeansLandingMode): {
   }
 
   return {
-    title: '还没决定从哪里开始时，可以先展开轻问答',
-    description: '它会按处理法、风味方向和产地逐步帮你缩小到一条可浏览的路径。',
+    title: '没有头绪时，帮你按喜好逐步选豆',
+    description: '处理法-风味-产地，轻松筛选；\n已经有目标了？直接使用下方筛选吧。',
   };
 }
 
@@ -172,17 +172,6 @@ export default function AllBeans() {
 
     return `在 ${discoverPathItems.map((item) => item.value).join(' / ')} 中搜索 “${normalizedQuery}”`;
   }, [discoverPathItems, normalizedQuery]);
-
-  const discoverGuidance = useMemo(() => {
-    return buildDiscoverGuidance({
-      landingMode,
-      selectedProcessBase,
-      selectedProcessStyle,
-      selectedContinent,
-      selectedCountry,
-      searchQuery,
-    });
-  }, [landingMode, searchQuery, selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle]);
 
   const guidedDiscoverStep = useMemo(() => {
     return buildGuidedDiscoverStep({
@@ -489,17 +478,15 @@ export default function AllBeans() {
 
   return (
     <View className="all-beans">
+      <AtlasPageHero subtitle="全部咖啡豆">
+        {shouldShowDiscoverResults && discoverPayload ? (
+          <Text className="all-beans__hero-count">{`当前路径共 ${discoverPayload.resultSummary.total} 款咖啡豆`}</Text>
+        ) : null}
+      </AtlasPageHero>
+
       <SearchBar value={searchQuery} placeholder="按烘焙商、产地、处理法或豆种搜索..." onInput={setSearchQuery} />
 
       <View className="discover-top">
-        {discoverGuidance ? (
-          <View className="discover-guidance">
-            <Text className="discover-guidance__label">{discoverGuidance.label}</Text>
-            <Text className="discover-guidance__title">{discoverGuidance.title}</Text>
-            <Text className="discover-guidance__description">{discoverGuidance.description}</Text>
-          </View>
-        ) : null}
-
         <View className="guided-discover-card">
           <View className="guided-discover-card__header" onClick={() => setIsGuidedCardExpanded((current) => !current)}>
             <View className="guided-discover-card__header-main">
@@ -570,6 +557,29 @@ export default function AllBeans() {
                   </View>
                 ) : (
                   <Text className="guided-discover-card__hint">正在准备大洲选项...</Text>
+                )
+              ) : null}
+
+              {guidedDiscoverStep.step === 'country' ? (
+                discoverPayload ? (
+                  discoverPayload.countryOptions.length > 0 ? (
+                    <View className="guided-discover-card__choices">
+                      {discoverPayload.countryOptions.map((option) => (
+                        <View
+                          key={option.id}
+                          className="guided-discover-card__choice"
+                          onClick={() => handleCountrySelect(option.label)}
+                        >
+                          <Text className="guided-discover-card__choice-title">{option.label}</Text>
+                          <Text className="guided-discover-card__choice-description">{`${option.count} 款可选豆子`}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text className="guided-discover-card__hint">这个大洲下暂时没有可继续缩小的国家结果，可以直接往下浏览当前结果。</Text>
+                  )
+                ) : (
+                  <Text className="guided-discover-card__hint">正在准备国家选项...</Text>
                 )
               ) : null}
 

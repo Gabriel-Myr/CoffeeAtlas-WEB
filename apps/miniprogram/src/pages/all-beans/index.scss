@@ -2,6 +2,13 @@
   min-height: 100vh;
   padding-bottom: 40px;
 
+  &__hero-count {
+    display: block;
+    color: rgba(62, 42, 30, 0.72);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
   &__query-bar {
     display: flex;
     align-items: center;
@@ -65,42 +72,6 @@
 
 .discover-top {
   margin: 0 16px 16px;
-}
-
-.discover-guidance {
-  padding: 16px;
-  background:
-    radial-gradient(circle at top right, rgba(216, 111, 76, 0.16), transparent 52%),
-    rgba(255, 252, 247, 0.96);
-  border: 1px solid rgba(107, 83, 68, 0.12);
-  border-radius: 20px;
-  box-shadow: 0 10px 20px rgba(62, 42, 30, 0.05);
-
-  &__label {
-    display: block;
-    color: rgba(139, 115, 85, 0.8);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-
-  &__title {
-    display: block;
-    margin-top: 8px;
-    color: var(--color-coffee-dark, #3e2a1e);
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.4;
-  }
-
-  &__description {
-    display: block;
-    margin-top: 8px;
-    color: rgba(62, 42, 30, 0.76);
-    font-size: 13px;
-    line-height: 1.6;
-  }
 }
 
 .guided-discover-card {
@@ -581,42 +552,6 @@
 
 .discover-top {
   margin: 0 16px 16px;
-}
-
-.discover-guidance {
-  padding: 16px;
-  background:
-    radial-gradient(circle at top right, rgba(216, 111, 76, 0.16), transparent 52%),
-    rgba(255, 252, 247, 0.96);
-  border: 1px solid rgba(107, 83, 68, 0.12);
-  border-radius: 20px;
-  box-shadow: 0 10px 20px rgba(62, 42, 30, 0.05);
-
-  &__label {
-    display: block;
-    color: rgba(139, 115, 85, 0.8);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-
-  &__title {
-    display: block;
-    margin-top: 8px;
-    color: var(--color-coffee-dark, #3e2a1e);
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.4;
-  }
-
-  &__description {
-    display: block;
-    margin-top: 8px;
-    color: rgba(62, 42, 30, 0.76);
-    font-size: 13px;
-    line-height: 1.6;
-  }
 }
 
 .guided-discover-card {

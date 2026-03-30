@@ -176,13 +176,29 @@ test('buildGuidedDiscoverStep moves to continent question after style is selecte
   );
 });
 
-test('buildGuidedDiscoverStep finishes once continent or country is selected', () => {
+test('buildGuidedDiscoverStep moves to country question once continent is selected', () => {
   assert.deepEqual(
     buildGuidedDiscoverStep({
       selectedProcessBase: 'washed',
       selectedProcessStyle: 'traditional',
       selectedContinent: 'africa',
       selectedCountry: 'all',
+    }),
+    {
+      step: 'country',
+      title: '最后一步，再缩小到具体国家',
+      description: '大洲已经定好了，再选一个国家，就能直接看到更聚焦的豆单。',
+    }
+  );
+});
+
+test('buildGuidedDiscoverStep finishes once country is selected', () => {
+  assert.deepEqual(
+    buildGuidedDiscoverStep({
+      selectedProcessBase: 'washed',
+      selectedProcessStyle: 'traditional',
+      selectedContinent: 'africa',
+      selectedCountry: '埃塞俄比亚',
     }),
     {
       step: 'done',

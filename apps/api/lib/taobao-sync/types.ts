@@ -4,6 +4,15 @@ export type TaobaoSyncStatus = 'SUCCEEDED' | 'FAILED' | 'PARTIAL';
 export type TaobaoImportJobStatus = 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'PARTIAL';
 export type TaobaoImportJobType = 'SCRAPE_SYNC' | 'MANUAL_PATCH';
 export type TaobaoPublishStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+export type ParsedBeanField =
+  | 'beanName'
+  | 'originCountry'
+  | 'originRegion'
+  | 'processMethod'
+  | 'variety'
+  | 'roastLevel'
+  | 'weightGrams';
+export type ParsedBeanConflictSeverity = 'blocking' | 'warning';
 
 export interface TaobaoSyncConfig {
   mcpUrl: string;
@@ -129,6 +138,16 @@ export interface ParsedBeanCandidate {
   parseSource: TaobaoParseSource;
   parseWarnings: string[];
   confidence: TaobaoConfidence;
+  conflicts?: ParsedBeanConflict[];
+}
+
+export interface ParsedBeanConflict {
+  field: ParsedBeanField;
+  severity: ParsedBeanConflictSeverity;
+  textualSource: TaobaoParseSource;
+  textualValue: string | number;
+  visualSource: TaobaoParseSource;
+  visualValue: string | number;
 }
 
 export interface TaobaoArrivalEligibility {

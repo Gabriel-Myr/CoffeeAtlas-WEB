@@ -29,12 +29,13 @@
 当前仓库已有两种方式：
 
 - 普通页面参数：`useRouter().params`
-- tab 入口意图：`entry-intent` / `entry-options`
+- tab 入口意图：`entry-intent-store.ts` + `entry-intent.ts` + `entry-transition.ts`
 
 适用原则：
 
 - 能直接放 query 的简单值，走 route params
 - 需要跨 tab 保留“从哪个入口进入”的语义，走现有 `entry-intent`
+- 入口落地时，优先在页面内显式消费并清理一次性 intent，不要让旧 intent 影响下一次进入
 - 不要把一次性的入口意图长期留在 storage 里不清理
 
 ---
@@ -63,13 +64,17 @@
 
 ## 4. Runtime Config State
 
-API 联调地址不算业务状态，统一放 `src/utils/api-config.ts`。
+运行时配置不算业务状态，但要分两类看：
+
+- API 联调地址：统一放 `src/utils/api-config.ts`
+- 目录数据环境：统一通过 `src/utils/compiled-env.ts` / `src/utils/supabase.ts` 读取
 
 规则：
 
-- 页面不要各自缓存一份 base URL
-- 接口请求前由 `src/services/api.ts` 统一校验
-- “未配置 API 地址”的提示属于必须保留的安全网
+- 页面不要各自缓存一份 base URL 或 Supabase 配置
+- `/api/v1/*` 请求前由 `src/services/api.ts` 统一校验 API base URL
+- 目录读操作前由 `src/services/catalog-read-mode.ts` 统一校验 Supabase 环境
+- “未配置 API 地址”和“未配置 Supabase 环境变量”这两类提示都属于必须保留的安全网
 
 ---
 

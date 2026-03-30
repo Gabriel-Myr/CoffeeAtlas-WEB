@@ -3,6 +3,8 @@ import type {
   TaobaoCleanupCandidate,
   ExistingRoasterBeanRecord,
   ParsedBeanCandidate,
+  ParsedBeanConflict,
+  ParsedBeanField,
   ParsedTextSignals,
   TaobaoBinding,
   TaobaoConfidence,
@@ -206,6 +208,8 @@ const HARD_COLD_BREW_PATTERNS = [/冷萃(?:专用)?(?:豆)?/, /冷泡(?:专用)?
 const SOFT_STYLE_PATTERNS = [/精品意式/, /意式手冲/, /手冲意式/, /\bomni\b/i, /omni烘焙/i, /意式/];
 const STRICT_SINGLE_ORIGIN_ESPRESSO_PATTERNS = [/奶咖/, /拿铁/];
 const LOT_CODE_PATTERN = /\b[A-Z]\d{2,3}\b/i;
+const BLOCKING_CONFLICT_FIELDS = new Set<ParsedBeanField>(['beanName', 'originCountry', 'originRegion', 'weightGrams']);
+const WARNING_CONFLICT_FIELDS = new Set<ParsedBeanField>(['processMethod', 'variety', 'roastLevel']);
 
 function normalizeWhitespace(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -772,6 +776,76 @@ function candidateScore(candidate: ParsedBeanCandidate) {
   return score;
 }
 
+function normalizeFieldValue(value: string | number | null | undefined) {
+  if (typeof value === 'number') return Number.isFinite(value) ? String(value) : '';
+  if (typeof value === 'string') return normalizeComparisonText(value);
+  return '';
+}
+
+function getCandidateFieldValue(candidate: ParsedBeanCandidate, field: ParsedBeanField) {
+  return candidate[field];
+}
+
+function buildConflictWarning(conflict: ParsedBeanConflict) {
+  return `conflict:${conflict.severity}:${conflict.field}:${conflict.textualSource}:${conflict.visualSource}`;
+}
+
+function analyzeCandidateConflicts(candidates: ParsedBeanCandidate[]) {
+  const textualCandidates = candidates.filter((candidate) => candidate.parseSource === 'title' || candidate.parseSource === 'page');
+  const visualCandidates = candidates.filter((candidate) => candidate.parseSource === 'ocr' || candidate.parseSource === 'vision');
+  const conflicts: ParsedBeanConflict[] = [];
+  const warnings: string[] = [];
+  const consensusVisualFields = new Set<ParsedBeanField>();
+  const fields = [...BLOCKING_CONFLICT_FIELDS, ...WARNING_CONFLICT_FIELDS];
+
+  for (const field of fields) {
+    const textual = [...textualCandidates]
+      .filter((candidate) => getCandidateFieldValue(candidate, field) !== null)
+      .sort((left, right) => candidateScore(right) - candidateScore(left))[0];
+    const visualValues = visualCandidates
+      .map((candidate) => ({
+        candidate,
+        rawValue: getCandidateFieldValue(candidate, field),
+        normalizedValue: normalizeFieldValue(getCandidateFieldValue(candidate, field) as string | number | null),
+      }))
+      .filter((entry) => entry.rawValue !== null && entry.normalizedValue);
+
+    if (!textual || visualValues.length === 0) continue;
+
+    const visual = [...visualValues].sort((left, right) => candidateScore(right.candidate) - candidateScore(left.candidate))[0];
+    if (!visual) continue;
+
+    const uniqueVisualValues = new Set(visualValues.map((entry) => entry.normalizedValue));
+    if (uniqueVisualValues.size === 1 && visualValues.length > 1) {
+      consensusVisualFields.add(field);
+    }
+    if (uniqueVisualValues.size > 1) {
+      warnings.push(`conflict:visual_disagreement:${field}`);
+    }
+
+    const textualValue = getCandidateFieldValue(textual, field);
+    const textualNormalized = normalizeFieldValue(textualValue as string | number | null);
+    if (!textualNormalized || textualNormalized === visual.normalizedValue) continue;
+
+    conflicts.push({
+      field,
+      severity: BLOCKING_CONFLICT_FIELDS.has(field) ? 'blocking' : 'warning',
+      textualSource: textual.parseSource,
+      textualValue: textualValue as string | number,
+      visualSource: visual.candidate.parseSource,
+      visualValue: visual.rawValue as string | number,
+    });
+  }
+
+  return {
+    conflicts,
+    warnings,
+    consensusVisualFields,
+    bestVisualCandidate:
+      [...visualCandidates].sort((left, right) => candidateScore(right) - candidateScore(left))[0] ?? null,
+  };
+}
+
 function toParsedBeanCandidate(
   displayName: string,
   parseSource: TaobaoParseSource,
@@ -829,14 +903,35 @@ export function parseBeanCandidateFromSources(args: {
     candidates.push(toParsedBeanCandidate(args.displayName, 'vision', args.visionCandidate));
   }
 
-  const best = candidates.sort((left, right) => candidateScore(right) - candidateScore(left))[0];
+  const ranked = [...candidates].sort((left, right) => candidateScore(right) - candidateScore(left));
+  const best = ranked[0];
   if (!best) {
     return buildCandidate(args.displayName, args.displayName, 'fallback');
   }
 
+  const conflictAnalysis = analyzeCandidateConflicts(candidates);
+  const blockingConflicts = conflictAnalysis.conflicts.filter((conflict) => conflict.severity === 'blocking');
+  let resolved = best;
+
+  if (
+    blockingConflicts.length > 0 &&
+    conflictAnalysis.bestVisualCandidate &&
+    conflictAnalysis.bestVisualCandidate.confidence !== 'low' &&
+    blockingConflicts.some((conflict) => conflictAnalysis.consensusVisualFields.has(conflict.field) || conflict.visualSource === 'vision')
+  ) {
+    resolved = conflictAnalysis.bestVisualCandidate;
+  }
+
   return {
-    ...best,
-    parseWarnings: [...new Set(best.parseWarnings)],
+    ...resolved,
+    conflicts: conflictAnalysis.conflicts,
+    parseWarnings: [
+      ...new Set([
+        ...resolved.parseWarnings,
+        ...conflictAnalysis.conflicts.map(buildConflictWarning),
+        ...conflictAnalysis.warnings,
+      ]),
+    ],
   };
 }
 

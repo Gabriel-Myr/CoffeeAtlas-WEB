@@ -19,7 +19,7 @@ export interface GuidedDiscoverStepInput {
 }
 
 export interface GuidedDiscoverStep {
-  step: 'process_base' | 'process_style' | 'continent' | 'done';
+  step: 'process_base' | 'process_style' | 'continent' | 'country' | 'done';
   title: string;
   description: string;
 }
@@ -113,7 +113,7 @@ export function resolveGuidedContinentSelection(
 }
 
 export function buildGuidedDiscoverStep(input: GuidedDiscoverStepInput): GuidedDiscoverStep {
-  if (isSelected(input.selectedContinent) || isSelected(input.selectedCountry)) {
+  if (isSelected(input.selectedCountry)) {
     return {
       step: 'done',
       title: '已经帮你缩小到一条可直接浏览的路径',
@@ -137,10 +137,18 @@ export function buildGuidedDiscoverStep(input: GuidedDiscoverStepInput): GuidedD
     };
   }
 
+  if (!isSelected(input.selectedContinent)) {
+    return {
+      step: 'continent',
+      title: '下一步，选一个更接近你期待风味的区域',
+      description: '处理风格已经定好了，现在再用大洲和国家把结果继续缩小。',
+    };
+  }
+
   return {
-    step: 'continent',
-    title: '下一步，选一个更接近你期待风味的区域',
-    description: '处理风格已经定好了，现在再用大洲和国家把结果继续缩小。',
+    step: 'country',
+    title: '最后一步，再缩小到具体国家',
+    description: '大洲已经定好了，再选一个国家，就能直接看到更聚焦的豆单。',
   };
 }
 

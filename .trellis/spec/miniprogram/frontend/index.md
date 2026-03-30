@@ -8,9 +8,11 @@
 
 ### Miniprogram (`apps/miniprogram`)
 - Taro 3.x + React 18
-- 页面状态、storage、收藏、onboarding、API 联调入口都已落地
-- 运行时 API 地址通过 `src/utils/api-config.ts` 管理
-- 主请求入口仍是 `src/services/api.ts`
+- 页面状态、storage、收藏、onboarding、目录检索与登录态接口都已落地
+- 目录数据（豆单、discover、烘焙商详情）默认走 `src/services/catalog-supabase.ts`
+- 登录、收藏、`/api/v1/health` 等用户态接口仍通过 `src/services/api.ts`
+- 运行时 API 地址通过 `src/utils/api-config.ts` 管理；仅对仍走 `/api/v1/*` 的请求生效
+- 目录数据依赖编译时 Supabase 环境变量：`TARO_APP_SUPABASE_URL`、`TARO_APP_SUPABASE_ANON_KEY`
 
 ---
 
@@ -46,7 +48,10 @@
 ## Current Repo Reality
 
 - `@coffee-atlas/shared-types` 仍是 v1 API 主契约层。
-- `apps/miniprogram/src/types/index.ts` 仍保留一份本地镜像类型；改 v1 契约时要同步检查。
-- `src/services/api.ts` 已经在用 `@coffee-atlas/api-client` 的 path builder / unwrap helper，但还不是完整跨端 client 方案。
+- `apps/miniprogram/src/types/index.ts` 主要作为 shared-types 的本地别名出口，并保留少量小程序专用类型。
+- `src/services/api.ts` 当前是“用户态接口入口”，不是目录数据的唯一入口。
+- 目录数据读取要求 Supabase 环境变量就绪；当前目录页不再回退到 API 联调地址。
+- `@coffee-atlas/domain` 已承载收藏快照与部分本地 mapper，storage helper 和页面会直接复用。
+- `src/services/api.ts` 已经在用 `@coffee-atlas/api-client` 的 unwrap / error helper，但还不是完整跨端 client 方案。
 - `src/utils/storage.ts` 已承载 token、用户、收藏、pending favorites、onboarding profile 等持久化状态。
 - 如果改动同时影响 `/api/v1/*`、`packages/shared-types` 或 `apps/api` server mapping，再补读 `.trellis/spec/api/backend/` 与 `.trellis/spec/guides/`。

@@ -114,7 +114,7 @@ test('buildBeanDiscoverPayload builds options, summary and editor picks from bea
     },
   });
 
-  assert.equal(payload.resultSummary.total, 2);
+  assert.equal(payload.resultSummary.total, 1);
   assert.equal(payload.editorial.mode, 'fallback');
   assert.equal(payload.editorial.title.includes('Kenya'), true);
   assert.equal(payload.processBaseOptions.some((option) => option.id === 'washed'), true);
@@ -122,6 +122,124 @@ test('buildBeanDiscoverPayload builds options, summary and editor picks from bea
   assert.equal(payload.continentOptions.some((option) => option.id === 'africa'), true);
   assert.equal(payload.countryOptions.some((option) => option.label === '肯尼亚'), true);
   assert.equal(payload.editorPicks[0]?.bean.id, 'bean-1');
+});
+
+test('buildBeanDiscoverPayload keeps same-level options switchable after selection', () => {
+  const payload = buildBeanDiscoverPayload({
+    beans: [
+      {
+        id: 'bean-1',
+        name: 'Kenya Washed Classic',
+        roasterId: 'r1',
+        roasterName: 'North',
+        city: 'Shanghai',
+        originCountry: 'Kenya',
+        originRegion: 'Nyeri',
+        farm: '',
+        variety: '',
+        process: 'Washed',
+        processBase: 'washed',
+        processStyle: 'traditional',
+        roastLevel: 'Light',
+        price: 90,
+        discountedPrice: 90,
+        currency: 'CNY',
+        salesCount: 20,
+        tastingNotes: [],
+        imageUrl: null,
+        isInStock: true,
+        isNewArrival: true,
+      },
+      {
+        id: 'bean-2',
+        name: 'Ethiopia Natural Classic',
+        roasterId: 'r2',
+        roasterName: 'South',
+        city: 'Beijing',
+        originCountry: 'Ethiopia',
+        originRegion: 'Guji',
+        farm: '',
+        variety: '',
+        process: 'Natural',
+        processBase: 'natural',
+        processStyle: 'traditional',
+        roastLevel: 'Light',
+        price: 88,
+        discountedPrice: 88,
+        currency: 'CNY',
+        salesCount: 18,
+        tastingNotes: [],
+        imageUrl: null,
+        isInStock: true,
+        isNewArrival: false,
+      },
+      {
+        id: 'bean-3',
+        name: 'Ethiopia Washed Anaerobic',
+        roasterId: 'r3',
+        roasterName: 'West',
+        city: 'Guangzhou',
+        originCountry: 'Ethiopia',
+        originRegion: 'Sidama',
+        farm: '',
+        variety: '',
+        process: 'Anaerobic Washed',
+        processBase: 'washed',
+        processStyle: 'anaerobic',
+        roastLevel: 'Light',
+        price: 95,
+        discountedPrice: 95,
+        currency: 'CNY',
+        salesCount: 14,
+        tastingNotes: [],
+        imageUrl: null,
+        isInStock: true,
+        isNewArrival: false,
+      },
+      {
+        id: 'bean-4',
+        name: 'Brazil Washed Classic',
+        roasterId: 'r4',
+        roasterName: 'East',
+        city: 'Shenzhen',
+        originCountry: 'Brazil',
+        originRegion: 'Sul de Minas',
+        farm: '',
+        variety: '',
+        process: 'Washed',
+        processBase: 'washed',
+        processStyle: 'traditional',
+        roastLevel: 'Medium',
+        price: 82,
+        discountedPrice: 82,
+        currency: 'CNY',
+        salesCount: 10,
+        tastingNotes: [],
+        imageUrl: null,
+        isInStock: true,
+        isNewArrival: false,
+      },
+    ],
+    filters: {
+      processBase: 'washed',
+      processStyle: 'traditional',
+      continent: 'africa',
+    },
+  });
+
+  assert.equal(payload.resultSummary.total, 1);
+  assert.deepEqual(
+    payload.processBaseOptions.map((option) => option.id),
+    ['washed', 'natural']
+  );
+  assert.deepEqual(
+    payload.processStyleOptions.map((option) => option.id),
+    ['traditional', 'anaerobic']
+  );
+  assert.deepEqual(
+    payload.continentOptions.map((option) => option.id),
+    ['americas', 'africa']
+  );
 });
 
 test('buildBeanDiscoverPayload keeps only generic other style under other base', () => {
