@@ -1032,6 +1032,7 @@ async function fetchCatalogRows(
   const to = from + pageSize - 1;
   const requiresLocalProcessFilter = Boolean(params.processBase || params.processStyle);
   const requiresLocalVarietyFilter = Boolean(params.variety);
+  const requiresLocalPostQueryFiltering = requiresLocalProcessFilter || requiresLocalVarietyFilter;
 
   const runQuery = async (options: {
     legacyProcessColumns: boolean;
@@ -1056,7 +1057,7 @@ async function fetchCatalogRows(
 
   let result = await runQuery({
     legacyProcessColumns: false,
-    fetchAllRows: requiresLocalVarietyFilter,
+    fetchAllRows: requiresLocalPostQueryFiltering,
   });
   let usedLegacyProcessColumns = false;
 
@@ -1064,7 +1065,7 @@ async function fetchCatalogRows(
     usedLegacyProcessColumns = true;
     result = await runQuery({
       legacyProcessColumns: true,
-      fetchAllRows: Boolean(params.processBase || params.processStyle || params.variety),
+      fetchAllRows: requiresLocalPostQueryFiltering,
     });
   }
 
@@ -1093,7 +1094,7 @@ async function fetchCatalogRows(
       }).in('roaster_bean_id', latestNewArrivalBeanIds),
       params.sort
     );
-    const finalScopedResult = await (requiresLocalVarietyFilter ? scopedQuery : scopedQuery.range(from, to));
+    const finalScopedResult = await (requiresLocalPostQueryFiltering ? scopedQuery : scopedQuery.range(from, to));
 
     if (finalScopedResult.error) {
       throw new Error(`加载咖啡豆目录失败：${finalScopedResult.error.message}`);
@@ -1116,7 +1117,7 @@ async function fetchCatalogRows(
       : processFilteredScopedItems;
 
     return {
-      items: requiresLocalVarietyFilter ? filteredScopedItems.slice(from, to + 1) : filteredScopedItems,
+      items: requiresLocalPostQueryFiltering ? filteredScopedItems.slice(from, to + 1) : filteredScopedItems,
       total: filteredScopedItems.length,
       page,
       pageSize,
@@ -1138,16 +1139,14 @@ async function fetchCatalogRows(
     ? processFilteredItems.filter((bean) => matchesVarietyFilter(bean, params.variety))
     : processFilteredItems;
   const paginatedItems =
-    requiresLocalProcessFilter
+    requiresLocalPostQueryFiltering
       ? filteredItems.slice(from, to + 1)
-      : requiresLocalVarietyFilter
-        ? filteredItems.slice(from, to + 1)
       : filteredItems;
 
   return {
     items: paginatedItems,
     total:
-      requiresLocalProcessFilter || requiresLocalVarietyFilter
+      requiresLocalPostQueryFiltering
         ? filteredItems.length
         : result.count ?? 0,
     page,

@@ -23,14 +23,24 @@ import _bootstrap  # noqa: F401 — adds parent scripts/ dir to sys.path
 
 from common.paths import get_repo_root
 
-from .status_display import (
-    cmd_detail,
-    cmd_help,
-    cmd_list,
-    cmd_registry,
-    cmd_summary,
-)
-from .status_monitor import cmd_log, cmd_watch
+try:
+    from .status_display import (
+        cmd_detail,
+        cmd_help,
+        cmd_list,
+        cmd_registry,
+        cmd_summary,
+    )
+    from .status_monitor import cmd_log, cmd_watch
+except ImportError:
+    from multi_agent.status_display import (  # type: ignore
+        cmd_detail,
+        cmd_help,
+        cmd_list,
+        cmd_registry,
+        cmd_summary,
+    )
+    from multi_agent.status_monitor import cmd_log, cmd_watch  # type: ignore
 
 
 # =============================================================================

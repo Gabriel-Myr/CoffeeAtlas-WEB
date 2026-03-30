@@ -18,7 +18,10 @@ from pathlib import Path
 
 from common.log import Colors
 
-from .status_display import find_agent
+try:
+    from .status_display import find_agent
+except ImportError:
+    from multi_agent.status_display import find_agent  # type: ignore
 
 
 # =============================================================================

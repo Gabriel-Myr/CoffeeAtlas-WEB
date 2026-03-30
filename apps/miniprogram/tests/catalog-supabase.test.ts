@@ -945,6 +945,46 @@ test('listBeansWithSupabase applies process filters locally when a bean exposes 
   assert.equal(result.pageInfo.total, 1);
 });
 
+test('listBeansWithSupabase paginates after local process filtering instead of filtering only the first page', async () => {
+  const rows = Array.from({ length: 21 }, (_, index) => ({
+    roaster_bean_id: `bean-${index + 1}`,
+    roaster_id: `roaster-${index + 1}`,
+    roaster_name: `Roaster ${index + 1}`,
+    city: 'Shanghai',
+    display_name: `Bean ${index + 1}`,
+    origin_country: index === 20 ? 'Ethiopia' : 'Brazil',
+    origin_region: index === 20 ? 'Guji' : 'Sul de Minas',
+    farm: 'Farm',
+    variety: index === 20 ? '74110' : 'Bourbon',
+    process_method: index === 20 ? 'Washed' : 'Natural',
+    process_base: index === 20 ? 'washed' : 'natural',
+    process_style: 'traditional',
+    roast_level: 'Light',
+    price_amount: '88',
+    price_currency: 'CNY',
+    sales_count: 120 - index,
+    image_url: `https://img.example/bean-${index + 1}.jpg`,
+    is_in_stock: true,
+    updated_at: `2026-03-${String(29 - index).padStart(2, '0')}T00:00:00.000Z`,
+  }));
+
+  const client = createCatalogClient(rows, {
+    supportsNormalizedProcessColumns: true,
+  });
+
+  const result = await listBeansWithSupabase(client as never, {
+    page: 1,
+    pageSize: 20,
+    processBase: 'washed',
+  });
+
+  assert.deepEqual(
+    result.items.map((bean) => bean.id),
+    ['bean-21']
+  );
+  assert.equal(result.pageInfo.total, 1);
+});
+
 function createNewArrivalScopedClient(options: {
   catalogRows: Array<Record<string, unknown>>;
   latestJobId: string | null;

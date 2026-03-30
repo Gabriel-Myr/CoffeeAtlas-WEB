@@ -212,7 +212,13 @@ def cmd_list(repo_root: Path) -> int:
 def cmd_summary(repo_root: Path, filter_assignee: str | None = None) -> int:
     """Show summary of all tasks."""
     # Import lazily to avoid circular import at module level
-    from .status_monitor import get_last_tool, get_last_message
+    try:
+        from .status_monitor import get_last_tool, get_last_message
+    except ImportError:
+        from multi_agent.status_monitor import (  # type: ignore
+            get_last_tool,
+            get_last_message,
+        )
 
     ensure_developer(repo_root)
 

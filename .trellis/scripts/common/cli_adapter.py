@@ -29,6 +29,7 @@ Usage:
 
 from __future__ import annotations
 
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar, Literal
@@ -140,6 +141,62 @@ class CLIAdapter:
             return self.get_config_dir(project_root) / "agents" / f"{mapped_name}.toml"
         return self.get_config_dir(project_root) / "agents" / f"{mapped_name}.md"
 
+    def get_agent_definition(
+        self, agent: str, project_root: Path
+    ) -> dict[str, object] | None:
+        """Read the platform-specific agent definition when available."""
+        agent_path = self.get_agent_path(agent, project_root)
+        if not agent_path.is_file():
+            return None
+
+        try:
+            if self.platform == "codex":
+                return tomllib.loads(agent_path.read_text(encoding="utf-8"))
+            return {"raw": agent_path.read_text(encoding="utf-8")}
+        except (OSError, tomllib.TOMLDecodeError):
+            return None
+
+    def get_agent_sandbox_mode(self, agent: str, project_root: Path) -> str | None:
+        """Return the configured sandbox mode for platforms that store it in agent files."""
+        if self.platform != "codex":
+            return None
+
+        definition = self.get_agent_definition(agent, project_root)
+        if not definition:
+            return None
+
+        sandbox_mode = definition.get("sandbox_mode")
+        if sandbox_mode in ("read-only", "workspace-write", "danger-full-access"):
+            return str(sandbox_mode)
+        return None
+
+    def build_agent_prompt(
+        self, agent: str, prompt: str, project_root: Path | None = None
+    ) -> str:
+        """Decorate the base prompt with agent instructions when the platform needs it."""
+        if self.platform != "codex" or project_root is None:
+            return prompt
+
+        definition = self.get_agent_definition(agent, project_root)
+        if not definition:
+            return prompt
+
+        description = str(definition.get("description", "")).strip()
+        developer_instructions = str(
+            definition.get("developer_instructions", "")
+        ).strip()
+
+        parts = [
+            f"You are the Trellis '{agent}' agent running in a non-interactive Codex session.",
+        ]
+        if description:
+            parts.append(f"Role: {description}")
+        if developer_instructions:
+            parts.append(f"Agent instructions:\n{developer_instructions}")
+        parts.append(f"Primary task:\n{prompt}")
+
+        return "\n\n".join(parts)
+
     def get_commands_path(self, project_root: Path, *parts: str) -> Path:
         """Get path to commands directory or specific command file.
 
@@ -250,6 +307,7 @@ class CLIAdapter:
         skip_permissions: bool = True,
         verbose: bool = True,
         json_output: bool = True,
+        project_root: Path | None = None,
     ) -> list[str]:
         """Build CLI command for running an agent.
 
@@ -260,11 +318,13 @@ class CLIAdapter:
             skip_permissions: Whether to skip permission prompts
             verbose: Whether to enable verbose output
             json_output: Whether to use JSON output format
+            project_root: Optional project root for platforms that need local agent files
 
         Returns:
             List of command arguments
         """
         mapped_agent = self.get_agent_name(agent)
+        effective_prompt = self.build_agent_prompt(agent, prompt, project_root)
 
         if self.platform == "opencode":
             cmd = ["opencode", "run"]
@@ -283,25 +343,29 @@ class CLIAdapter:
             # Note: OpenCode doesn't support --session-id on creation
             # Session ID must be extracted from logs after startup
 
-            cmd.append(prompt)
+            cmd.append(effective_prompt)
 
         elif self.platform == "iflow":
             cmd = ["iflow", "-y", "-p"]
-            cmd.append(f"${mapped_agent} {prompt}")
+            cmd.append(f"${mapped_agent} {effective_prompt}")
         elif self.platform == "codex":
             cmd = ["codex", "exec"]
-            cmd.append(prompt)
+            if project_root is not None:
+                sandbox_mode = self.get_agent_sandbox_mode(agent, project_root)
+                if sandbox_mode:
+                    cmd.extend(["-s", sandbox_mode])
+            cmd.append(effective_prompt)
         elif self.platform == "kiro":
-            cmd = ["kiro", "run", prompt]
+            cmd = ["kiro", "run", effective_prompt]
         elif self.platform == "gemini":
             cmd = ["gemini"]
-            cmd.append(prompt)
+            cmd.append(effective_prompt)
         elif self.platform == "antigravity":
             raise ValueError(
                 "Antigravity workflows are UI slash commands; CLI agent run is not supported."
             )
         elif self.platform == "qoder":
-            cmd = ["qodercli", "-p", prompt]
+            cmd = ["qodercli", "-p", effective_prompt]
         elif self.platform == "codebuddy":
             raise ValueError(
                 "CodeBuddy does not support non-interactive mode (no CLI agent)"
@@ -323,7 +387,7 @@ class CLIAdapter:
             if verbose:
                 cmd.append("--verbose")
 
-            cmd.append(prompt)
+            cmd.append(effective_prompt)
 
         return cmd
 
