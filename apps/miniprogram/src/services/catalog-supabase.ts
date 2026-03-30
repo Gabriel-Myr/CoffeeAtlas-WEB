@@ -104,6 +104,17 @@ function normalizeString(value: string | null | undefined): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function splitMultiValueSegments(value: string | null | undefined): string[] {
+  const normalized = normalizeString(value);
+  if (!normalized) return [];
+
+  return normalized
+    .replace(/[／、，；|+&]+/g, '/')
+    .split('/')
+    .map((segment) => normalizeString(segment))
+    .filter((segment) => segment.length > 0);
+}
+
 function normalizeOptionalString(value: string | null | undefined): string | null {
   const normalized = normalizeString(value);
   return normalized.length > 0 ? normalized : null;
@@ -244,17 +255,23 @@ function applyBeanFilters(
   },
   options?: {
     supportsNormalizedProcessColumns?: boolean;
+    applyNormalizedProcessFilters?: boolean;
   }
 ): any {
   let next = query;
   const supportsNormalizedProcessColumns = options?.supportsNormalizedProcessColumns !== false;
+  const applyNormalizedProcessFilters = options?.applyNormalizedProcessFilters !== false;
 
   if (params.q) next = next.or(buildSearchConditions(params.q));
   if (params.roasterId) next = next.eq('roaster_id', params.roasterId);
   if (params.originCountry) next = next.ilike('origin_country', `%${params.originCountry}%`);
   if (params.process) next = next.ilike('process_method', `%${params.process}%`);
-  if (supportsNormalizedProcessColumns && params.processBase) next = next.eq('process_base', params.processBase);
-  if (supportsNormalizedProcessColumns && params.processStyle) next = next.eq('process_style', params.processStyle);
+  if (supportsNormalizedProcessColumns && applyNormalizedProcessFilters && params.processBase) {
+    next = next.eq('process_base', params.processBase);
+  }
+  if (supportsNormalizedProcessColumns && applyNormalizedProcessFilters && params.processStyle) {
+    next = next.eq('process_style', params.processStyle);
+  }
   if (params.roastLevel) next = next.ilike('roast_level', `%${params.roastLevel}%`);
 
   const countryConditions = buildOriginConditions(getCountryFilterCandidates(params.country));
@@ -286,20 +303,19 @@ function matchesProcessFilters(
     processStyle?: ProcessStyleId;
   }
 ): boolean {
-  const normalizedProcess = normalizeProcess(bean.processRaw ?? bean.process, {
-    base: bean.processBase,
-    style: bean.processStyle,
+  const processVariants = getBeanProcessVariants(bean);
+
+  return processVariants.some((processVariant) => {
+    if (filters.processBase && processVariant.base !== filters.processBase) {
+      return false;
+    }
+
+    if (filters.processStyle && processVariant.style !== filters.processStyle) {
+      return false;
+    }
+
+    return true;
   });
-
-  if (filters.processBase && normalizedProcess.base !== filters.processBase) {
-    return false;
-  }
-
-  if (filters.processStyle && normalizedProcess.style !== filters.processStyle) {
-    return false;
-  }
-
-  return true;
 }
 
 function matchesCountryFilter(bean: CoffeeBean, country: string | undefined): boolean {
@@ -327,6 +343,38 @@ function matchesContinentFilter(bean: CoffeeBean, continent: DiscoverContinentId
   if (!continent) return true;
   const atlasCountry = matchAtlasCountry(bean.originCountry);
   return atlasCountry?.continentId === continent;
+}
+
+function getBeanProcessVariants(
+  bean: Pick<CoffeeBean, 'process' | 'processRaw' | 'processBase' | 'processStyle'>
+) {
+  const rawProcess = bean.processRaw ?? bean.process;
+  const segments = splitMultiValueSegments(rawProcess);
+  const variants = new Map<string, ReturnType<typeof normalizeProcess>>();
+
+  if (segments.length <= 1) {
+    const normalized = normalizeProcess(rawProcess, {
+      base: bean.processBase,
+      style: bean.processStyle,
+    });
+    variants.set(`${normalized.base}:${normalized.style}`, normalized);
+    return [...variants.values()];
+  }
+
+  for (const segment of segments) {
+    const normalized = normalizeProcess(segment);
+    variants.set(`${normalized.base}:${normalized.style}`, normalized);
+  }
+
+  if (bean.processBase || bean.processStyle) {
+    const normalizedFromOverrides = normalizeProcess(rawProcess, {
+      base: bean.processBase,
+      style: bean.processStyle,
+    });
+    variants.set(`${normalizedFromOverrides.base}:${normalizedFromOverrides.style}`, normalizedFromOverrides);
+  }
+
+  return [...variants.values()];
 }
 
 function containsCjk(text: string): boolean {
@@ -357,30 +405,22 @@ function normalizeVarietyToken(token: string): string {
   return normalized;
 }
 
-function normalizeVarietyLabel(value: string | undefined): string {
-  const normalized = normalizeString(value)
-    .replace(/[／、，；|+&]+/g, '/')
-    .replace(/\s*\/\s*/g, '/')
-    .trim();
-  if (!normalized) return '';
-
-  const tokens = normalized
-    .split('/')
-    .map((token) => normalizeVarietyToken(token))
-    .filter((token) => token.length > 0);
-
-  return tokens.join(' / ');
-}
-
-function getVarietyFilterKey(value: string | undefined): string {
-  return normalizeVarietyLabel(value).toLowerCase();
+function getVarietyTokens(value: string | undefined): string[] {
+  return Array.from(
+    new Set(
+      splitMultiValueSegments(value)
+        .map((token) => normalizeVarietyToken(token))
+        .filter((token) => token.length > 0)
+    )
+  );
 }
 
 function matchesVarietyFilter(bean: CoffeeBean, variety: string | undefined): boolean {
   if (!variety) return true;
-  const beanVarietyKey = getVarietyFilterKey(bean.variety);
-  if (!beanVarietyKey) return false;
-  return beanVarietyKey === getVarietyFilterKey(variety);
+  const beanVarietyKeys = new Set(getVarietyTokens(bean.variety).map((token) => token.toLowerCase()));
+  if (beanVarietyKeys.size === 0) return false;
+
+  return getVarietyTokens(variety).some((token) => beanVarietyKeys.has(token.toLowerCase()));
 }
 
 function filterBeansForDiscover(
@@ -406,15 +446,17 @@ function buildVarietyOptions(beans: CoffeeBean[]): BeanDiscoverPayload['varietyO
   const counts = new Map<string, { label: string; count: number }>();
 
   for (const bean of beans) {
-    const label = normalizeVarietyLabel(bean.variety);
-    if (!label) continue;
-    const key = label.toLowerCase();
-    const current = counts.get(key);
-    if (current) {
-      current.count += 1;
-      continue;
+    const varietyTokens = getVarietyTokens(bean.variety);
+
+    for (const label of varietyTokens) {
+      const key = label.toLowerCase();
+      const current = counts.get(key);
+      if (current) {
+        current.count += 1;
+        continue;
+      }
+      counts.set(key, { label, count: 1 });
     }
-    counts.set(key, { label, count: 1 });
   }
 
   return [...counts.values()]
@@ -549,11 +591,11 @@ function buildProcessBaseOptions(beans: CoffeeBean[]): BeanDiscoverPayload['proc
   const counts = new Map<ProcessBaseId, number>();
 
   for (const bean of beans) {
-    const normalizedProcess = normalizeProcess(bean.processRaw ?? bean.process, {
-      base: bean.processBase,
-      style: bean.processStyle,
-    });
-    counts.set(normalizedProcess.base, (counts.get(normalizedProcess.base) ?? 0) + 1);
+    const processBases = new Set(getBeanProcessVariants(bean).map((processVariant) => processVariant.base));
+
+    for (const processBase of processBases) {
+      counts.set(processBase, (counts.get(processBase) ?? 0) + 1);
+    }
   }
 
   return [...counts.entries()]
@@ -573,12 +615,16 @@ function buildProcessStyleOptions(
   const counts = new Map<ProcessStyleId, number>();
 
   for (const bean of beans) {
-    const normalizedProcess = normalizeProcess(bean.processRaw ?? bean.process, {
-      base: bean.processBase,
-      style: bean.processStyle,
-    });
-    if (!allowedStyles.has(normalizedProcess.style)) continue;
-    counts.set(normalizedProcess.style, (counts.get(normalizedProcess.style) ?? 0) + 1);
+    const processStyles = new Set(
+      getBeanProcessVariants(bean)
+        .filter((processVariant) => !selectedProcessBase || processVariant.base === selectedProcessBase)
+        .map((processVariant) => processVariant.style)
+        .filter((processStyle) => allowedStyles.has(processStyle))
+    );
+
+    for (const processStyle of processStyles) {
+      counts.set(processStyle, (counts.get(processStyle) ?? 0) + 1);
+    }
   }
 
   return getAvailableProcessStyleDefinitions(selectedProcessBase)
@@ -984,6 +1030,7 @@ async function fetchCatalogRows(
   const pageSize = params.pageSize ?? DEFAULT_BEAN_PAGE_SIZE;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+  const requiresLocalProcessFilter = Boolean(params.processBase || params.processStyle);
   const requiresLocalVarietyFilter = Boolean(params.variety);
 
   const runQuery = async (options: {
@@ -1001,6 +1048,7 @@ async function fetchCatalogRows(
     return applyBeanSort(
       applyBeanFilters(query, params, {
         supportsNormalizedProcessColumns: !options.legacyProcessColumns,
+        applyNormalizedProcessFilters: !requiresLocalProcessFilter,
       }),
       params.sort
     );
@@ -1041,6 +1089,7 @@ async function fetchCatalogRows(
     const scopedQuery = applyBeanSort(
       applyBeanFilters(fallbackQuery, { ...params, isNewArrival: undefined }, {
         supportsNormalizedProcessColumns: !usedLegacyProcessColumns,
+        applyNormalizedProcessFilters: !requiresLocalProcessFilter,
       }).in('roaster_bean_id', latestNewArrivalBeanIds),
       params.sort
     );
@@ -1054,15 +1103,14 @@ async function fetchCatalogRows(
     const mappedScopedItems = scopedRows.map((row) =>
       mapCatalogBeanRow(row, new Set(latestNewArrivalBeanIds))
     );
-    const processFilteredScopedItems =
-      usedLegacyProcessColumns && (params.processBase || params.processStyle)
-        ? mappedScopedItems.filter((bean) =>
-            matchesProcessFilters(bean, {
-              processBase: params.processBase,
-              processStyle: params.processStyle,
-            })
-          )
-        : mappedScopedItems;
+    const processFilteredScopedItems = requiresLocalProcessFilter
+      ? mappedScopedItems.filter((bean) =>
+          matchesProcessFilters(bean, {
+            processBase: params.processBase,
+            processStyle: params.processStyle,
+          })
+        )
+      : mappedScopedItems;
     const filteredScopedItems = requiresLocalVarietyFilter
       ? processFilteredScopedItems.filter((bean) => matchesVarietyFilter(bean, params.variety))
       : processFilteredScopedItems;
@@ -1078,20 +1126,19 @@ async function fetchCatalogRows(
   const rows = (result.data ?? []) as ActiveCatalogRow[];
   const newArrivalIds = resolveNewArrivalIdSet(rows, latestNewArrivalBeanIds);
   const mappedItems = rows.map((row) => mapCatalogBeanRow(row, newArrivalIds));
-  const processFilteredItems =
-    usedLegacyProcessColumns && (params.processBase || params.processStyle)
-      ? mappedItems.filter((bean) =>
-          matchesProcessFilters(bean, {
-            processBase: params.processBase,
-            processStyle: params.processStyle,
-          })
-        )
-      : mappedItems;
+  const processFilteredItems = requiresLocalProcessFilter
+    ? mappedItems.filter((bean) =>
+        matchesProcessFilters(bean, {
+          processBase: params.processBase,
+          processStyle: params.processStyle,
+        })
+      )
+    : mappedItems;
   const filteredItems = requiresLocalVarietyFilter
     ? processFilteredItems.filter((bean) => matchesVarietyFilter(bean, params.variety))
     : processFilteredItems;
   const paginatedItems =
-    usedLegacyProcessColumns && (params.processBase || params.processStyle)
+    requiresLocalProcessFilter
       ? filteredItems.slice(from, to + 1)
       : requiresLocalVarietyFilter
         ? filteredItems.slice(from, to + 1)
@@ -1100,7 +1147,7 @@ async function fetchCatalogRows(
   return {
     items: paginatedItems,
     total:
-      (usedLegacyProcessColumns && (params.processBase || params.processStyle)) || requiresLocalVarietyFilter
+      requiresLocalProcessFilter || requiresLocalVarietyFilter
         ? filteredItems.length
         : result.count ?? 0,
     page,

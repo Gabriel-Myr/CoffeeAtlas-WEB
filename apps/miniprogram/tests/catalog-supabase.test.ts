@@ -249,7 +249,7 @@ test('buildBeanDiscoverPayload keeps same-level options switchable after selecti
   );
 });
 
-test('buildBeanDiscoverPayload merges duplicated variety labels with spacing and case differences', () => {
+test('buildBeanDiscoverPayload splits multi-value varieties into individual selectable options', () => {
   const payload = buildBeanDiscoverPayload({
     beans: [
       {
@@ -341,8 +341,67 @@ test('buildBeanDiscoverPayload merges duplicated variety labels with spacing and
   });
 
   assert.deepEqual(payload.varietyOptions, [
-    { id: 'SL28', label: 'SL28', count: 2 },
-    { id: 'SL28 / SL34', label: 'SL28 / SL34', count: 2 },
+    { id: 'SL28', label: 'SL28', count: 4 },
+    { id: 'SL34', label: 'SL34', count: 2 },
+  ]);
+});
+
+test('buildBeanDiscoverPayload counts multi-value process options separately', () => {
+  const payload = buildBeanDiscoverPayload({
+    beans: [
+      {
+        id: 'bean-1',
+        name: 'Mixed Process One',
+        roasterId: 'r1',
+        roasterName: 'North',
+        city: 'Shanghai',
+        originCountry: 'Kenya',
+        originRegion: 'Nyeri',
+        farm: '',
+        variety: 'SL28',
+        process: 'Washed / Natural',
+        roastLevel: 'Light',
+        price: 90,
+        discountedPrice: 90,
+        currency: 'CNY',
+        salesCount: 20,
+        tastingNotes: [],
+        imageUrl: null,
+        isInStock: true,
+        isNewArrival: false,
+      },
+      {
+        id: 'bean-2',
+        name: 'Mixed Process Two',
+        roasterId: 'r2',
+        roasterName: 'South',
+        city: 'Beijing',
+        originCountry: 'Ethiopia',
+        originRegion: 'Guji',
+        farm: '',
+        variety: '74110',
+        process: 'Anaerobic Washed / Natural',
+        roastLevel: 'Light',
+        price: 92,
+        discountedPrice: 92,
+        currency: 'CNY',
+        salesCount: 18,
+        tastingNotes: [],
+        imageUrl: null,
+        isInStock: true,
+        isNewArrival: false,
+      },
+    ],
+    filters: {},
+  });
+
+  assert.deepEqual(payload.processBaseOptions.map((option) => [option.id, option.count]), [
+    ['natural', 2],
+    ['washed', 2],
+  ]);
+  assert.deepEqual(payload.processStyleOptions.map((option) => [option.id, option.count]), [
+    ['traditional', 2],
+    ['anaerobic', 1],
   ]);
 });
 
@@ -530,8 +589,14 @@ type MockFilter =
   | { kind: 'gte'; column: string; value: string }
   | { kind: 'in'; column: string; values: unknown[] };
 
-function createLegacyCatalogClient(rows: Array<Record<string, unknown>>) {
+function createCatalogClient(
+  rows: Array<Record<string, unknown>>,
+  options?: {
+    supportsNormalizedProcessColumns?: boolean;
+  }
+) {
   const calls: string[] = [];
+  const supportsNormalizedProcessColumns = options?.supportsNormalizedProcessColumns === true;
 
   function createQuery(selectClause: string, state?: {
     filters: MockFilter[];
@@ -573,7 +638,7 @@ function createLegacyCatalogClient(rows: Array<Record<string, unknown>>) {
       then(onFulfilled: (value: unknown) => unknown, onRejected?: (reason: unknown) => unknown) {
         const hasNormalizedColumns = selectClause.includes('process_base') || selectClause.includes('process_style');
 
-        if (hasNormalizedColumns) {
+        if (hasNormalizedColumns && !supportsNormalizedProcessColumns) {
           return Promise.resolve({
             data: null,
             error: {
@@ -590,6 +655,12 @@ function createLegacyCatalogClient(rows: Array<Record<string, unknown>>) {
           }
           if (filter.kind === 'eq' && filter.column === 'roaster_bean_id') {
             data = data.filter((row) => row.roaster_bean_id === filter.value);
+          }
+          if (filter.kind === 'eq' && filter.column === 'process_base') {
+            data = data.filter((row) => row.process_base === filter.value);
+          }
+          if (filter.kind === 'eq' && filter.column === 'process_style') {
+            data = data.filter((row) => row.process_style === filter.value);
           }
         }
 
@@ -624,6 +695,12 @@ function createLegacyCatalogClient(rows: Array<Record<string, unknown>>) {
       };
     },
   };
+}
+
+function createLegacyCatalogClient(rows: Array<Record<string, unknown>>) {
+  return createCatalogClient(rows, {
+    supportsNormalizedProcessColumns: false,
+  });
 }
 
 test('listBeansWithSupabase falls back when legacy view lacks normalized process columns', async () => {
@@ -787,6 +864,85 @@ test('listBeansWithSupabase merges equivalent variety labels when filtering', as
     ['bean-1', 'bean-2']
   );
   assert.equal(result.pageInfo.total, 2);
+});
+
+test('listBeansWithSupabase matches one selected variety inside a multi-value variety field', async () => {
+  const client = createLegacyCatalogClient([
+    {
+      roaster_bean_id: 'bean-1',
+      roaster_id: 'roaster-1',
+      roaster_name: 'Roaster One',
+      city: 'Shanghai',
+      display_name: 'Kenya Mix',
+      origin_country: 'Kenya',
+      origin_region: 'Nyeri',
+      farm: 'Hill',
+      variety: 'SL28 / SL34',
+      process_method: 'Washed',
+      roast_level: 'Light',
+      price_amount: '88',
+      price_currency: 'CNY',
+      sales_count: 120,
+      image_url: 'https://img.example/bean.jpg',
+      is_in_stock: true,
+      updated_at: '2026-03-20T00:00:00.000Z',
+    },
+  ]);
+
+  const result = await listBeansWithSupabase(client as never, {
+    page: 1,
+    pageSize: 20,
+    variety: 'SL28',
+  });
+
+  assert.deepEqual(
+    result.items.map((bean) => bean.id),
+    ['bean-1']
+  );
+  assert.equal(result.pageInfo.total, 1);
+});
+
+test('listBeansWithSupabase applies process filters locally when a bean exposes multiple process options', async () => {
+  const client = createCatalogClient(
+    [
+      {
+        roaster_bean_id: 'bean-1',
+        roaster_id: 'roaster-1',
+        roaster_name: 'Roaster One',
+        city: 'Shanghai',
+        display_name: 'Process Mix',
+        origin_country: 'Ethiopia',
+        origin_region: 'Guji',
+        farm: 'Halo',
+        variety: '74110',
+        process_method: 'Washed / Natural',
+        process_base: 'washed',
+        process_style: 'traditional',
+        roast_level: 'Light',
+        price_amount: '88',
+        price_currency: 'CNY',
+        sales_count: 120,
+        image_url: 'https://img.example/bean.jpg',
+        is_in_stock: true,
+        updated_at: '2026-03-20T00:00:00.000Z',
+      },
+    ],
+    {
+      supportsNormalizedProcessColumns: true,
+    }
+  );
+
+  const result = await listBeansWithSupabase(client as never, {
+    page: 1,
+    pageSize: 20,
+    processBase: 'natural',
+  });
+
+  assert.deepEqual(
+    result.items.map((bean) => bean.id),
+    ['bean-1']
+  );
+  assert.equal(result.pageInfo.total, 1);
 });
 
 function createNewArrivalScopedClient(options: {

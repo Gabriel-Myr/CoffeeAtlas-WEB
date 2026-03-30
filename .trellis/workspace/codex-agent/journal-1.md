@@ -73,3 +73,37 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: Miniprogram optional bean varieties
+
+**Date**: 2026-03-30
+**Task**: Miniprogram optional bean varieties
+**Package**: miniprogram
+**Branch**: `main`
+
+### Summary
+
+Updated all-beans discover so bean variety becomes an optional final filter step, merged duplicated variety labels during discover filtering, and verified miniprogram test plus typecheck.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `262cd17` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
