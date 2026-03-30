@@ -233,6 +233,7 @@ function applyBeanFilters(
     q?: string;
     roasterId?: string;
     originCountry?: string;
+    variety?: string;
     process?: string;
     processBase?: ProcessBaseId;
     processStyle?: ProcessStyleId;
@@ -328,6 +329,60 @@ function matchesContinentFilter(bean: CoffeeBean, continent: DiscoverContinentId
   return atlasCountry?.continentId === continent;
 }
 
+function containsCjk(text: string): boolean {
+  return /[\u3400-\u9fff]/.test(text);
+}
+
+function toTitleCase(text: string): string {
+  return text.replace(/\b[a-z]/g, (char) => char.toUpperCase());
+}
+
+function normalizeVarietyToken(token: string): string {
+  const normalized = normalizeString(token).replace(/\s+/g, ' ').trim();
+  if (!normalized) return '';
+
+  const compact = normalized.replace(/\s+/g, '');
+  if (/^[a-z]+\d+[a-z0-9-]*$/i.test(compact)) {
+    return compact.toUpperCase();
+  }
+
+  if (!containsCjk(normalized) && /^[a-z0-9-]+$/i.test(normalized)) {
+    return /[0-9]/.test(normalized) ? normalized.toUpperCase() : toTitleCase(normalized.toLowerCase());
+  }
+
+  if (!containsCjk(normalized) && /[a-z]/i.test(normalized)) {
+    return toTitleCase(normalized.toLowerCase());
+  }
+
+  return normalized;
+}
+
+function normalizeVarietyLabel(value: string | undefined): string {
+  const normalized = normalizeString(value)
+    .replace(/[／、，；|+&]+/g, '/')
+    .replace(/\s*\/\s*/g, '/')
+    .trim();
+  if (!normalized) return '';
+
+  const tokens = normalized
+    .split('/')
+    .map((token) => normalizeVarietyToken(token))
+    .filter((token) => token.length > 0);
+
+  return tokens.join(' / ');
+}
+
+function getVarietyFilterKey(value: string | undefined): string {
+  return normalizeVarietyLabel(value).toLowerCase();
+}
+
+function matchesVarietyFilter(bean: CoffeeBean, variety: string | undefined): boolean {
+  if (!variety) return true;
+  const beanVarietyKey = getVarietyFilterKey(bean.variety);
+  if (!beanVarietyKey) return false;
+  return beanVarietyKey === getVarietyFilterKey(variety);
+}
+
 function filterBeansForDiscover(
   beans: CoffeeBean[],
   filters: {
@@ -335,14 +390,40 @@ function filterBeansForDiscover(
     processStyle?: ProcessStyleId;
     continent?: DiscoverContinentId;
     country?: string;
+    variety?: string;
   }
 ): CoffeeBean[] {
   return beans.filter((bean) => {
     if (!matchesProcessFilters(bean, filters)) return false;
     if (!matchesContinentFilter(bean, filters.continent)) return false;
     if (!matchesCountryFilter(bean, filters.country)) return false;
+    if (!matchesVarietyFilter(bean, filters.variety)) return false;
     return true;
   });
+}
+
+function buildVarietyOptions(beans: CoffeeBean[]): BeanDiscoverPayload['varietyOptions'] {
+  const counts = new Map<string, { label: string; count: number }>();
+
+  for (const bean of beans) {
+    const label = normalizeVarietyLabel(bean.variety);
+    if (!label) continue;
+    const key = label.toLowerCase();
+    const current = counts.get(key);
+    if (current) {
+      current.count += 1;
+      continue;
+    }
+    counts.set(key, { label, count: 1 });
+  }
+
+  return [...counts.values()]
+    .sort((left, right) => sortByCountThenLabel([left.label, left.count], [right.label, right.count]))
+    .map(({ label, count }) => ({
+      id: label,
+      label,
+      count,
+    }));
 }
 
 function applyBeanSort(
@@ -516,8 +597,9 @@ function buildDiscoverOptions(
     processStyle?: ProcessStyleId;
     continent?: DiscoverContinentId;
     country?: string;
+    variety?: string;
   }
-): Pick<BeanDiscoverPayload, 'processBaseOptions' | 'processStyleOptions' | 'continentOptions' | 'countryOptions'> {
+): Pick<BeanDiscoverPayload, 'processBaseOptions' | 'processStyleOptions' | 'continentOptions' | 'countryOptions' | 'varietyOptions'> {
   const processBaseScopedBeans = filterBeansForDiscover(beans, {
     continent: filters.continent,
     country: filters.country,
@@ -574,11 +656,20 @@ function buildDiscoverOptions(
       count,
     }));
 
+  const varietyScopedBeans = filterBeansForDiscover(beans, {
+    processBase: filters.processBase,
+    processStyle: filters.processStyle,
+    continent: filters.continent,
+    country: filters.country,
+  });
+  const varietyOptions = buildVarietyOptions(varietyScopedBeans);
+
   return {
     processBaseOptions,
     processStyleOptions,
     continentOptions,
     countryOptions,
+    varietyOptions,
   };
 }
 
@@ -587,7 +678,16 @@ function buildDiscoverEditorial(filters: {
   processStyle?: ProcessStyleId;
   continent?: DiscoverContinentId;
   country?: string;
+  variety?: string;
 }): BeanDiscoverPayload['editorial'] {
+  if (filters.variety) {
+    return {
+      title: `${filters.variety} 豆种路径`,
+      subtitle: '先看这一豆种下的代表豆款，再决定要不要放宽回更大的结果范围。',
+      mode: 'fallback',
+    };
+  }
+
   if (filters.country) {
     return {
       title: `${filters.country} 代表样本`,
@@ -625,12 +725,16 @@ function buildDiscoverReason(bean: CoffeeBean, filters: {
   processStyle?: ProcessStyleId;
   continent?: DiscoverContinentId;
   country?: string;
+  variety?: string;
 }) {
   const country = matchAtlasCountry(bean.originCountry);
   const normalizedProcess = normalizeProcess(bean.processRaw ?? bean.process, {
     base: bean.processBase,
     style: bean.processStyle,
   });
+  if (matchesVarietyFilter(bean, filters.variety)) {
+    return `${filters.variety} 这条豆种路径下的代表样本，更适合继续往下比较。`;
+  }
   if (filters.country && country?.name === filters.country) {
     return `更能代表 ${filters.country} 当前路径的典型风味轮廓。`;
   }
@@ -652,6 +756,7 @@ function scoreDiscoverPick(bean: CoffeeBean, filters: {
   processStyle?: ProcessStyleId;
   continent?: DiscoverContinentId;
   country?: string;
+  variety?: string;
 }) {
   const country = matchAtlasCountry(bean.originCountry);
   const normalizedProcess = normalizeProcess(bean.processRaw ?? bean.process, {
@@ -665,6 +770,7 @@ function scoreDiscoverPick(bean: CoffeeBean, filters: {
   if (filters.processStyle && normalizedProcess.style === filters.processStyle) score += 220;
   if (filters.country && country?.name === filters.country) score += 500;
   if (filters.continent && country?.continentId === filters.continent) score += 240;
+  if (matchesVarietyFilter(bean, filters.variety)) score += 180;
   return score;
 }
 
@@ -742,6 +848,7 @@ export function buildBeanDiscoverPayload({
     processStyle?: ProcessStyleId;
     continent?: DiscoverContinentId;
     country?: string;
+    variety?: string;
   };
 }): BeanDiscoverPayload {
   const resultBeans = filterBeansForDiscover(beans, filters);
@@ -765,6 +872,7 @@ export function buildBeanDiscoverPayload({
       processStyle: filters.processStyle,
       continent: filters.continent,
       country: filters.country,
+      variety: filters.variety,
     },
   };
 }
@@ -864,6 +972,7 @@ async function fetchCatalogRows(
     isNewArrival?: boolean;
     continent?: DiscoverContinentId;
     country?: string;
+    variety?: string;
     sort?: 'updated_desc' | 'sales_desc' | 'price_asc' | 'price_desc';
     page?: number;
     pageSize?: number;
@@ -875,6 +984,7 @@ async function fetchCatalogRows(
   const pageSize = params.pageSize ?? DEFAULT_BEAN_PAGE_SIZE;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+  const requiresLocalVarietyFilter = Boolean(params.variety);
 
   const runQuery = async (options: {
     legacyProcessColumns: boolean;
@@ -898,7 +1008,7 @@ async function fetchCatalogRows(
 
   let result = await runQuery({
     legacyProcessColumns: false,
-    fetchAllRows: false,
+    fetchAllRows: requiresLocalVarietyFilter,
   });
   let usedLegacyProcessColumns = false;
 
@@ -906,7 +1016,7 @@ async function fetchCatalogRows(
     usedLegacyProcessColumns = true;
     result = await runQuery({
       legacyProcessColumns: true,
-      fetchAllRows: Boolean(params.processBase || params.processStyle),
+      fetchAllRows: Boolean(params.processBase || params.processStyle || params.variety),
     });
   }
 
@@ -928,22 +1038,23 @@ async function fetchCatalogRows(
       .from('v_catalog_active')
       .select(usedLegacyProcessColumns ? CATALOG_VIEW_LEGACY_SELECT : CATALOG_VIEW_SELECT, { count: 'exact' });
 
-    const scopedResult = await applyBeanSort(
+    const scopedQuery = applyBeanSort(
       applyBeanFilters(fallbackQuery, { ...params, isNewArrival: undefined }, {
         supportsNormalizedProcessColumns: !usedLegacyProcessColumns,
       }).in('roaster_bean_id', latestNewArrivalBeanIds),
       params.sort
-    ).range(from, to);
+    );
+    const finalScopedResult = await (requiresLocalVarietyFilter ? scopedQuery : scopedQuery.range(from, to));
 
-    if (scopedResult.error) {
-      throw new Error(`加载咖啡豆目录失败：${scopedResult.error.message}`);
+    if (finalScopedResult.error) {
+      throw new Error(`加载咖啡豆目录失败：${finalScopedResult.error.message}`);
     }
 
-    const scopedRows = (scopedResult.data ?? []) as ActiveCatalogRow[];
+    const scopedRows = (finalScopedResult.data ?? []) as ActiveCatalogRow[];
     const mappedScopedItems = scopedRows.map((row) =>
       mapCatalogBeanRow(row, new Set(latestNewArrivalBeanIds))
     );
-    const filteredScopedItems =
+    const processFilteredScopedItems =
       usedLegacyProcessColumns && (params.processBase || params.processStyle)
         ? mappedScopedItems.filter((bean) =>
             matchesProcessFilters(bean, {
@@ -952,10 +1063,13 @@ async function fetchCatalogRows(
             })
           )
         : mappedScopedItems;
+    const filteredScopedItems = requiresLocalVarietyFilter
+      ? processFilteredScopedItems.filter((bean) => matchesVarietyFilter(bean, params.variety))
+      : processFilteredScopedItems;
 
     return {
-      items: filteredScopedItems,
-      total: scopedResult.count ?? filteredScopedItems.length,
+      items: requiresLocalVarietyFilter ? filteredScopedItems.slice(from, to + 1) : filteredScopedItems,
+      total: filteredScopedItems.length,
       page,
       pageSize,
     };
@@ -964,7 +1078,7 @@ async function fetchCatalogRows(
   const rows = (result.data ?? []) as ActiveCatalogRow[];
   const newArrivalIds = resolveNewArrivalIdSet(rows, latestNewArrivalBeanIds);
   const mappedItems = rows.map((row) => mapCatalogBeanRow(row, newArrivalIds));
-  const filteredItems =
+  const processFilteredItems =
     usedLegacyProcessColumns && (params.processBase || params.processStyle)
       ? mappedItems.filter((bean) =>
           matchesProcessFilters(bean, {
@@ -973,15 +1087,20 @@ async function fetchCatalogRows(
           })
         )
       : mappedItems;
+  const filteredItems = requiresLocalVarietyFilter
+    ? processFilteredItems.filter((bean) => matchesVarietyFilter(bean, params.variety))
+    : processFilteredItems;
   const paginatedItems =
     usedLegacyProcessColumns && (params.processBase || params.processStyle)
       ? filteredItems.slice(from, to + 1)
+      : requiresLocalVarietyFilter
+        ? filteredItems.slice(from, to + 1)
       : filteredItems;
 
   return {
     items: paginatedItems,
     total:
-      usedLegacyProcessColumns && (params.processBase || params.processStyle)
+      (usedLegacyProcessColumns && (params.processBase || params.processStyle)) || requiresLocalVarietyFilter
         ? filteredItems.length
         : result.count ?? 0,
     page,
@@ -1005,6 +1124,7 @@ export async function listBeansWithSupabase(
     isNewArrival?: boolean;
     continent?: DiscoverContinentId;
     country?: string;
+    variety?: string;
   }
 ): Promise<PaginatedResult<CoffeeBean>> {
   const result = await fetchCatalogRows(client, params ?? {});
@@ -1052,6 +1172,7 @@ export async function getBeanDiscoverWithSupabase(
     processStyle?: ProcessStyleId;
     continent?: DiscoverContinentId;
     country?: string;
+    variety?: string;
   }
 ): Promise<BeanDiscoverPayload> {
   const filters = params ?? {};

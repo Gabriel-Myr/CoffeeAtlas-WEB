@@ -63,6 +63,7 @@ export interface BeanDiscoverSummary {
   processStyle?: ProcessStyleId;
   continent?: BeanDiscoverContinent;
   country?: string;
+  variety?: string;
 }
 
 export interface BeanDiscoverPayload {
@@ -70,6 +71,7 @@ export interface BeanDiscoverPayload {
   processStyleOptions: BeanDiscoverOption[];
   continentOptions: BeanDiscoverOption[];
   countryOptions: BeanDiscoverOption[];
+  varietyOptions: BeanDiscoverOption[];
   editorial: BeanDiscoverEditorial;
   editorPicks: BeanDiscoverEditorialPick[];
   resultSummary: BeanDiscoverSummary;
@@ -81,6 +83,7 @@ export interface BeanDiscoverQueryParams {
   processStyle?: ProcessStyleId;
   continent?: BeanDiscoverContinent;
   country?: string;
+  variety?: string;
 }
 
 export type NewArrivalFiltersMode = 'personalized' | 'mixed' | 'fallback';
@@ -122,6 +125,7 @@ export interface BeansQueryParams {
   q?: string;
   roasterId?: string;
   originCountry?: string;
+  variety?: string;
   process?: string;
   processBase?: ProcessBaseId;
   processStyle?: ProcessStyleId;

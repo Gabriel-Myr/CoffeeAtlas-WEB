@@ -112,6 +112,7 @@ export default function AllBeans() {
   const [selectedProcessStyle, setSelectedProcessStyle] = useState<string>(ALL_DISCOVER_VALUE);
   const [selectedContinent, setSelectedContinent] = useState<DiscoverContinentKey>(ALL_DISCOVER_VALUE);
   const [selectedCountry, setSelectedCountry] = useState<string>(ALL_DISCOVER_VALUE);
+  const [selectedVariety, setSelectedVariety] = useState<string>(ALL_DISCOVER_VALUE);
 
   const [discoverPayload, setDiscoverPayload] = useState<BeanDiscoverPayload | null>(null);
   const [discoverLoading, setDiscoverLoading] = useState(false);
@@ -134,11 +135,12 @@ export default function AllBeans() {
     selectedProcessBase !== ALL_DISCOVER_VALUE ||
     selectedProcessStyle !== ALL_DISCOVER_VALUE ||
     selectedContinent !== ALL_DISCOVER_VALUE ||
-    selectedCountry !== ALL_DISCOVER_VALUE;
+    selectedCountry !== ALL_DISCOVER_VALUE ||
+    selectedVariety !== ALL_DISCOVER_VALUE;
   const shouldShowDiscoverResults = hasDiscoverPath || Boolean(normalizedQuery);
 
   const discoverPathItems = useMemo(() => {
-    const items: Array<{ key: 'processBase' | 'processStyle' | 'continent' | 'country'; label: string; value: string }> = [];
+    const items: Array<{ key: 'processBase' | 'processStyle' | 'continent' | 'country' | 'variety'; label: string; value: string }> = [];
 
     if (selectedProcessBase !== ALL_DISCOVER_VALUE) {
       items.push({
@@ -160,9 +162,12 @@ export default function AllBeans() {
     if (selectedCountry !== ALL_DISCOVER_VALUE) {
       items.push({ key: 'country', label: '国家', value: selectedCountry });
     }
+    if (selectedVariety !== ALL_DISCOVER_VALUE) {
+      items.push({ key: 'variety', label: '豆种', value: selectedVariety });
+    }
 
     return items;
-  }, [activeContinentMeta, selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle]);
+  }, [activeContinentMeta, selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle, selectedVariety]);
 
   const discoverQueryText = useMemo(() => {
     if (!normalizedQuery) return '';
@@ -179,8 +184,9 @@ export default function AllBeans() {
       selectedProcessStyle,
       selectedContinent,
       selectedCountry,
+      selectedVariety,
     });
-  }, [selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle]);
+  }, [selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle, selectedVariety]);
 
   const visibleGuidedProcessStyleChoices = useMemo(() => {
     if (!discoverPayload || discoverPayload.processStyleOptions.length === 0) return [];
@@ -211,6 +217,7 @@ export default function AllBeans() {
     setSelectedProcessStyle(ALL_DISCOVER_VALUE);
     setSelectedContinent(ALL_DISCOVER_VALUE);
     setSelectedCountry(ALL_DISCOVER_VALUE);
+    setSelectedVariety(ALL_DISCOVER_VALUE);
     setDiscoverPayload(null);
     setDiscoverError('');
     setErrorMessage('');
@@ -243,6 +250,7 @@ export default function AllBeans() {
         processStyle: selectedProcessStyle !== ALL_DISCOVER_VALUE ? (selectedProcessStyle as ProcessStyleId) : undefined,
         continent: selectedContinent !== ALL_DISCOVER_VALUE ? selectedContinent : undefined,
         country: selectedCountry !== ALL_DISCOVER_VALUE ? selectedCountry : undefined,
+        variety: selectedVariety !== ALL_DISCOVER_VALUE ? selectedVariety : undefined,
       });
 
       if (requestVersion !== requestVersionRef.current) return;
@@ -283,6 +291,7 @@ export default function AllBeans() {
           selectedProcessStyle !== ALL_DISCOVER_VALUE ? (selectedProcessStyle as ProcessStyleId) : undefined,
         continent: selectedContinent !== ALL_DISCOVER_VALUE ? selectedContinent : undefined,
         country: selectedCountry !== ALL_DISCOVER_VALUE ? selectedCountry : undefined,
+        variety: selectedVariety !== ALL_DISCOVER_VALUE ? selectedVariety : undefined,
       });
 
       if (requestVersion !== discoverRequestVersionRef.current) return;
@@ -304,7 +313,7 @@ export default function AllBeans() {
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [normalizedQuery, selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle]);
+  }, [normalizedQuery, selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle, selectedVariety]);
 
   useEffect(() => {
     if (!shouldShowDiscoverResults) {
@@ -320,7 +329,7 @@ export default function AllBeans() {
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [normalizedQuery, selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle, shouldShowDiscoverResults]);
+  }, [normalizedQuery, selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle, selectedVariety, shouldShowDiscoverResults]);
 
   useEffect(() => {
     if (!discoverPayload) return;
@@ -333,6 +342,7 @@ export default function AllBeans() {
       setSelectedProcessStyle(ALL_DISCOVER_VALUE);
       setSelectedContinent(ALL_DISCOVER_VALUE);
       setSelectedCountry(ALL_DISCOVER_VALUE);
+      setSelectedVariety(ALL_DISCOVER_VALUE);
       return;
     }
 
@@ -343,6 +353,7 @@ export default function AllBeans() {
       setSelectedProcessStyle(ALL_DISCOVER_VALUE);
       setSelectedContinent(ALL_DISCOVER_VALUE);
       setSelectedCountry(ALL_DISCOVER_VALUE);
+      setSelectedVariety(ALL_DISCOVER_VALUE);
       return;
     }
 
@@ -352,6 +363,7 @@ export default function AllBeans() {
     ) {
       setSelectedContinent(ALL_DISCOVER_VALUE);
       setSelectedCountry(ALL_DISCOVER_VALUE);
+      setSelectedVariety(ALL_DISCOVER_VALUE);
       return;
     }
 
@@ -360,8 +372,17 @@ export default function AllBeans() {
       !discoverPayload.countryOptions.some((option) => option.label === selectedCountry)
     ) {
       setSelectedCountry(ALL_DISCOVER_VALUE);
+      setSelectedVariety(ALL_DISCOVER_VALUE);
+      return;
     }
-  }, [discoverPayload, selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle]);
+
+    if (
+      selectedVariety !== ALL_DISCOVER_VALUE &&
+      !discoverPayload.varietyOptions.some((option) => option.label === selectedVariety)
+    ) {
+      setSelectedVariety(ALL_DISCOVER_VALUE);
+    }
+  }, [discoverPayload, selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle, selectedVariety]);
 
   useReachBottom(() => {
     if (loadingRef.current || !hasMore || !shouldShowDiscoverResults) return;
@@ -399,12 +420,14 @@ export default function AllBeans() {
     setSelectedProcessStyle(nextValue);
     setSelectedContinent(ALL_DISCOVER_VALUE);
     setSelectedCountry(ALL_DISCOVER_VALUE);
+    setSelectedVariety(ALL_DISCOVER_VALUE);
   };
 
   const handleContinentSelect = (value: DiscoverContinentId) => {
     const nextValue = value === selectedContinent ? ALL_DISCOVER_VALUE : value;
     setSelectedContinent(nextValue);
     setSelectedCountry(ALL_DISCOVER_VALUE);
+    setSelectedVariety(ALL_DISCOVER_VALUE);
   };
 
   const handleCountrySelect = (value: string) => {
@@ -413,14 +436,20 @@ export default function AllBeans() {
       setSelectedContinent(atlasCountry.continentId);
     }
     setSelectedCountry(value === selectedCountry ? ALL_DISCOVER_VALUE : value);
+    setSelectedVariety(ALL_DISCOVER_VALUE);
   };
 
-  const clearDiscoverPath = (key?: 'processBase' | 'processStyle' | 'continent' | 'country') => {
+  const handleVarietySelect = (value: string) => {
+    setSelectedVariety(value === selectedVariety ? ALL_DISCOVER_VALUE : value);
+  };
+
+  const clearDiscoverPath = (key?: 'processBase' | 'processStyle' | 'continent' | 'country' | 'variety') => {
     if (!key || key === 'processBase') {
       setSelectedProcessBase(ALL_DISCOVER_VALUE);
       setSelectedProcessStyle(ALL_DISCOVER_VALUE);
       setSelectedContinent(ALL_DISCOVER_VALUE);
       setSelectedCountry(ALL_DISCOVER_VALUE);
+      setSelectedVariety(ALL_DISCOVER_VALUE);
       return;
     }
 
@@ -428,12 +457,25 @@ export default function AllBeans() {
       setSelectedProcessStyle(ALL_DISCOVER_VALUE);
       setSelectedContinent(ALL_DISCOVER_VALUE);
       setSelectedCountry(ALL_DISCOVER_VALUE);
+      setSelectedVariety(ALL_DISCOVER_VALUE);
       return;
     }
 
     if (key === 'continent') {
       setSelectedContinent(ALL_DISCOVER_VALUE);
       setSelectedCountry(ALL_DISCOVER_VALUE);
+      setSelectedVariety(ALL_DISCOVER_VALUE);
+      return;
+    }
+
+    if (key === 'country') {
+      setSelectedCountry(ALL_DISCOVER_VALUE);
+      setSelectedVariety(ALL_DISCOVER_VALUE);
+      return;
+    }
+
+    if (key === 'variety') {
+      setSelectedVariety(ALL_DISCOVER_VALUE);
       return;
     }
 
@@ -451,6 +493,7 @@ export default function AllBeans() {
     setSelectedProcessStyle(ALL_DISCOVER_VALUE);
     setSelectedContinent(ALL_DISCOVER_VALUE);
     setSelectedCountry(ALL_DISCOVER_VALUE);
+    setSelectedVariety(ALL_DISCOVER_VALUE);
   };
 
   const handleGuidedProcessStyleAnswer = (choice: GuidedProcessStyleChoiceId) => {
@@ -463,6 +506,7 @@ export default function AllBeans() {
     setSelectedProcessStyle(selection.id);
     setSelectedContinent(ALL_DISCOVER_VALUE);
     setSelectedCountry(ALL_DISCOVER_VALUE);
+    setSelectedVariety(ALL_DISCOVER_VALUE);
   };
 
   const handleGuidedContinentAnswer = (choice: GuidedContinentChoiceId) => {
@@ -474,6 +518,7 @@ export default function AllBeans() {
     }
     setSelectedContinent(selection.id as DiscoverContinentId);
     setSelectedCountry(ALL_DISCOVER_VALUE);
+    setSelectedVariety(ALL_DISCOVER_VALUE);
   };
 
   return (
@@ -580,6 +625,34 @@ export default function AllBeans() {
                   )
                 ) : (
                   <Text className="guided-discover-card__hint">正在准备国家选项...</Text>
+                )
+              ) : null}
+
+              {guidedDiscoverStep.step === 'variety' ? (
+                discoverPayload ? (
+                  discoverPayload.varietyOptions.length > 0 ? (
+                    <>
+                      <View className="guided-discover-card__choices">
+                        {discoverPayload.varietyOptions.slice(0, 6).map((option) => (
+                          <View
+                            key={option.id}
+                            className="guided-discover-card__choice"
+                            onClick={() => handleVarietySelect(option.label)}
+                          >
+                            <Text className="guided-discover-card__choice-title">{option.label}</Text>
+                            <Text className="guided-discover-card__choice-description">{`${option.count} 款可选豆子`}</Text>
+                          </View>
+                        ))}
+                      </View>
+                      <Text className="guided-discover-card__restart" onClick={() => setSelectedVariety(ALL_DISCOVER_VALUE)}>
+                        先看结果
+                      </Text>
+                    </>
+                  ) : (
+                    <Text className="guided-discover-card__hint">当前路径下暂时没有可继续细分的豆种，可以直接查看结果。</Text>
+                  )
+                ) : (
+                  <Text className="guided-discover-card__hint">正在准备豆种选项...</Text>
                 )
               ) : null}
 
@@ -720,13 +793,46 @@ export default function AllBeans() {
               )}
             </View>
 
+            <View className="discover-panel__section">
+              <Text className="discover-panel__eyebrow">第五步 · 豆种（可选）</Text>
+              <Text className="discover-panel__title">
+                {selectedCountry === ALL_DISCOVER_VALUE
+                  ? '这一步可以跳过；如果你已经有目标豆种，也可以在这里继续缩小。'
+                  : '国家已经定好了，如果还想更聚焦，可以再按豆种细分。'}
+              </Text>
+              {discoverPayload.varietyOptions.length === 0 ? (
+                <Text className="discover-panel__description">当前路径下暂时没有可用的豆种选项，直接看结果即可。</Text>
+              ) : (
+                <View className="discover-panel__chips">
+                  <View
+                    className={`discover-chip ${selectedVariety === ALL_DISCOVER_VALUE ? 'discover-chip--active' : ''}`}
+                    onClick={() => handleVarietySelect(ALL_DISCOVER_VALUE)}
+                  >
+                    <Text className="discover-chip__text">全部豆种</Text>
+                  </View>
+                  {discoverPayload.varietyOptions.map((option) => (
+                    <View
+                      key={option.id}
+                      className={`discover-chip ${selectedVariety === option.label ? 'discover-chip--active' : ''}`}
+                      onClick={() => handleVarietySelect(option.label)}
+                    >
+                      <Text className="discover-chip__text">{option.label}</Text>
+                      <Text className="discover-chip__count">{option.count}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+
             {shouldShowDiscoverResults ? (
               <View className="discover-panel__section">
                 <View className="discover-results">
                   <View className="discover-results__heading">
-                    <Text className="discover-panel__eyebrow">第五步 · 结果</Text>
+                    <Text className="discover-panel__eyebrow">第六步 · 结果</Text>
                     <Text className="discover-panel__title">
-                      {selectedCountry !== ALL_DISCOVER_VALUE
+                      {selectedVariety !== ALL_DISCOVER_VALUE
+                        ? `当前豆种路径共 ${discoverPayload.resultSummary.total} 款，继续向下浏览完整豆单`
+                        : selectedCountry !== ALL_DISCOVER_VALUE
                         ? `共 ${discoverPayload.resultSummary.total} 款，继续向下浏览完整豆单`
                         : `当前路径共 ${discoverPayload.resultSummary.total} 款，先看结果再决定是否缩到国家`}
                     </Text>
@@ -738,20 +844,29 @@ export default function AllBeans() {
                   ) : beans.length === 0 ? (
                     <View className="discover-results__empty">
                       <Text className="discover-results__empty-title">
-                        {selectedCountry !== ALL_DISCOVER_VALUE
+                        {selectedVariety !== ALL_DISCOVER_VALUE
+                          ? `${selectedVariety} 暂时没有匹配豆子`
+                          : selectedCountry !== ALL_DISCOVER_VALUE
                           ? `${selectedCountry} 暂时没有匹配豆子`
                           : activeContinentMeta
                             ? `${activeContinentMeta.name} 暂时没有匹配豆子`
                             : '当前探索路径下暂无豆子'}
                       </Text>
                       <Text className="discover-results__empty-text">
-                        {selectedCountry !== ALL_DISCOVER_VALUE
+                        {selectedVariety !== ALL_DISCOVER_VALUE
+                          ? '可以先退回当前路径的全部豆种，或者换一个国家继续探索。'
+                          : selectedCountry !== ALL_DISCOVER_VALUE
                           ? '可以退回当前大洲的全部国家，或者换一个处理法继续探索。'
                           : activeContinentMeta
                             ? '可以先切回全部大洲，或者保留搜索词继续换一个处理法。'
                             : '试试换一个处理法、大洲或国家，让发现页重新给出结果。'}
                       </Text>
                       <View className="discover-results__empty-actions">
+                        {selectedVariety !== ALL_DISCOVER_VALUE ? (
+                          <View className="discover-results__empty-action" onClick={() => setSelectedVariety(ALL_DISCOVER_VALUE)}>
+                            <Text className="discover-results__empty-action-text">回到全部豆种</Text>
+                          </View>
+                        ) : null}
                         {selectedCountry !== ALL_DISCOVER_VALUE ? (
                           <View className="discover-results__empty-action" onClick={() => setSelectedCountry(ALL_DISCOVER_VALUE)}>
                             <Text className="discover-results__empty-action-text">回到全部国家</Text>

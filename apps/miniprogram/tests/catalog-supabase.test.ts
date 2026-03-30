@@ -72,7 +72,7 @@ test('buildBeanDiscoverPayload builds options, summary and editor picks from bea
         originCountry: 'Kenya',
         originRegion: 'Nyeri',
         farm: '',
-        variety: '',
+        variety: 'SL28',
         process: 'Washed',
         roastLevel: 'Light',
         price: 90,
@@ -93,7 +93,7 @@ test('buildBeanDiscoverPayload builds options, summary and editor picks from bea
         originCountry: 'Brazil',
         originRegion: 'Sul de Minas',
         farm: '',
-        variety: '',
+        variety: 'Bourbon',
         process: 'Natural',
         roastLevel: 'Medium',
         price: 78,
@@ -111,17 +111,20 @@ test('buildBeanDiscoverPayload builds options, summary and editor picks from bea
       processStyle: 'traditional',
       continent: 'africa',
       country: 'Kenya',
+      variety: 'SL28',
     },
   });
 
   assert.equal(payload.resultSummary.total, 1);
   assert.equal(payload.editorial.mode, 'fallback');
-  assert.equal(payload.editorial.title.includes('Kenya'), true);
+  assert.equal(payload.editorial.title.includes('SL28'), true);
   assert.equal(payload.processBaseOptions.some((option) => option.id === 'washed'), true);
   assert.equal(payload.processStyleOptions.some((option) => option.id === 'traditional'), true);
   assert.equal(payload.continentOptions.some((option) => option.id === 'africa'), true);
   assert.equal(payload.countryOptions.some((option) => option.label === '肯尼亚'), true);
+  assert.equal(payload.varietyOptions.some((option) => option.label === 'SL28'), true);
   assert.equal(payload.editorPicks[0]?.bean.id, 'bean-1');
+  assert.equal(payload.resultSummary.variety, 'SL28');
 });
 
 test('buildBeanDiscoverPayload keeps same-level options switchable after selection', () => {
@@ -136,7 +139,7 @@ test('buildBeanDiscoverPayload keeps same-level options switchable after selecti
         originCountry: 'Kenya',
         originRegion: 'Nyeri',
         farm: '',
-        variety: '',
+        variety: 'SL28',
         process: 'Washed',
         processBase: 'washed',
         processStyle: 'traditional',
@@ -159,7 +162,7 @@ test('buildBeanDiscoverPayload keeps same-level options switchable after selecti
         originCountry: 'Ethiopia',
         originRegion: 'Guji',
         farm: '',
-        variety: '',
+        variety: '74110',
         process: 'Natural',
         processBase: 'natural',
         processStyle: 'traditional',
@@ -182,7 +185,7 @@ test('buildBeanDiscoverPayload keeps same-level options switchable after selecti
         originCountry: 'Ethiopia',
         originRegion: 'Sidama',
         farm: '',
-        variety: '',
+        variety: '74112',
         process: 'Anaerobic Washed',
         processBase: 'washed',
         processStyle: 'anaerobic',
@@ -205,7 +208,7 @@ test('buildBeanDiscoverPayload keeps same-level options switchable after selecti
         originCountry: 'Brazil',
         originRegion: 'Sul de Minas',
         farm: '',
-        variety: '',
+        variety: 'Bourbon',
         process: 'Washed',
         processBase: 'washed',
         processStyle: 'traditional',
@@ -240,6 +243,107 @@ test('buildBeanDiscoverPayload keeps same-level options switchable after selecti
     payload.continentOptions.map((option) => option.id),
     ['americas', 'africa']
   );
+  assert.deepEqual(
+    payload.varietyOptions.map((option) => option.label),
+    ['SL28']
+  );
+});
+
+test('buildBeanDiscoverPayload merges duplicated variety labels with spacing and case differences', () => {
+  const payload = buildBeanDiscoverPayload({
+    beans: [
+      {
+        id: 'bean-1',
+        name: 'Kenya One',
+        roasterId: 'r1',
+        roasterName: 'North',
+        city: 'Shanghai',
+        originCountry: 'Kenya',
+        originRegion: 'Nyeri',
+        farm: '',
+        variety: 'sl28',
+        process: 'Washed',
+        roastLevel: 'Light',
+        price: 90,
+        discountedPrice: 90,
+        currency: 'CNY',
+        salesCount: 20,
+        tastingNotes: [],
+        imageUrl: null,
+        isInStock: true,
+        isNewArrival: true,
+      },
+      {
+        id: 'bean-2',
+        name: 'Kenya Two',
+        roasterId: 'r2',
+        roasterName: 'South',
+        city: 'Beijing',
+        originCountry: 'Kenya',
+        originRegion: 'Nyeri',
+        farm: '',
+        variety: 'SL 28',
+        process: 'Washed',
+        roastLevel: 'Light',
+        price: 92,
+        discountedPrice: 92,
+        currency: 'CNY',
+        salesCount: 18,
+        tastingNotes: [],
+        imageUrl: null,
+        isInStock: true,
+        isNewArrival: false,
+      },
+      {
+        id: 'bean-3',
+        name: 'Kenya Mix',
+        roasterId: 'r3',
+        roasterName: 'West',
+        city: 'Guangzhou',
+        originCountry: 'Kenya',
+        originRegion: 'Nyeri',
+        farm: '',
+        variety: 'SL28/SL34',
+        process: 'Washed',
+        roastLevel: 'Light',
+        price: 95,
+        discountedPrice: 95,
+        currency: 'CNY',
+        salesCount: 15,
+        tastingNotes: [],
+        imageUrl: null,
+        isInStock: true,
+        isNewArrival: false,
+      },
+      {
+        id: 'bean-4',
+        name: 'Kenya Mix 2',
+        roasterId: 'r4',
+        roasterName: 'East',
+        city: 'Shenzhen',
+        originCountry: 'Kenya',
+        originRegion: 'Nyeri',
+        farm: '',
+        variety: 'sl28 / sl34',
+        process: 'Washed',
+        roastLevel: 'Light',
+        price: 96,
+        discountedPrice: 96,
+        currency: 'CNY',
+        salesCount: 13,
+        tastingNotes: [],
+        imageUrl: null,
+        isInStock: true,
+        isNewArrival: false,
+      },
+    ],
+    filters: {},
+  });
+
+  assert.deepEqual(payload.varietyOptions, [
+    { id: 'SL28', label: 'SL28', count: 2 },
+    { id: 'SL28 / SL34', label: 'SL28 / SL34', count: 2 },
+  ]);
 });
 
 test('buildBeanDiscoverPayload keeps only generic other style under other base', () => {
@@ -609,6 +713,80 @@ test('listBeansWithSupabase applies process filters locally after legacy fallbac
   assert.equal(result.items.length, 1);
   assert.equal(result.items[0]?.id, 'bean-1');
   assert.equal(result.pageInfo.total, 1);
+});
+
+test('listBeansWithSupabase merges equivalent variety labels when filtering', async () => {
+  const client = createLegacyCatalogClient([
+    {
+      roaster_bean_id: 'bean-1',
+      roaster_id: 'roaster-1',
+      roaster_name: 'Roaster One',
+      city: 'Shanghai',
+      display_name: 'Kenya One',
+      origin_country: 'Kenya',
+      origin_region: 'Nyeri',
+      farm: 'Hill',
+      variety: 'sl28',
+      process_method: 'Washed',
+      roast_level: 'Light',
+      price_amount: '88',
+      price_currency: 'CNY',
+      sales_count: 120,
+      image_url: 'https://img.example/bean.jpg',
+      is_in_stock: true,
+      updated_at: '2026-03-20T00:00:00.000Z',
+    },
+    {
+      roaster_bean_id: 'bean-2',
+      roaster_id: 'roaster-2',
+      roaster_name: 'Roaster Two',
+      city: 'Beijing',
+      display_name: 'Kenya Two',
+      origin_country: 'Kenya',
+      origin_region: 'Nyeri',
+      farm: 'Hill',
+      variety: 'SL 28',
+      process_method: 'Washed',
+      roast_level: 'Light',
+      price_amount: '86',
+      price_currency: 'CNY',
+      sales_count: 80,
+      image_url: 'https://img.example/bean-2.jpg',
+      is_in_stock: true,
+      updated_at: '2026-03-18T00:00:00.000Z',
+    },
+    {
+      roaster_bean_id: 'bean-3',
+      roaster_id: 'roaster-3',
+      roaster_name: 'Roaster Three',
+      city: 'Guangzhou',
+      display_name: 'Brazil Bourbon',
+      origin_country: 'Brazil',
+      origin_region: 'Minas Gerais',
+      farm: 'Vista',
+      variety: 'Bourbon',
+      process_method: 'Natural',
+      roast_level: 'Medium',
+      price_amount: '78',
+      price_currency: 'CNY',
+      sales_count: 60,
+      image_url: 'https://img.example/bean-3.jpg',
+      is_in_stock: true,
+      updated_at: '2026-03-17T00:00:00.000Z',
+    },
+  ]);
+
+  const result = await listBeansWithSupabase(client as never, {
+    page: 1,
+    pageSize: 20,
+    variety: 'SL28',
+  });
+
+  assert.deepEqual(
+    result.items.map((bean) => bean.id),
+    ['bean-1', 'bean-2']
+  );
+  assert.equal(result.pageInfo.total, 2);
 });
 
 function createNewArrivalScopedClient(options: {

@@ -96,6 +96,7 @@ export async function getBeans(params?: {
   q?: string;
   roasterId?: string;
   originCountry?: string;
+  variety?: string;
   process?: string;
   processBase?: ProcessBaseId;
   processStyle?: ProcessStyleId;
@@ -114,6 +115,7 @@ export async function getBeanDiscover(params?: {
   processStyle?: ProcessStyleId;
   continent?: DiscoverContinentId;
   country?: string;
+  variety?: string;
 }): Promise<BeanDiscoverPayload> {
   return getBeanDiscoverWithSupabase(requireSupabaseCatalogRead(hasSupabaseEnv, requireSupabaseClient), params);
 }

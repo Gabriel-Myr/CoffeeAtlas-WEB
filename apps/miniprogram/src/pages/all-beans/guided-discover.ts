@@ -16,10 +16,11 @@ export interface GuidedDiscoverStepInput {
   selectedProcessStyle: string;
   selectedContinent: string;
   selectedCountry: string;
+  selectedVariety: string;
 }
 
 export interface GuidedDiscoverStep {
-  step: 'process_base' | 'process_style' | 'continent' | 'country' | 'done';
+  step: 'process_base' | 'process_style' | 'continent' | 'country' | 'variety' | 'done';
   title: string;
   description: string;
 }
@@ -88,7 +89,7 @@ function pickOptionByKeywordGroups(
 }
 
 function isSelected(value: string): boolean {
-  return value !== ALL_DISCOVER_VALUE;
+  return typeof value === 'string' && value !== ALL_DISCOVER_VALUE;
 }
 
 export function resolveGuidedProcessSelection(
@@ -113,7 +114,7 @@ export function resolveGuidedContinentSelection(
 }
 
 export function buildGuidedDiscoverStep(input: GuidedDiscoverStepInput): GuidedDiscoverStep {
-  if (isSelected(input.selectedCountry)) {
+  if (isSelected(input.selectedVariety)) {
     return {
       step: 'done',
       title: '已经帮你缩小到一条可直接浏览的路径',
@@ -145,10 +146,18 @@ export function buildGuidedDiscoverStep(input: GuidedDiscoverStepInput): GuidedD
     };
   }
 
+  if (!isSelected(input.selectedCountry)) {
+    return {
+      step: 'country',
+      title: '先看下要不要继续缩小到具体国家',
+      description: '大洲已经定好了，再选一个国家，就能直接看到更聚焦的豆单。',
+    };
+  }
+
   return {
-    step: 'country',
-    title: '最后一步，再缩小到具体国家',
-    description: '大洲已经定好了，再选一个国家，就能直接看到更聚焦的豆单。',
+    step: 'variety',
+    title: '最后一步，可以再按豆种细分',
+    description: '这一步是可选的。你可以直接看结果，也可以再按豆种把范围缩小一点。',
   };
 }
 

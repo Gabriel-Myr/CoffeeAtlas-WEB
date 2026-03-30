@@ -1,43 +1,7 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-type ComparedField = {
-  field: string;
-  existingValue: string | number | null;
-  ocrValue: string | number | null;
-  kind: 'mismatch' | 'missing_in_db' | 'missing_in_ocr';
-};
-
-type ReviewItem = {
-  id: string;
-  title: string;
-  status: string;
-  sourceItemId: string | null;
-  sourceSkuId: string | null;
-  productUrl: string | null;
-  imageUrl: string | null;
-  highConfidenceIssues?: ComparedField[];
-  fillCandidates?: ComparedField[];
-  ocr: {
-    text: string;
-    confidence: string;
-    warnings: string[];
-  };
-};
-
-type ReviewSummary = {
-  total: number;
-  hardMismatch: number;
-  processMethodMismatch: number;
-  originMismatch: number;
-  weightFill: number;
-  roastLevelFill: number;
-};
-
-type ReviewPayload = {
-  summary: ReviewSummary;
-  items: ReviewItem[];
-};
+import { sortReviewItems, type ReviewComparedField as ComparedField, type ReviewItem, type ReviewPayload } from '../lib/taobao-sync/review.ts';
 
 const TMP_DIR = '/tmp';
 const REVIEW_FILE_PREFIX = 'taobao-ocr-high-confidence-';
@@ -162,6 +126,8 @@ function renderItem(item: ReviewItem) {
 }
 
 function renderHtml(inputFile: string, payload: ReviewPayload) {
+  const sortedItems = sortReviewItems(payload.items);
+
   return `<!doctype html>
 <html lang="zh-CN">
   <head>
@@ -354,7 +320,7 @@ function renderHtml(inputFile: string, payload: ReviewPayload) {
       </section>
 
       <section class="list">
-        ${payload.items.map(renderItem).join('')}
+        ${sortedItems.map(renderItem).join('')}
       </section>
     </main>
   </body>

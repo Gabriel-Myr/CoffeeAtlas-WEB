@@ -93,9 +93,24 @@ export async function saveReviewDecisions(decisions: ReviewDecision[], filePath 
   await writeFile(filePath, JSON.stringify({ decisions }, null, 2));
 }
 
+function hasHardConflict(item: ReviewItem) {
+  return (item.highConfidenceIssues?.length ?? 0) > 0;
+}
+
+export function sortReviewItems(items: ReviewItem[]) {
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort((left, right) => {
+      const hardGap = Number(hasHardConflict(right.item)) - Number(hasHardConflict(left.item));
+      if (hardGap !== 0) return hardGap;
+      return left.index - right.index;
+    })
+    .map((entry) => entry.item);
+}
+
 export function filterPendingReviewItems(items: ReviewItem[], decisions: ReviewDecision[]) {
   const handled = new Set(decisions.map((decision) => decision.reviewItemId));
-  return items.filter((item) => !handled.has(item.id));
+  return sortReviewItems(items.filter((item) => !handled.has(item.id)));
 }
 
 function parseEditableValue(key: string, value: string) {

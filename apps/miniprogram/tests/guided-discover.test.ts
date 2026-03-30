@@ -135,6 +135,7 @@ test('buildGuidedDiscoverStep starts from process base question', () => {
       selectedProcessStyle: 'all',
       selectedContinent: 'all',
       selectedCountry: 'all',
+      selectedVariety: 'all',
     }),
     {
       step: 'process_base',
@@ -151,6 +152,7 @@ test('buildGuidedDiscoverStep moves to process style question after base is sele
       selectedProcessStyle: 'all',
       selectedContinent: 'all',
       selectedCountry: 'all',
+      selectedVariety: 'all',
     }),
     {
       step: 'process_style',
@@ -167,6 +169,7 @@ test('buildGuidedDiscoverStep moves to continent question after style is selecte
       selectedProcessStyle: 'traditional',
       selectedContinent: 'all',
       selectedCountry: 'all',
+      selectedVariety: 'all',
     }),
     {
       step: 'continent',
@@ -183,22 +186,41 @@ test('buildGuidedDiscoverStep moves to country question once continent is select
       selectedProcessStyle: 'traditional',
       selectedContinent: 'africa',
       selectedCountry: 'all',
+      selectedVariety: 'all',
     }),
     {
       step: 'country',
-      title: '最后一步，再缩小到具体国家',
+      title: '先看下要不要继续缩小到具体国家',
       description: '大洲已经定好了，再选一个国家，就能直接看到更聚焦的豆单。',
     }
   );
 });
 
-test('buildGuidedDiscoverStep finishes once country is selected', () => {
+test('buildGuidedDiscoverStep moves to optional variety question once country is selected', () => {
   assert.deepEqual(
     buildGuidedDiscoverStep({
       selectedProcessBase: 'washed',
       selectedProcessStyle: 'traditional',
       selectedContinent: 'africa',
       selectedCountry: '埃塞俄比亚',
+      selectedVariety: 'all',
+    }),
+    {
+      step: 'variety',
+      title: '最后一步，可以再按豆种细分',
+      description: '这一步是可选的。你可以直接看结果，也可以再按豆种把范围缩小一点。',
+    }
+  );
+});
+
+test('buildGuidedDiscoverStep finishes once variety is selected', () => {
+  assert.deepEqual(
+    buildGuidedDiscoverStep({
+      selectedProcessBase: 'washed',
+      selectedProcessStyle: 'traditional',
+      selectedContinent: 'africa',
+      selectedCountry: '埃塞俄比亚',
+      selectedVariety: '74110',
     }),
     {
       step: 'done',
