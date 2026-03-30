@@ -141,3 +141,38 @@ Updated miniprogram catalog filtering so multi-value varieties and processes mat
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: Trellis session context and delivery rules
+
+**Date**: 2026-03-30
+**Task**: Trellis session context and delivery rules
+**Package**: miniprogram
+**Branch**: `main`
+
+### Summary
+
+Added recent session memory to Trellis start context, documented copy-change and delivery reporting rules, and synced the related repository instructions.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `57533a6` | (see git log) |
+| `8189d15` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

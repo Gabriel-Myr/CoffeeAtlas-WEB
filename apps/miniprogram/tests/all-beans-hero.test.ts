@@ -14,5 +14,9 @@ test('all-beans page imports the shared AtlasPageHero component', () => {
 });
 
 test('all-beans page renders the shared AtlasPageHero at the top', () => {
-  assert.match(pageSource, /<AtlasPageHero subtitle="全部咖啡豆">/);
+  assert.match(pageSource, /<AtlasPageHero subtitle="全部咖啡豆"(?:\s*\/>|>)/);
+});
+
+test('all-beans page does not render the hero bean count summary', () => {
+  assert.doesNotMatch(pageSource, /当前路径共\s*\$\{discoverPayload\.resultSummary\.total\}\s*款咖啡豆/);
 });

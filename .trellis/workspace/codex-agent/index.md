@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 4
+- **Total Sessions**: 5
 - **Last Active**: 2026-03-30
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~143 | Active |
+| `journal-1.md` | ~178 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 5 | 2026-03-30 | Trellis session context and delivery rules | `57533a6`, `8189d15` | `main` |
 | 4 | 2026-03-30 | Miniprogram multi-value bean filters | `99398e7` | `main` |
 | 3 | 2026-03-30 | Miniprogram optional bean varieties | `262cd17` | `main` |
 | 2 | 2026-03-30 | API Taobao OCR review tooling | `cdc7a71` | `main` |

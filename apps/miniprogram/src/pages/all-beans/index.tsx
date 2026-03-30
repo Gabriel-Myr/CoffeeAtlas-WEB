@@ -523,11 +523,7 @@ export default function AllBeans() {
 
   return (
     <View className="all-beans">
-      <AtlasPageHero subtitle="全部咖啡豆">
-        {shouldShowDiscoverResults && discoverPayload ? (
-          <Text className="all-beans__hero-count">{`当前路径共 ${discoverPayload.resultSummary.total} 款咖啡豆`}</Text>
-        ) : null}
-      </AtlasPageHero>
+      <AtlasPageHero subtitle="全部咖啡豆" />
 
       <SearchBar value={searchQuery} placeholder="按烘焙商、产地、处理法或豆种搜索..." onInput={setSearchQuery} />
 
