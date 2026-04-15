@@ -1,7 +1,7 @@
 """
 CLI Adapter for Multi-Platform Support.
 
-Abstracts differences between Claude Code, OpenCode, Cursor, iFlow, Codex, Kilo, Kiro Code, Gemini CLI, Antigravity, Qoder, and CodeBuddy interfaces.
+Abstracts differences between Claude Code, OpenCode, Cursor, iFlow, Codex, Kilo, Kiro Code, Gemini CLI, Antigravity, Windsurf, Qoder, CodeBuddy, GitHub Copilot, and Factory Droid interfaces.
 
 Supported platforms:
 - claude: Claude Code (default)
@@ -13,8 +13,11 @@ Supported platforms:
 - kiro: Kiro Code (skills-based)
 - gemini: Gemini CLI
 - antigravity: Antigravity (workflow-based)
+- windsurf: Windsurf (workflow-based)
 - qoder: Qoder
 - codebuddy: CodeBuddy
+- copilot: GitHub Copilot (VS Code)
+- droid: Factory Droid (commands-based)
 
 Usage:
     from common.cli_adapter import CLIAdapter
@@ -29,7 +32,6 @@ Usage:
 
 from __future__ import annotations
 
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar, Literal
@@ -44,8 +46,11 @@ Platform = Literal[
     "kiro",
     "gemini",
     "antigravity",
+    "windsurf",
     "qoder",
     "codebuddy",
+    "copilot",
+    "droid",
 ]
 
 
@@ -90,7 +95,7 @@ class CLIAdapter:
         """Get platform-specific config directory name.
 
         Returns:
-            Directory name ('.claude', '.opencode', '.cursor', '.iflow', '.codex', '.kilocode', '.kiro', '.gemini', '.agent', '.qoder', or '.codebuddy')
+            Directory name ('.claude', '.opencode', '.cursor', '.iflow', '.codex', '.kilocode', '.kiro', '.gemini', '.agent', '.windsurf', '.qoder', or '.codebuddy')
         """
         if self.platform == "opencode":
             return ".opencode"
@@ -108,10 +113,16 @@ class CLIAdapter:
             return ".gemini"
         elif self.platform == "antigravity":
             return ".agent"
+        elif self.platform == "windsurf":
+            return ".windsurf"
         elif self.platform == "qoder":
             return ".qoder"
         elif self.platform == "codebuddy":
             return ".codebuddy"
+        elif self.platform == "copilot":
+            return ".github/copilot"
+        elif self.platform == "droid":
+            return ".factory"
         else:
             return ".claude"
 
@@ -122,7 +133,7 @@ class CLIAdapter:
             project_root: Project root directory
 
         Returns:
-            Path to config directory (.claude, .opencode, .cursor, .iflow, .codex, .kilocode, .kiro, .gemini, .agent, .qoder, or .codebuddy)
+            Path to config directory (.claude, .opencode, .cursor, .iflow, .codex, .kilocode, .kiro, .gemini, .agent, .windsurf, .qoder, or .codebuddy)
         """
         return project_root / self.config_dir_name
 
@@ -141,62 +152,6 @@ class CLIAdapter:
             return self.get_config_dir(project_root) / "agents" / f"{mapped_name}.toml"
         return self.get_config_dir(project_root) / "agents" / f"{mapped_name}.md"
 
-    def get_agent_definition(
-        self, agent: str, project_root: Path
-    ) -> dict[str, object] | None:
-        """Read the platform-specific agent definition when available."""
-        agent_path = self.get_agent_path(agent, project_root)
-        if not agent_path.is_file():
-            return None
-
-        try:
-            if self.platform == "codex":
-                return tomllib.loads(agent_path.read_text(encoding="utf-8"))
-            return {"raw": agent_path.read_text(encoding="utf-8")}
-        except (OSError, tomllib.TOMLDecodeError):
-            return None
-
-    def get_agent_sandbox_mode(self, agent: str, project_root: Path) -> str | None:
-        """Return the configured sandbox mode for platforms that store it in agent files."""
-        if self.platform != "codex":
-            return None
-
-        definition = self.get_agent_definition(agent, project_root)
-        if not definition:
-            return None
-
-        sandbox_mode = definition.get("sandbox_mode")
-        if sandbox_mode in ("read-only", "workspace-write", "danger-full-access"):
-            return str(sandbox_mode)
-        return None
-
-    def build_agent_prompt(
-        self, agent: str, prompt: str, project_root: Path | None = None
-    ) -> str:
-        """Decorate the base prompt with agent instructions when the platform needs it."""
-        if self.platform != "codex" or project_root is None:
-            return prompt
-
-        definition = self.get_agent_definition(agent, project_root)
-        if not definition:
-            return prompt
-
-        description = str(definition.get("description", "")).strip()
-        developer_instructions = str(
-            definition.get("developer_instructions", "")
-        ).strip()
-
-        parts = [
-            f"You are the Trellis '{agent}' agent running in a non-interactive Codex session.",
-        ]
-        if description:
-            parts.append(f"Role: {description}")
-        if developer_instructions:
-            parts.append(f"Agent instructions:\n{developer_instructions}")
-        parts.append(f"Primary task:\n{prompt}")
-
-        return "\n\n".join(parts)
-
     def get_commands_path(self, project_root: Path, *parts: str) -> Path:
         """Get path to commands directory or specific command file.
 
@@ -210,8 +165,19 @@ class CLIAdapter:
         Note:
             Cursor uses prefix naming: .cursor/commands/trellis-<name>.md
             Antigravity uses workflow directory: .agent/workflows/<name>.md
+            Windsurf uses workflow directory: .windsurf/workflows/trellis-<name>.md
+            Copilot uses prompt files: .github/prompts/<name>.prompt.md
             Claude/OpenCode use subdirectory: .claude/commands/trellis/<name>.md
         """
+        if self.platform == "windsurf":
+            workflow_dir = self.get_config_dir(project_root) / "workflows"
+            if not parts:
+                return workflow_dir
+            if len(parts) >= 2 and parts[0] == "trellis":
+                filename = parts[-1]
+                return workflow_dir / f"trellis-{filename}"
+            return workflow_dir / Path(*parts)
+
         if self.platform in ("antigravity", "kilo"):
             workflow_dir = self.get_config_dir(project_root) / "workflows"
             if not parts:
@@ -220,6 +186,17 @@ class CLIAdapter:
                 filename = parts[-1]
                 return workflow_dir / filename
             return workflow_dir / Path(*parts)
+
+        if self.platform == "copilot":
+            prompts_dir = project_root / ".github" / "prompts"
+            if not parts:
+                return prompts_dir
+            if len(parts) >= 2 and parts[0] == "trellis":
+                filename = parts[-1]
+                if filename.endswith(".md"):
+                    filename = filename[:-3]
+                return prompts_dir / f"{filename}.prompt.md"
+            return prompts_dir / Path(*parts)
 
         if not parts:
             return self.get_config_dir(project_root) / "commands"
@@ -249,6 +226,7 @@ class CLIAdapter:
             Kiro: .kiro/skills/<name>/SKILL.md
             Gemini: .gemini/commands/trellis/<name>.toml
             Antigravity: .agent/workflows/<name>.md
+            Windsurf: .windsurf/workflows/trellis-<name>.md
             Others: .{platform}/commands/trellis/<name>.md
         """
         if self.platform == "cursor":
@@ -261,8 +239,14 @@ class CLIAdapter:
             return f".gemini/commands/trellis/{name}.toml"
         elif self.platform == "antigravity":
             return f".agent/workflows/{name}.md"
+        elif self.platform == "windsurf":
+            return f".windsurf/workflows/trellis-{name}.md"
         elif self.platform == "kilo":
             return f".kilocode/workflows/{name}.md"
+        elif self.platform == "copilot":
+            return f".github/prompts/{name}.prompt.md"
+        elif self.platform == "droid":
+            return f".factory/commands/trellis/{name}.md"
         else:
             return f"{self.config_dir_name}/commands/trellis/{name}.md"
 
@@ -288,9 +272,15 @@ class CLIAdapter:
             return {}  # Gemini CLI doesn't have a non-interactive env var
         elif self.platform == "antigravity":
             return {}
+        elif self.platform == "windsurf":
+            return {}
         elif self.platform == "qoder":
             return {}
         elif self.platform == "codebuddy":
+            return {}
+        elif self.platform == "copilot":
+            return {}
+        elif self.platform == "droid":
             return {}
         else:
             return {"CLAUDE_NON_INTERACTIVE": "1"}
@@ -307,7 +297,6 @@ class CLIAdapter:
         skip_permissions: bool = True,
         verbose: bool = True,
         json_output: bool = True,
-        project_root: Path | None = None,
     ) -> list[str]:
         """Build CLI command for running an agent.
 
@@ -318,13 +307,11 @@ class CLIAdapter:
             skip_permissions: Whether to skip permission prompts
             verbose: Whether to enable verbose output
             json_output: Whether to use JSON output format
-            project_root: Optional project root for platforms that need local agent files
 
         Returns:
             List of command arguments
         """
         mapped_agent = self.get_agent_name(agent)
-        effective_prompt = self.build_agent_prompt(agent, prompt, project_root)
 
         if self.platform == "opencode":
             cmd = ["opencode", "run"]
@@ -343,32 +330,40 @@ class CLIAdapter:
             # Note: OpenCode doesn't support --session-id on creation
             # Session ID must be extracted from logs after startup
 
-            cmd.append(effective_prompt)
+            cmd.append(prompt)
 
         elif self.platform == "iflow":
             cmd = ["iflow", "-y", "-p"]
-            cmd.append(f"${mapped_agent} {effective_prompt}")
+            cmd.append(f"${mapped_agent} {prompt}")
         elif self.platform == "codex":
             cmd = ["codex", "exec"]
-            if project_root is not None:
-                sandbox_mode = self.get_agent_sandbox_mode(agent, project_root)
-                if sandbox_mode:
-                    cmd.extend(["-s", sandbox_mode])
-            cmd.append(effective_prompt)
+            cmd.append(prompt)
         elif self.platform == "kiro":
-            cmd = ["kiro", "run", effective_prompt]
+            cmd = ["kiro", "run", prompt]
         elif self.platform == "gemini":
             cmd = ["gemini"]
-            cmd.append(effective_prompt)
+            cmd.append(prompt)
         elif self.platform == "antigravity":
             raise ValueError(
                 "Antigravity workflows are UI slash commands; CLI agent run is not supported."
             )
+        elif self.platform == "windsurf":
+            raise ValueError(
+                "Windsurf workflows are UI slash commands; CLI agent run is not supported."
+            )
         elif self.platform == "qoder":
-            cmd = ["qodercli", "-p", effective_prompt]
+            cmd = ["qodercli", "-p", prompt]
         elif self.platform == "codebuddy":
             raise ValueError(
                 "CodeBuddy does not support non-interactive mode (no CLI agent)"
+            )
+        elif self.platform == "copilot":
+            raise ValueError(
+                "GitHub Copilot is IDE-only; CLI agent run is not supported."
+            )
+        elif self.platform == "droid":
+            raise ValueError(
+                "Factory Droid CLI agent run is not yet integrated with Trellis multi-agent."
             )
 
         else:  # claude
@@ -387,7 +382,7 @@ class CLIAdapter:
             if verbose:
                 cmd.append("--verbose")
 
-            cmd.append(effective_prompt)
+            cmd.append(prompt)
 
         return cmd
 
@@ -416,11 +411,23 @@ class CLIAdapter:
             raise ValueError(
                 "Antigravity workflows are UI slash commands; CLI resume is not supported."
             )
+        elif self.platform == "windsurf":
+            raise ValueError(
+                "Windsurf workflows are UI slash commands; CLI resume is not supported."
+            )
         elif self.platform == "qoder":
             return ["qodercli", "--resume", session_id]
         elif self.platform == "codebuddy":
             raise ValueError(
                 "CodeBuddy does not support non-interactive mode (no CLI agent)"
+            )
+        elif self.platform == "copilot":
+            raise ValueError(
+                "GitHub Copilot is IDE-only; CLI resume is not supported."
+            )
+        elif self.platform == "droid":
+            raise ValueError(
+                "Factory Droid CLI resume is not yet integrated with Trellis multi-agent."
             )
         else:
             return ["claude", "--resume", session_id]
@@ -484,10 +491,16 @@ class CLIAdapter:
             return "gemini"
         elif self.platform == "antigravity":
             return "agy"
+        elif self.platform == "windsurf":
+            return "windsurf"
         elif self.platform == "qoder":
             return "qodercli"
         elif self.platform == "codebuddy":
             return "codebuddy"
+        elif self.platform == "copilot":
+            return "copilot"
+        elif self.platform == "droid":
+            return "droid"
         else:
             return "claude"
 
@@ -552,7 +565,7 @@ def get_cli_adapter(platform: str = "claude") -> CLIAdapter:
     """Get CLI adapter for the specified platform.
 
     Args:
-        platform: Platform name ('claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'qoder', or 'codebuddy')
+        platform: Platform name ('claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'windsurf', 'qoder', or 'codebuddy')
 
     Returns:
         CLIAdapter instance
@@ -570,11 +583,14 @@ def get_cli_adapter(platform: str = "claude") -> CLIAdapter:
         "kiro",
         "gemini",
         "antigravity",
+        "windsurf",
         "qoder",
         "codebuddy",
+        "copilot",
+        "droid",
     ):
         raise ValueError(
-            f"Unsupported platform: {platform} (must be 'claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'qoder', or 'codebuddy')"
+            f"Unsupported platform: {platform} (must be 'claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'windsurf', 'qoder', 'codebuddy', 'copilot', or 'droid')"
         )
 
     return CLIAdapter(platform=platform)  # type: ignore
@@ -591,8 +607,11 @@ _ALL_PLATFORM_CONFIG_DIRS = (
     ".kiro",
     ".gemini",
     ".agent",
+    ".windsurf",
     ".qoder",
     ".codebuddy",
+    ".github/copilot",
+    ".factory",
 )
 """All platform config directory names (used by detect_platform exclusion checks)."""
 
@@ -619,15 +638,16 @@ def detect_platform(project_root: Path) -> Platform:
     7. .kiro/skills exists and no other platform dirs → kiro
     8. .gemini directory exists → gemini
     9. .agent/workflows exists and no other platform dirs → antigravity
-    10. .codebuddy directory exists → codebuddy
-    11. .qoder directory exists → qoder
-    12. Default → claude
+    10. .windsurf/workflows exists and no other platform dirs → windsurf
+    11. .codebuddy directory exists → codebuddy
+    12. .qoder directory exists → qoder
+    13. Default → claude
 
     Args:
         project_root: Project root directory
 
     Returns:
-        Detected platform ('claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'qoder', 'codebuddy', or default 'claude')
+        Detected platform ('claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'windsurf', 'qoder', 'codebuddy', or default 'claude')
     """
     import os
 
@@ -643,8 +663,11 @@ def detect_platform(project_root: Path) -> Platform:
         "kiro",
         "gemini",
         "antigravity",
+        "windsurf",
         "qoder",
         "codebuddy",
+        "copilot",
+        "droid",
     ):
         return env_platform  # type: ignore
 
@@ -690,6 +713,14 @@ def detect_platform(project_root: Path) -> Platform:
     ):
         return "antigravity"
 
+    # Check for Windsurf workflow directory only when no other platform config exists
+    if (
+        project_root / ".windsurf" / "workflows"
+    ).is_dir() and not _has_other_platform_dir(
+        project_root, {".windsurf"}
+    ):
+        return "windsurf"
+
     # Check for .codebuddy directory (CodeBuddy-specific)
     if (project_root / ".codebuddy").is_dir():
         return "codebuddy"
@@ -697,6 +728,14 @@ def detect_platform(project_root: Path) -> Platform:
     # Check for .qoder directory (Qoder-specific)
     if (project_root / ".qoder").is_dir():
         return "qoder"
+
+    # Check for .github/copilot directory (GitHub Copilot-specific)
+    if (project_root / ".github" / "copilot").is_dir():
+        return "copilot"
+
+    # Check for .factory directory (Factory Droid-specific)
+    if (project_root / ".factory").is_dir():
+        return "droid"
 
     return "claude"
 

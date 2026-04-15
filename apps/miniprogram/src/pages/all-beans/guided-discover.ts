@@ -1,4 +1,5 @@
 import type { AllBeansLandingMode } from './route-params.ts';
+import { LIGHT_QUESTION_COPY, type GuidedStepKey } from './light-question-copy.ts';
 
 const ALL_DISCOVER_VALUE = 'all';
 
@@ -24,6 +25,24 @@ export interface GuidedDiscoverStep {
   title: string;
   description: string;
 }
+
+export const GUIDED_PROCESS_CHOICES = LIGHT_QUESTION_COPY.miniprogram.guidedCard.processChoices as Array<{
+  id: GuidedProcessChoiceId;
+  title: string;
+  description: string;
+}>;
+
+export const GUIDED_PROCESS_STYLE_CHOICES = LIGHT_QUESTION_COPY.miniprogram.guidedCard.processStyleChoices as Array<{
+  id: GuidedProcessStyleChoiceId;
+  title: string;
+  description: string;
+}>;
+
+export const GUIDED_CONTINENT_CHOICES = LIGHT_QUESTION_COPY.miniprogram.guidedCard.continentChoices as Array<{
+  id: GuidedContinentChoiceId;
+  title: string;
+  description: string;
+}>;
 
 type KeywordGroups = string[][];
 
@@ -92,6 +111,15 @@ function isSelected(value: string): boolean {
   return typeof value === 'string' && value !== ALL_DISCOVER_VALUE;
 }
 
+function getGuidedStepCopy(step: GuidedStepKey): GuidedDiscoverStep {
+  const copy = LIGHT_QUESTION_COPY.miniprogram.guidedCard.steps[step];
+  return {
+    step,
+    title: copy.title,
+    description: copy.description,
+  };
+}
+
 export function resolveGuidedProcessSelection(
   choice: GuidedProcessChoiceId,
   options: GuidedDiscoverOption[]
@@ -115,52 +143,32 @@ export function resolveGuidedContinentSelection(
 
 export function buildGuidedDiscoverStep(input: GuidedDiscoverStepInput): GuidedDiscoverStep {
   if (isSelected(input.selectedVariety)) {
-    return {
-      step: 'done',
-      title: '已经帮你缩小到一条可直接浏览的路径',
-      description: '你可以直接往下看推荐和豆单，也可以重新回答一次，换一条路线。',
-    };
+    return getGuidedStepCopy('done');
   }
 
   if (!isSelected(input.selectedProcessBase)) {
-    return {
-      step: 'process_base',
-      title: '先告诉我你想从哪种基础处理法开始',
-      description: '我会先帮你定一个基础处理法方向，再继续收窄到处理风格和产地区域。',
-    };
+    return getGuidedStepCopy('process_base');
   }
 
   if (!isSelected(input.selectedProcessStyle)) {
-    return {
-      step: 'process_style',
-      title: '第二步，再选一个处理风格',
-      description: '基础处理法已经定好了，现在继续缩小到更具体的处理风格。',
-    };
+    return getGuidedStepCopy('process_style');
   }
 
   if (!isSelected(input.selectedContinent)) {
-    return {
-      step: 'continent',
-      title: '下一步，选一个更接近你期待风味的区域',
-      description: '处理风格已经定好了，现在再用大洲和国家把结果继续缩小。',
-    };
+    return getGuidedStepCopy('continent');
   }
 
   if (!isSelected(input.selectedCountry)) {
-    return {
-      step: 'country',
-      title: '最后一步，再缩小到具体国家',
-      description: '大洲已经定好了，再选一个国家，就能直接看到更聚焦的豆单。',
-    };
+    return getGuidedStepCopy('country');
   }
 
-  return {
-    step: 'variety',
-    title: '如果你已经有目标豆种，可以继续细分',
-    description: '这一步是可选的，不选也可以直接看结果。',
-  };
+  return getGuidedStepCopy('variety');
 }
 
-export function shouldExpandGuidedDiscoverCard(landingMode: AllBeansLandingMode): boolean {
-  return landingMode === 'guided';
+export function shouldExpandGuidedDiscoverCard(_landingMode: AllBeansLandingMode): boolean {
+  return false;
+}
+
+export function shouldShowGuidedDiscoverCard(_landingMode: AllBeansLandingMode): boolean {
+  return false;
 }

@@ -272,6 +272,16 @@ create table if not exists public.user_favorites (
   unique (user_id, target_type, target_id)
 );
 
+create table if not exists public.user_badge_progress (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.app_users(id) on delete cascade,
+  badge_id text not null check (btrim(badge_id) <> ''),
+  unlocked_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, badge_id)
+);
+
 -- Search vector maintenance functions
 create or replace function public.update_roaster_search_tsv()
 returns trigger
@@ -346,6 +356,9 @@ create trigger trg_app_users_updated_at before update on public.app_users for ea
 drop trigger if exists trg_user_favorites_updated_at on public.user_favorites;
 create trigger trg_user_favorites_updated_at before update on public.user_favorites for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_user_badge_progress_updated_at on public.user_badge_progress;
+create trigger trg_user_badge_progress_updated_at before update on public.user_badge_progress for each row execute function public.set_updated_at();
+
 drop trigger if exists trg_roasters_search_tsv on public.roasters;
 create trigger trg_roasters_search_tsv before insert or update of name, name_en, city, description on public.roasters for each row execute function public.update_roaster_search_tsv();
 
@@ -384,6 +397,8 @@ create index if not exists idx_change_requests_status_created on public.change_r
 create index if not exists idx_app_users_openid on public.app_users (wechat_openid);
 create index if not exists idx_user_favorites_user_created on public.user_favorites (user_id, created_at desc);
 create index if not exists idx_user_favorites_target on public.user_favorites (target_type, target_id);
+create index if not exists idx_user_badge_progress_user_unlocked on public.user_badge_progress (user_id, unlocked_at desc);
+create index if not exists idx_user_badge_progress_badge_id on public.user_badge_progress (badge_id);
 
 create index if not exists idx_roasters_search_tsv on public.roasters using gin (search_tsv);
 create index if not exists idx_beans_search_tsv on public.beans using gin (search_tsv);
@@ -409,8 +424,9 @@ alter table public.ingestion_events enable row level security;
 alter table public.change_requests enable row level security;
 alter table public.app_users enable row level security;
 alter table public.user_favorites enable row level security;
--- app_users / user_favorites intentionally do not expose anon/authenticated
--- policies. These tables are server-only and must be accessed via service_role.
+alter table public.user_badge_progress enable row level security;
+-- app_users / user_favorites / user_badge_progress intentionally do not expose
+-- anon/authenticated policies. These tables are server-only and must be accessed via service_role.
 
 create or replace function public.has_platform_role(required_roles text[])
 returns boolean

@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-import re
 
 from .config import get_git_packages
 from .git import run_git
@@ -27,14 +26,12 @@ from .paths import (
     DIR_TASKS,
     DIR_WORKFLOW,
     DIR_WORKSPACE,
-    FILE_JOURNAL_PREFIX,
     count_lines,
     get_active_journal_file,
     get_current_task,
     get_developer,
     get_repo_root,
     get_tasks_dir,
-    get_workspace_dir,
 )
 
 
@@ -109,89 +106,6 @@ def _append_package_git_context(lines: list[str], package_git_info: list[dict]) 
         else:
             lines.append("(no commits)")
         lines.append("")
-
-
-def _parse_journal_sessions(journal_file: Path) -> list[dict[str, str]]:
-    """Extract session titles and summaries from a journal file."""
-    try:
-        content = journal_file.read_text(encoding="utf-8")
-    except (OSError, IOError):
-        return []
-
-    lines = content.splitlines()
-    sessions: list[dict[str, str]] = []
-    current: dict[str, str] | None = None
-    summary_lines: list[str] = []
-    in_summary = False
-
-    for line in lines:
-        session_match = re.match(r"^## Session \d+: (.+)$", line.strip())
-        if session_match:
-            if current is not None:
-                current["summary"] = " ".join(
-                    part.strip() for part in summary_lines if part.strip()
-                ).strip()
-                sessions.append(current)
-
-            current = {
-                "title": session_match.group(1).strip(),
-                "summary": "",
-                "journal": journal_file.name,
-            }
-            summary_lines = []
-            in_summary = False
-            continue
-
-        if current is None:
-            continue
-
-        if line.strip() == "### Summary":
-            in_summary = True
-            summary_lines = []
-            continue
-
-        if in_summary:
-            if line.startswith("### ") or line.startswith("## "):
-                in_summary = False
-                continue
-            summary_lines.append(line)
-
-    if current is not None:
-        current["summary"] = " ".join(
-            part.strip() for part in summary_lines if part.strip()
-        ).strip()
-        sessions.append(current)
-
-    return sessions
-
-
-def _get_recent_session_memory(
-    repo_root: Path, limit: int = 3
-) -> list[dict[str, str]]:
-    """Get the most recent recorded sessions for the current developer."""
-    workspace_dir = get_workspace_dir(repo_root)
-    if workspace_dir is None or not workspace_dir.is_dir():
-        return []
-
-    journal_files: list[tuple[int, Path]] = []
-    for file_path in workspace_dir.glob(f"{FILE_JOURNAL_PREFIX}*.md"):
-        if not file_path.is_file():
-            continue
-        match = re.search(r"(\d+)$", file_path.stem)
-        if match:
-            journal_files.append((int(match.group(1)), file_path))
-
-    all_sessions: list[dict[str, str]] = []
-    for _, journal_file in sorted(journal_files):
-        all_sessions.extend(_parse_journal_sessions(journal_file))
-
-    recent_sessions = all_sessions[-limit:]
-    for session in recent_sessions:
-        summary = session.get("summary", "").strip()
-        if not summary or summary.startswith("(Add summary)"):
-            session["summary"] = "(summary not recorded yet)"
-
-    return list(reversed(recent_sessions))
 
 
 # =============================================================================
@@ -273,7 +187,6 @@ def get_context_json(repo_root: Path | None = None) -> dict:
             "lines": journal_lines,
             "nearLimit": journal_lines > 1800,
         },
-        "recentSessions": _get_recent_session_memory(repo_root),
     }
 
     if pkg_git_info:
@@ -440,17 +353,6 @@ def get_context_text(repo_root: Path | None = None) -> str:
             lines.append("[!] WARNING: Approaching 2000 line limit!")
     else:
         lines.append("No journal file found")
-    lines.append("")
-
-    # Recent session memory
-    lines.append("## RECENT SESSION MEMORY")
-    recent_sessions = _get_recent_session_memory(repo_root)
-    if recent_sessions:
-        for session in recent_sessions:
-            lines.append(f"- {session['title']}")
-            lines.append(f"  Summary: {session['summary']}")
-    else:
-        lines.append("(no recorded sessions yet)")
     lines.append("")
 
     # Packages

@@ -239,6 +239,8 @@ export function createSupabaseFetch(requestImpl: RequestLike = Taro.request): ty
 
 export type MiniProgramSupabaseClient = PostgrestClient;
 
+let cachedSupabaseClient: MiniProgramSupabaseClient | null | undefined;
+
 export function createMiniProgramSupabaseClient(): MiniProgramSupabaseClient {
   const { url, anonKey } = getSupabaseConfig();
 
@@ -258,14 +260,33 @@ export function createMiniProgramSupabaseClient(): MiniProgramSupabaseClient {
   });
 }
 
+export function getSupabaseClient(): MiniProgramSupabaseClient | null {
+  if (!hasSupabaseEnv) {
+    return null;
+  }
+
+  if (typeof cachedSupabaseClient === 'undefined') {
+    cachedSupabaseClient = createMiniProgramSupabaseClient();
+  }
+
+  return cachedSupabaseClient;
+}
+
 export const supabaseClient = hasSupabaseEnv
-  ? createMiniProgramSupabaseClient()
+  ? new Proxy({} as MiniProgramSupabaseClient, {
+      get(_target, key, receiver) {
+        const client = getSupabaseClient();
+        return Reflect.get(client as MiniProgramSupabaseClient, key, receiver);
+      },
+    })
   : null;
 
 export function requireSupabaseClient(): MiniProgramSupabaseClient {
-  if (!supabaseClient) {
+  const client = getSupabaseClient();
+
+  if (!client) {
     throw new Error('未配置 Supabase 客户端环境变量：请提供 TARO_APP_SUPABASE_URL 和 TARO_APP_SUPABASE_ANON_KEY。');
   }
 
-  return supabaseClient;
+  return client;
 }

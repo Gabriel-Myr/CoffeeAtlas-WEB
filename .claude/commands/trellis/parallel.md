@@ -104,7 +104,7 @@ TASK_DIR=$(python3 ./.trellis/scripts/task.py create "<title>" --slug <task-name
 
 ```bash
 # Initialize jsonl context files
-python3 ./.trellis/scripts/task.py init-context "$TASK_DIR" <dev_type> --package <web|miniprogram|shared-types|api-client|domain>
+python3 ./.trellis/scripts/task.py init-context "$TASK_DIR" <dev_type>
 
 # Set branch and scope
 python3 ./.trellis/scripts/task.py set-branch "$TASK_DIR" feature/<name>

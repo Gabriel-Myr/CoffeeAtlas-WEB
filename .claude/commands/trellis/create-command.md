@@ -130,11 +130,11 @@ git diff main...HEAD --name-only
 
 ### 2. Categorized Review
 
-**Frontend files** (`apps/web/` or `apps/miniprogram/`):
-- Reference `.trellis/spec/<package>/frontend/index.md`
+**Frontend files** (`apps/web/`):
+- Reference `.trellis/spec/frontend/index.md`
 
-**Backend / contract files** (`apps/web/`, `packages/shared-types/`):
-- Reference `.trellis/spec/<package>/backend/index.md`
+**Backend files** (`packages/api/`):
+- Reference `.trellis/spec/backend/index.md`
 
 ### 3. Output Review Report
 

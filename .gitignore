@@ -18,9 +18,15 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.development
+.env.production
 
 .DS_Store
 .superpowers
 tmp
 temp
 .worktrees/
+.playwright-cli/
+output/
+__pycache__/
+*.pyc

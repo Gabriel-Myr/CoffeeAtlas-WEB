@@ -43,29 +43,11 @@ This shows: developer identity, git status, current task (if any), active tasks.
 python3 ./.trellis/scripts/get_context.py --mode packages
 ```
 
-This shows available packages and their spec layers. Read the relevant spec indexes.
-
-In this repo, start from the package marked as `default`.
-Right now that usually means `miniprogram`, so if the task is only in `apps/miniprogram`, read this first:
+This shows available packages and their spec layers. Read the relevant spec indexes:
 
 ```bash
-cat .trellis/spec/miniprogram/frontend/index.md
-```
-
-If this session is mainly for WeChat miniprogram local preview, also start this helper in a separate terminal:
-
-```bash
-pnpm dev:miniprogram:auto
-```
-
-It watches miniprogram and shared package changes, then automatically restarts `dev:weapp`.
-
-Only add other package indexes when the task truly spans them:
-
-```bash
-cat .trellis/spec/guides/index.md              # Thinking guides (always read)
-cat .trellis/spec/unit-test/index.md           # Testing guidelines
 cat .trellis/spec/<package>/<layer>/index.md   # Package-specific guidelines
+cat .trellis/spec/guides/index.md              # Thinking guides (always read)
 ```
 
 > **Important**: The index files are navigation — they list the actual guideline files (e.g., `error-handling.md`, `conventions.md`, `mock-strategies.md`).

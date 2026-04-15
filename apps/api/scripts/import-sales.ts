@@ -1,16 +1,14 @@
-import { createClient } from '@supabase/supabase-js';
 import * as XLSX from 'xlsx';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://lkadpxktijdtibftuuwi.supabase.co';
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrYWRweGt0aWpkdGliZnR1dXdpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTA2MTUxNiwiZXhwIjoyMDg2NjM3NTE2fQ.bmiravHx9Gb9EhhPTDteo-Rlr0WKN7Bi7r0dScZrdtc';
+import { createAdminSupabaseClient, parseImportArgs, reportScriptError } from './import-script-helpers.ts';
 
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
+const SCRIPT_NAME = 'import-sales.ts';
 
-async function importSalesAndPrice() {
-  console.log('读取 Excel 文件...');
-  const workbook = XLSX.readFile('/Users/gabi/Downloads/白鲸咖啡_清洗后.xlsx');
+async function importSalesAndPrice(inputFile: string) {
+  const supabase = createAdminSupabaseClient();
+
+  console.log(`读取 Excel 文件: ${inputFile}`);
+  const workbook = XLSX.readFile(inputFile);
   const sheetName = workbook.SheetNames[0];
   const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]) as Record<string, unknown>[];
   console.log('共 ' + data.length + ' 条记录');
@@ -93,8 +91,11 @@ async function importSalesAndPrice() {
 }
 
 async function main() {
-  await importSalesAndPrice();
+  const args = parseImportArgs(process.argv.slice(2), { scriptName: SCRIPT_NAME, allowInput: true });
+  await importSalesAndPrice(args.input!);
   console.log('全部完成!');
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  reportScriptError(SCRIPT_NAME, error);
+});

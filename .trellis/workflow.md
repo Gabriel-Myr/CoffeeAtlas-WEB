@@ -57,6 +57,8 @@ cat .trellis/spec/shared-types/backend/index.md
 `get_context.py --mode packages` 会标出当前默认 package 和哪些 package 目前 `out of scope`。
 当前仓库默认 package 是 `miniprogram`，所以如果这轮只改小程序，先从 `miniprogram/frontend` 开始读。
 
+原则：只读当前任务真正需要的 index 和规范文件，不做大范围预读。
+
 ### Step 3: Read Task-Specific Specs
 
 **Miniprogram UI work**
@@ -95,6 +97,8 @@ cat .trellis/spec/unit-test/conventions.md
 3. **One Task At A Time** - 每次聚焦单一任务目录
 4. **Code-Spec Sync** - 学到新规则时及时更新 `.trellis/spec/`
 5. **Keep Work Traceable** - 任务、PRD、journal 尽量可追踪
+6. **Prefer Final Skills** - 默认用轻量 `think`、直接实现、`check` 收尾；不要默认进入大而复杂的前置流程
+7. **Separate Flow From Capability** - Trellis 管任务流程与项目上下文；通用能力型 skill 默认复用你当前 Codex 全局技能（本仓库按 `Waza` 风格使用）
 
 ### File System
 
@@ -161,6 +165,7 @@ python3 ./.trellis/scripts/task.py start .trellis/tasks/<dir>
 - Goal
 - Requirements
 - Acceptance Criteria
+- Out of Scope
 - Technical Notes / risks
 
 ---
@@ -171,13 +176,37 @@ python3 ./.trellis/scripts/task.py start .trellis/tasks/<dir>
 
 ```
 1. Create/select task
-2. Read relevant specs
+2. Read the minimum relevant specs
 3. Update PRD
-4. Implement
-5. Run checks
-6. Sync Trellis docs if new patterns were learned
-7. Hand off for human testing / commit
+4. If unclear, do a short planning pass
+5. Implement
+6. Run checks
+7. Sync Trellis docs if new patterns were learned
+8. Hand off for human testing / commit
 ```
+
+默认对应关系：
+
+- 不清楚怎么做：先短 `think`
+- 出现异常或失败：先定位原因，再修
+- 改完代码：跑 `check`
+- 准备交接或提交：跑 `finish-work`
+
+只有在需求持续变化、确实需要多轮澄清时，才使用 `brainstorm`。
+
+### Global Skills vs Project Skills
+
+本仓库默认把 skill 分成两类：
+
+- **Trellis 项目流程 skill**：`start`、`before-dev`、`check`、`check-cross-layer`、`finish-work`、`record-session`
+- **全局通用能力 skill**：`think`、`hunt`、`design`、`read`、`write`、`health`
+
+约定如下：
+
+- 通用能力优先复用你当前 Codex 全局 skill；本仓库不重复发明一套同名通用技能
+- Trellis 只负责项目特有流程、spec 读取、任务状态、交接与记录
+- 本仓库的 `check` 是**项目补充检查规则**，不是替代全局通用 `check`
+- 如果同时用到全局 `check` 和项目 `check`，顺序默认是：先按通用 `check` 做审查，再按项目 `check` 补跑本仓库验证命令
 
 ### Required Commands
 
@@ -224,6 +253,24 @@ Minimum expectations:
 2. `.trellis/spec/` updated if the task changed conventions/contracts
 3. Working tree is understandable
 4. Human reviewer/tester has enough context to validate the change
+5. If the task was cross-layer, that fact is documented instead of implied
+
+### Post-Commit Recording
+
+After human testing and commit:
+
+1. Archive completed task if it is actually done
+2. Record the session into Trellis workspace journals
+
+```bash
+python3 ./.trellis/scripts/task.py archive <task-name>
+python3 ./.trellis/scripts/add_session.py \
+  --title "Session Title" \
+  --commit "abc1234" \
+  --summary "Brief summary"
+```
+
+只有在代码已经由人类确认并提交后，才进入这一步。
 
 ### Optional Session Recording
 

@@ -5,10 +5,12 @@ import type {
 } from '@coffee-atlas/domain';
 
 import type { AuthUser } from '../types/index.ts';
-
 const FAVORITES_KEY = 'coffee_favorites';
 const ROASTER_FAVORITES_KEY = 'roaster_favorites';
 const HISTORY_KEY = 'coffee_history';
+const PURCHASE_CLICK_LOG_KEY = 'purchase_click_log';
+const SHARE_EVENT_LOG_KEY = 'share_event_log';
+const EXPLORATION_SET_KEY = 'exploration_set';
 const TOKEN_KEY = 'app_token';
 const USER_KEY = 'auth_user';
 const PENDING_FAVORITES_KEY = 'pending_favorites';
@@ -17,6 +19,34 @@ const MAX_HISTORY = 20;
 type FavoriteTargetType = 'bean' | 'roaster';
 
 export type { BeanSnapshot, RoasterSnapshot };
+
+export interface PurchaseClickLogEntry {
+  roasterId: string;
+  beanId: string;
+  ts: number;
+}
+
+export interface PurchaseClickLogEntryInput {
+  roasterId: string;
+  beanId: string;
+  ts?: number;
+}
+
+export interface ShareEventLogEntry {
+  beanId: string;
+  ts: number;
+}
+
+export interface ShareEventLogEntryInput {
+  beanId: string;
+  ts?: number;
+}
+
+export interface ExplorationSet {
+  countries: string[];
+  processes: string[];
+  varieties: string[];
+}
 
 // Token
 export function getToken(): string | null {
@@ -49,6 +79,181 @@ function getStoredList<T>(key: string): T[] {
 
 function setStoredList<T>(key: string, value: T[]): void {
   Taro.setStorageSync(key, value);
+}
+
+function normalizeStoredText(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeStoredStringList(value: unknown): string[] | null {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const normalized = value.map((item) => normalizeStoredText(item)).filter((item) => item.length > 0);
+  return Array.from(new Set(normalized));
+}
+
+function mergeUniqueLists(...lists: string[][]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const list of lists) {
+    for (const item of list) {
+      if (seen.has(item)) {
+        continue;
+      }
+
+      seen.add(item);
+      result.push(item);
+    }
+  }
+
+  return result;
+}
+
+function normalizeExplorationSet(value: unknown): ExplorationSet | null {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const countries = normalizeStoredStringList(record.countries);
+  const processes = normalizeStoredStringList(record.processes);
+  const varieties = normalizeStoredStringList(record.varieties);
+
+  if (!countries || !processes || !varieties) {
+    return null;
+  }
+
+  return {
+    countries,
+    processes,
+    varieties,
+  };
+}
+
+function deriveExplorationSetFromHistory(history: Array<Partial<HistoryItem>>): ExplorationSet {
+  const countries: string[] = [];
+  const processes: string[] = [];
+  const varieties: string[] = [];
+  const seenCountries = new Set<string>();
+  const seenProcesses = new Set<string>();
+  const seenVarieties = new Set<string>();
+
+  for (const item of history) {
+    const country = normalizeStoredText(item.originCountry);
+    if (country && !seenCountries.has(country)) {
+      seenCountries.add(country);
+      countries.push(country);
+    }
+
+    const process = normalizeStoredText(item.process);
+    if (process && !seenProcesses.has(process)) {
+      seenProcesses.add(process);
+      processes.push(process);
+    }
+
+    const variety = normalizeStoredText(item.variety);
+    if (variety && !seenVarieties.has(variety)) {
+      seenVarieties.add(variety);
+      varieties.push(variety);
+    }
+  }
+
+  return {
+    countries,
+    processes,
+    varieties,
+  };
+}
+
+function readExplorationSet(): ExplorationSet | null {
+  return normalizeExplorationSet(Taro.getStorageSync(EXPLORATION_SET_KEY));
+}
+
+function persistExplorationSet(explorationSet: ExplorationSet): void {
+  Taro.setStorageSync(EXPLORATION_SET_KEY, explorationSet);
+}
+
+function mergeExplorationSetWithHistory(
+  explorationSet: ExplorationSet,
+  history: Array<Partial<HistoryItem>>
+): ExplorationSet {
+  const derived = deriveExplorationSetFromHistory(history);
+  return {
+    countries: mergeUniqueLists(explorationSet.countries, derived.countries),
+    processes: mergeUniqueLists(explorationSet.processes, derived.processes),
+    varieties: mergeUniqueLists(explorationSet.varieties, derived.varieties),
+  };
+}
+
+function updateExplorationSetFromBean(bean: Pick<BeanSnapshot, 'originCountry' | 'process' | 'variety'>): void {
+  const current = getExplorationSet();
+  const next = {
+    countries: mergeUniqueLists(current.countries, normalizeStoredText(bean.originCountry) ? [bean.originCountry.trim()] : []),
+    processes: mergeUniqueLists(current.processes, normalizeStoredText(bean.process) ? [bean.process.trim()] : []),
+    varieties: mergeUniqueLists(current.varieties, normalizeStoredText(bean.variety) ? [bean.variety.trim()] : []),
+  };
+  persistExplorationSet(next);
+}
+
+function normalizePurchaseClickLogEntry(entry: PurchaseClickLogEntryInput): PurchaseClickLogEntry | null {
+  const roasterId = normalizeStoredText(entry.roasterId);
+  const beanId = normalizeStoredText(entry.beanId);
+  if (!roasterId || !beanId) {
+    return null;
+  }
+
+  return {
+    roasterId,
+    beanId,
+    ts: Number.isFinite(entry.ts) ? Number(entry.ts) : Date.now(),
+  };
+}
+
+function normalizeShareEventLogEntry(entry: ShareEventLogEntryInput): ShareEventLogEntry | null {
+  const beanId = normalizeStoredText(entry.beanId);
+  if (!beanId) {
+    return null;
+  }
+
+  return {
+    beanId,
+    ts: Number.isFinite(entry.ts) ? Number(entry.ts) : Date.now(),
+  };
+}
+
+function getStoredValidatedList<T>(key: string, isValid: (value: unknown) => value is T): T[] {
+  const value = Taro.getStorageSync(key);
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(isValid);
+}
+
+function isPurchaseClickLogEntry(value: unknown): value is PurchaseClickLogEntry {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const entry = value as Record<string, unknown>;
+  return (
+    normalizeStoredText(entry.roasterId).length > 0 &&
+    normalizeStoredText(entry.beanId).length > 0 &&
+    typeof entry.ts === 'number' &&
+    Number.isFinite(entry.ts)
+  );
+}
+
+function isShareEventLogEntry(value: unknown): value is ShareEventLogEntry {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const entry = value as Record<string, unknown>;
+  return normalizeStoredText(entry.beanId).length > 0 && typeof entry.ts === 'number' && Number.isFinite(entry.ts);
 }
 
 function addPendingFavorite(targetType: FavoriteTargetType, targetId: string): void {
@@ -152,10 +357,79 @@ export function getHistory(): HistoryItem[] {
   return Taro.getStorageSync(HISTORY_KEY) || [];
 }
 
+export function getExplorationSet(): ExplorationSet {
+  const stored = readExplorationSet();
+  const merged = mergeExplorationSetWithHistory(
+    stored ?? {
+      countries: [],
+      processes: [],
+      varieties: [],
+    },
+    getHistory()
+  );
+
+  if (!stored || JSON.stringify(stored) !== JSON.stringify(merged)) {
+    persistExplorationSet(merged);
+  }
+
+  return merged;
+}
+
+export function setExplorationSet(explorationSet: ExplorationSet): void {
+  persistExplorationSet({
+    countries: Array.from(new Set(explorationSet.countries.map((item) => normalizeStoredText(item)).filter(Boolean))),
+    processes: Array.from(new Set(explorationSet.processes.map((item) => normalizeStoredText(item)).filter(Boolean))),
+    varieties: Array.from(new Set(explorationSet.varieties.map((item) => normalizeStoredText(item)).filter(Boolean))),
+  });
+}
+
+export function clearExplorationSet(): void {
+  Taro.removeStorageSync(EXPLORATION_SET_KEY);
+}
+
 export function addToHistory(bean: BeanSnapshot): void {
   const history = getHistory().filter((h) => h.id !== bean.id);
   history.unshift({ ...bean, viewedAt: Date.now() });
   Taro.setStorageSync(HISTORY_KEY, history.slice(0, MAX_HISTORY));
+  updateExplorationSetFromBean(bean);
+}
+
+export function getPurchaseClickLog(): PurchaseClickLogEntry[] {
+  return getStoredValidatedList(PURCHASE_CLICK_LOG_KEY, isPurchaseClickLogEntry);
+}
+
+export function recordPurchaseClick(entry: PurchaseClickLogEntryInput): void {
+  const log = getPurchaseClickLog();
+  const normalized = normalizePurchaseClickLogEntry(entry);
+  if (!normalized) {
+    return;
+  }
+
+  log.push(normalized);
+  Taro.setStorageSync(PURCHASE_CLICK_LOG_KEY, log);
+}
+
+export function clearPurchaseClickLog(): void {
+  Taro.removeStorageSync(PURCHASE_CLICK_LOG_KEY);
+}
+
+export function getShareEventLog(): ShareEventLogEntry[] {
+  return getStoredValidatedList(SHARE_EVENT_LOG_KEY, isShareEventLogEntry);
+}
+
+export function recordShareEvent(entry: ShareEventLogEntryInput): void {
+  const log = getShareEventLog();
+  const normalized = normalizeShareEventLogEntry(entry);
+  if (!normalized) {
+    return;
+  }
+
+  log.push(normalized);
+  Taro.setStorageSync(SHARE_EVENT_LOG_KEY, log);
+}
+
+export function clearShareEventLog(): void {
+  Taro.removeStorageSync(SHARE_EVENT_LOG_KEY);
 }
 
 export type OnboardingExperienceLevel = 'beginner' | 'intermediate';

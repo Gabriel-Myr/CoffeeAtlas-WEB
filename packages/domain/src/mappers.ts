@@ -7,6 +7,7 @@ export interface BeanFavoriteSnapshot {
   imageUrl: string | null;
   originCountry: string;
   process: string;
+  variety: string;
   price: number;
 }
 
@@ -17,6 +18,7 @@ export interface BeanFavoriteSnapshotInput {
   imageUrl: string | null;
   originCountry: string;
   process: string;
+  variety?: string | null;
   price: number;
 }
 
@@ -60,6 +62,7 @@ export function toBeanFavoriteSnapshot<T extends BeanFavoriteSnapshotInput>(
     imageUrl: bean.imageUrl,
     originCountry: bean.originCountry,
     process: bean.process,
+    variety: toSnapshotText(bean.variety) ?? '',
     price: toSnapshotPrice(bean.price),
   };
 }

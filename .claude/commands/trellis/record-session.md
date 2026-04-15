@@ -34,22 +34,13 @@ python3 ./.trellis/scripts/add_session.py \
 cat << 'EOF' | python3 ./.trellis/scripts/add_session.py --stdin --title "Title" --commit "hash"
 | Feature | Description |
 |---------|-------------|
-| Miniprogram Discovery | Refined all-beans entry flow and filter state |
-| Trellis | Updated miniprogram-focused specs and check workflow |
+| New API | Added user authentication endpoint |
+| Frontend | Updated login form |
 
 **Updated Files**:
-- `apps/miniprogram/src/pages/all-beans/index.tsx`
-- `.trellis/spec/miniprogram/frontend/quality-guidelines.md`
+- `packages/api/modules/auth/router.ts`
+- `apps/web/modules/auth/components/login-form.tsx`
 EOF
-```
-
-If this round only touched miniprogram, keep the title and summary package-specific too:
-
-```bash
-python3 ./.trellis/scripts/add_session.py \
-  --title "Miniprogram discover flow" \
-  --commit "hash1,hash2" \
-  --summary "Updated all-beans entry intent, synced miniprogram Trellis specs, and verified typecheck"
 ```
 
 **Auto-completes**:

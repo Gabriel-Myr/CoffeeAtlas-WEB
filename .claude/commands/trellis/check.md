@@ -11,8 +11,6 @@ Execute these steps:
    ```bash
    python3 ./.trellis/scripts/get_context.py --mode packages
    ```
-   Start from the package marked as `default`.
-   In this repo, if the task only touches `apps/miniprogram`, read `miniprogram/frontend` first and only add `web/*` or `shared-types/*` when the change truly spans them.
 
 3. **Read the spec index** for each relevant module:
    ```bash
@@ -22,19 +20,6 @@ Execute these steps:
 
 4. **Read the specific guideline files** referenced in the Quality Check section (e.g., `quality-guidelines.md`, `conventions.md`). The index is NOT the goal — it points you to the actual guideline files. Read those files and review your code against them.
 
-5. **Run verification commands that match the affected package**.
-
-   Miniprogram-first baseline:
-   ```bash
-   pnpm lint
-   pnpm typecheck
-   pnpm --filter @coffeeatlas/miniprogram typecheck
-   ```
-
-   Add these only when relevant:
-   ```bash
-   pnpm --filter @coffeeatlas/web test
-   cd apps/web && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
-   ```
+5. **Run lint and typecheck** for the affected package.
 
 6. **Report any violations** and fix them if found.

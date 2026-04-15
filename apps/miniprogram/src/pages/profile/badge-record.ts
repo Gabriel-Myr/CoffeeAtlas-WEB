@@ -37,7 +37,10 @@ export function getBadgeRecordCopy({
       eyebrow: 'BADGE RECORD',
       title: '徽章记录',
       description: `已解锁 ${unlockedCount} / ${totalCount} 枚徽章，这一页已经被你点亮。`,
-      hint: '首批徽章已全部拿下，后续新的探索徽章会继续加入。',
+      hint:
+        totalCount >= 14
+          ? '当前徽章已全部拿下，后续新增徽章会继续加入。'
+          : '首批徽章已全部拿下，后续新的探索徽章会继续加入。',
     };
   }
 

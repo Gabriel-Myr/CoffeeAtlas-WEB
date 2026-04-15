@@ -4,7 +4,7 @@ import test from 'node:test';
 import { createOnboardingFlow } from '../src/pages/onboarding/onboarding-logic.ts';
 import { resolveOnboardingNavigation } from '../src/pages/onboarding/navigation.ts';
 
-test('beginner onboarding resolves to guided relaunch action', () => {
+test('beginner onboarding resolves to the guided onboarding page', () => {
   const flow = createOnboardingFlow(
     {
       getProfile: () => null,
@@ -15,8 +15,8 @@ test('beginner onboarding resolves to guided relaunch action', () => {
 
   assert.deepEqual(resolveOnboardingNavigation(flow.complete('beginner')), {
     type: 'reLaunch',
-    url: '/pages/all-beans/index',
-    entryIntent: 'guided',
+    url: '/pages/onboarding-guided/index',
+    entryIntent: null,
   });
 });
 

@@ -69,34 +69,6 @@ AGENTS_REQUIRE_TASK = (AGENT_IMPLEMENT, AGENT_CHECK, AGENT_DEBUG)
 AGENTS_ALL = (AGENT_IMPLEMENT, AGENT_CHECK, AGENT_DEBUG, AGENT_RESEARCH)
 
 
-def get_trellis_command_path(repo_root: str, name: str) -> str:
-    """Resolve the current platform's Trellis command/skill path."""
-    scripts_dir = Path(repo_root) / DIR_WORKFLOW / "scripts"
-    scripts_dir_str = str(scripts_dir)
-
-    try:
-        if scripts_dir_str not in sys.path:
-            sys.path.insert(0, scripts_dir_str)
-
-        from common.cli_adapter import get_cli_adapter_auto  # type: ignore
-
-        adapter = get_cli_adapter_auto(Path(repo_root))
-        return adapter.get_trellis_command_path(name)
-    except Exception:
-        # Keep Claude as the safe fallback because this hook itself lives under .claude/.
-        return f".claude/commands/trellis/{name}.md"
-
-
-def append_trellis_command_context(
-    context_parts: list[str], repo_root: str, name: str, description: str
-) -> None:
-    """Append a Trellis command/skill file to the prompt context if it exists."""
-    file_path = get_trellis_command_path(repo_root, name)
-    content = read_file_content(repo_root, file_path)
-    if content:
-        context_parts.append(f"=== {file_path} ({description}) ===\n{content}")
-
-
 def find_repo_root(start_path: str) -> str | None:
     """
     Find git repo root from start_path upwards
@@ -127,7 +99,14 @@ def get_current_task(repo_root: str) -> str | None:
     try:
         with open(current_task_file, "r", encoding="utf-8") as f:
             content = f.read().strip()
-            return content if content else None
+            if not content:
+                return None
+            normalized = content.replace("\\", "/")
+            while normalized.startswith("./"):
+                normalized = normalized[2:]
+            if normalized.startswith("tasks/"):
+                normalized = f".trellis/{normalized}"
+            return normalized
     except Exception:
         return None
 
@@ -363,16 +342,16 @@ def get_check_context(repo_root: str, task_dir: str) -> str:
         for file_path, content in check_entries:
             context_parts.append(f"=== {file_path} ===\n{content}")
     else:
-        # Fallback: use platform-aware check files + spec.jsonl
-        append_trellis_command_context(
-            context_parts, repo_root, "finish-work", "Finish work checklist"
-        )
-        append_trellis_command_context(
-            context_parts, repo_root, "check-cross-layer", "Cross-layer check spec"
-        )
-        append_trellis_command_context(
-            context_parts, repo_root, "check", "Code quality check spec"
-        )
+        # Fallback: use hardcoded check files + spec.jsonl
+        check_files = [
+            (".claude/commands/trellis/finish-work.md", "Finish work checklist"),
+            (".claude/commands/trellis/check-cross-layer.md", "Cross-layer check spec"),
+            (".claude/commands/trellis/check.md", "Code quality check spec"),
+        ]
+        for file_path, description in check_files:
+            content = read_file_content(repo_root, file_path)
+            if content:
+                context_parts.append(f"=== {file_path} ({description}) ===\n{content}")
 
         # Add spec.jsonl
         spec_entries = read_jsonl_entries(repo_root, f"{task_dir}/spec.jsonl")
@@ -408,15 +387,23 @@ def get_finish_context(repo_root: str, task_dir: str) -> str:
         for file_path, content in finish_entries:
             context_parts.append(f"=== {file_path} ===\n{content}")
     else:
-        # Fallback: only finish-work (lightweight)
-        append_trellis_command_context(
-            context_parts, repo_root, "finish-work", "Finish checklist"
+        # Fallback: only finish-work.md (lightweight)
+        finish_work = read_file_content(
+            repo_root, ".claude/commands/trellis/finish-work.md"
         )
+        if finish_work:
+            context_parts.append(
+                f"=== .claude/commands/trellis/finish-work.md (Finish checklist) ===\n{finish_work}"
+            )
 
     # 2. Spec update process (for active spec sync)
-    append_trellis_command_context(
-        context_parts, repo_root, "update-spec", "Spec update process"
+    update_spec = read_file_content(
+        repo_root, ".claude/commands/trellis/update-spec.md"
     )
+    if update_spec:
+        context_parts.append(
+            f"=== .claude/commands/trellis/update-spec.md (Spec update process) ===\n{update_spec}"
+        )
 
     # 3. Requirements document (for verifying requirements are met)
     prd_content = read_file_content(repo_root, f"{task_dir}/prd.md")
@@ -445,17 +432,19 @@ def get_debug_context(repo_root: str, task_dir: str) -> str:
         for file_path, content in debug_entries:
             context_parts.append(f"=== {file_path} ===\n{content}")
     else:
-        # Fallback: use spec.jsonl + platform-aware check files
+        # Fallback: use spec.jsonl + hardcoded check files
         spec_entries = read_jsonl_entries(repo_root, f"{task_dir}/spec.jsonl")
         for file_path, content in spec_entries:
             context_parts.append(f"=== {file_path} (Dev spec) ===\n{content}")
 
-        append_trellis_command_context(
-            context_parts, repo_root, "check", "Code quality check spec"
-        )
-        append_trellis_command_context(
-            context_parts, repo_root, "check-cross-layer", "Cross-layer check spec"
-        )
+        check_files = [
+            (".claude/commands/trellis/check.md", "Code quality check spec"),
+            (".claude/commands/trellis/check-cross-layer.md", "Cross-layer check spec"),
+        ]
+        for file_path, description in check_files:
+            content = read_file_content(repo_root, file_path)
+            if content:
+                context_parts.append(f"=== {file_path} ({description}) ===\n{content}")
 
     # 2. Codex review output (if exists)
     codex_output = read_file_content(repo_root, f"{task_dir}/codex-review-output.txt")

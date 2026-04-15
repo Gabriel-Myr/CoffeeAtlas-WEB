@@ -1,17 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { createAdminSupabaseClient, parseImportArgs, reportScriptError } from './import-script-helpers.ts';
 
-// 从环境变量或 .env 文件加载配置
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://lkadpxktijdtibftuuwi.supabase.co';
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrYWRweGt0aWpkdGliZnR1dXdpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTA2MTUxNiwiZXhwIjoyMDg2NjM3NTE2fQ.bmiravHx9Gb9EhhPTDteo-Rlr0WKN7Bi7r0dScZrdtc';
-
-if (!supabaseUrl || !serviceRoleKey) {
-  console.error('Missing environment variables');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
+const SCRIPT_NAME = 'import-roasters.ts';
 
 const roasters = [
   // 国际知名品牌
@@ -219,6 +208,8 @@ const roasters = [
 ];
 
 async function insertRoasters() {
+  const supabase = createAdminSupabaseClient();
+
   console.log(`开始插入 ${roasters.length} 家烘焙商数据...`);
 
   const { data, error } = await supabase
@@ -238,4 +229,11 @@ async function insertRoasters() {
   });
 }
 
-insertRoasters();
+async function main() {
+  parseImportArgs(process.argv.slice(2), { scriptName: SCRIPT_NAME, allowInput: false });
+  await insertRoasters();
+}
+
+main().catch((error) => {
+  reportScriptError(SCRIPT_NAME, error);
+});

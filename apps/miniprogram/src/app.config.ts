@@ -1,6 +1,7 @@
 export default defineAppConfig({
   pages: [
     'pages/onboarding/index',
+    'pages/onboarding-guided/index',
     'pages/all-beans/index',
     'pages/index/index',
     'pages/profile/index',

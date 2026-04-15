@@ -14,6 +14,7 @@ export default [
   },
   {
     files: [
+      'apps/api/**/*.{ts,tsx,js,jsx}',
       'apps/miniprogram/**/*.{ts,tsx,js,jsx}',
       'packages/**/*.{ts,tsx,js,jsx}',
     ],

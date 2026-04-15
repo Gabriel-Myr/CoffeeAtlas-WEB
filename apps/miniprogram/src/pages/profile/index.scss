@@ -220,9 +220,44 @@
 
   &__badge-record-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 18rpx;
-    margin-top: 22rpx;
+  }
+
+  &__badge-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 24rpx;
+    margin-top: 24rpx;
+  }
+
+  &__badge-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16rpx;
+  }
+
+  &__badge-group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16rpx;
+  }
+
+  &__badge-group-title {
+    font-size: 20rpx;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(107, 83, 68, 0.78);
+  }
+
+  &__badge-group-summary {
+    padding: 8rpx 14rpx;
+    border-radius: 999rpx;
+    background: rgba(78, 52, 46, 0.08);
+    font-size: 18rpx;
+    color: rgba(107, 83, 68, 0.82);
   }
 
   &__badge-card {
@@ -303,10 +338,10 @@
 
   &__badge-card-subtitle {
     display: block;
-    font-size: 20rpx;
+    font-size: 18rpx;
     line-height: 1.5;
     color: rgba(107, 83, 68, 0.78);
-    min-height: 60rpx;
+    min-height: 72rpx;
   }
 
   &__badge-card-footer {
@@ -398,11 +433,21 @@
 
   &__badge-modal-title {
     display: block;
-    margin-top: 22rpx;
+    margin-top: 12rpx;
     font-size: 36rpx;
     font-weight: 700;
     color: var(--color-coffee-dark, #3E2A1E);
     line-height: 1.25;
+  }
+
+  &__badge-modal-unlock-title {
+    display: block;
+    margin-top: 20rpx;
+    color: var(--color-accent-rust, #c85c3d);
+    font-size: 22rpx;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
   }
 
   &__badge-modal-subtitle {

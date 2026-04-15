@@ -16,8 +16,11 @@ import type {
   ProcessStyleId,
 } from '../../types';
 import { consumeAllBeansEntryIntent } from './entry-intent';
-import { resolveAllBeansRouteParams, type AllBeansLandingMode } from './route-params';
+import { consumeAllBeansGuidedSeed } from './guided-seed';
+import type { GuidedSeedState } from './guided-seed-store';
+import { resolveAllBeansEntryState, resolveAllBeansRouteParams, type AllBeansLandingMode } from './route-params';
 import { resolveAllBeansDidShowTransition } from './entry-transition';
+import { resolveAllBeansEntryBootstrap } from './entry-bootstrap';
 import {
   ORIGIN_ATLAS_CONTINENT_MAP,
   ORIGIN_ATLAS_COUNTRY_MAP,
@@ -25,14 +28,19 @@ import {
 } from '../../utils/origin-atlas';
 import {
   buildGuidedDiscoverStep,
+  GUIDED_CONTINENT_CHOICES,
+  GUIDED_PROCESS_CHOICES,
+  GUIDED_PROCESS_STYLE_CHOICES,
   resolveGuidedContinentSelection,
   resolveGuidedProcessSelection,
   resolveGuidedProcessStyleSelection,
   shouldExpandGuidedDiscoverCard,
+  shouldShowGuidedDiscoverCard,
   type GuidedContinentChoiceId,
   type GuidedProcessChoiceId,
   type GuidedProcessStyleChoiceId,
 } from './guided-discover';
+import { LIGHT_QUESTION_COPY } from './light-question-copy.ts';
 import './index.scss';
 
 const PAGE_SIZE = 20;
@@ -41,38 +49,8 @@ const ALL_DISCOVER_VALUE = 'all';
 
 type DiscoverContinentKey = DiscoverContinentId | 'all';
 
-const GUIDED_PROCESS_CHOICES: Array<{
-  id: GuidedProcessChoiceId;
-  title: string;
-  description: string;
-}> = [
-  { id: 'clean', title: '清爽干净', description: '水洗处理：干净明亮，酸质清稀。' },
-  { id: 'fruity', title: '果香馥郁', description: '日晒处理：具有果汁感和发酵甜感。' },
-  { id: 'sweet', title: '酸甜圆润', description: '蜜处理：甜感和酸质共存。' },
-];
-
-const GUIDED_PROCESS_STYLE_CHOICES: Array<{
-  id: GuidedProcessStyleChoiceId;
-  title: string;
-  description: string;
-}> = [
-  { id: 'classic', title: '传统一点', description: '先看传统风格，更容易建立稳定印象。' },
-  { id: 'anaerobic', title: '想试厌氧', description: '直接把结果缩到厌氧路线，风味会更跳一点。' },
-  { id: 'experimental', title: '更特别一点', description: '把酵母、热冲击等特殊处理一起纳入选择。' },
-];
-
-const GUIDED_CONTINENT_CHOICES: Array<{
-  id: GuidedContinentChoiceId;
-  title: string;
-  description: string;
-}> = [
-  { id: 'floral', title: '偏花香细腻', description: '先从非洲方向继续收窄。' },
-  { id: 'balanced', title: '偏平衡甜感', description: '先从美洲方向继续收窄。' },
-  { id: 'bold', title: '偏醇厚香料感', description: '先从亚洲方向继续收窄。' },
-];
-
 function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : '加载失败';
+  return error instanceof Error ? error.message : LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.loadResultsError;
 }
 
 function getCollapsedGuidanceCopy(landingMode: AllBeansLandingMode): {
@@ -80,31 +58,35 @@ function getCollapsedGuidanceCopy(landingMode: AllBeansLandingMode): {
   description: string;
 } {
   if (landingMode === 'guided') {
-    return {
-      title: '已经为你打开轻问答，可以继续按问题缩小范围',
-      description: '你也可以先收起引导，直接用下方筛选自己找豆子。',
-    };
+    return LIGHT_QUESTION_COPY.miniprogram.guidedCard.collapsed.guided;
   }
 
   if (landingMode === 'direct') {
-    return {
-      title: '需要我帮你缩小范围吗？',
-      description: '展开后会先问处理法，再逐步缩到大洲和国家；不展开也可以直接筛选。',
-    };
+    return LIGHT_QUESTION_COPY.miniprogram.guidedCard.collapsed.direct;
   }
 
-  return {
-    title: '没有头绪时，帮你按喜好逐步选豆',
-    description: '处理法-风味-产地，轻松筛选；\n已经有目标了？直接使用下方筛选吧。',
-  };
+  return LIGHT_QUESTION_COPY.miniprogram.guidedCard.collapsed.default;
+}
+
+function shouldExpandDiscoverPanelByDefault(landingMode: AllBeansLandingMode): boolean {
+  return landingMode !== 'guided';
 }
 
 export default function AllBeans() {
   const router = useRouter();
-  const initialRouteState = resolveAllBeansRouteParams(router.params);
+  const initialEntryIntentPreview = resolveAllBeansRouteParams({
+    entry: Taro.getStorageSync('all_beans_entry_intent'),
+  }).landingMode;
+  const initialRouteState = resolveAllBeansEntryState(
+    router.params,
+    initialEntryIntentPreview === 'guided' || initialEntryIntentPreview === 'direct' ? initialEntryIntentPreview : null
+  );
   const [landingMode, setLandingMode] = useState<AllBeansLandingMode>(initialRouteState.landingMode);
   const [isGuidedCardExpanded, setIsGuidedCardExpanded] = useState(() =>
     shouldExpandGuidedDiscoverCard(initialRouteState.landingMode)
+  );
+  const [isDiscoverPanelExpanded, setIsDiscoverPanelExpanded] = useState(() =>
+    shouldExpandDiscoverPanelByDefault(initialRouteState.landingMode)
   );
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -117,6 +99,7 @@ export default function AllBeans() {
   const [discoverPayload, setDiscoverPayload] = useState<BeanDiscoverPayload | null>(null);
   const [discoverLoading, setDiscoverLoading] = useState(false);
   const [discoverError, setDiscoverError] = useState('');
+  const [pendingGuidedSeed, setPendingGuidedSeed] = useState<GuidedSeedState | null>(null);
 
   const [beans, setBeans] = useState<CoffeeBean[]>([]);
   const [loading, setLoading] = useState(false);
@@ -177,6 +160,19 @@ export default function AllBeans() {
 
     return `在 ${discoverPathItems.map((item) => item.value).join(' / ')} 中搜索 “${normalizedQuery}”`;
   }, [discoverPathItems, normalizedQuery]);
+  const discoverResultCount = discoverPayload?.resultSummary.total ?? beans.length;
+  const discoverPanelSummaryText = useMemo(() => {
+    if (discoverPathItems.length === 0) {
+      return shouldShowDiscoverResults
+        ? '当前已经有结果，想继续缩小范围时再展开筛选。'
+        : '展开后可按处理法、风格、大洲、国家和豆种逐步缩小范围。';
+    }
+
+    return `当前路径：${discoverPathItems.map((item) => item.value).join(' / ')}`;
+  }, [discoverPathItems, shouldShowDiscoverResults]);
+  const discoverPanelTitle = shouldShowDiscoverResults
+    ? `当前已锁定 ${discoverResultCount} 款豆子`
+    : '筛选面板默认收起，需要时再展开';
 
   const guidedDiscoverStep = useMemo(() => {
     return buildGuidedDiscoverStep({
@@ -197,6 +193,7 @@ export default function AllBeans() {
   }, [discoverPayload]);
 
   const collapsedGuidanceCopy = useMemo(() => getCollapsedGuidanceCopy(landingMode), [landingMode]);
+  const shouldShowInlineGuidedDiscover = useMemo(() => shouldShowGuidedDiscoverCard(landingMode), [landingMode]);
 
   const resetResultState = () => {
     setBeans([]);
@@ -212,6 +209,7 @@ export default function AllBeans() {
   const resetEntryPageState = () => {
     requestVersionRef.current += 1;
     discoverRequestVersionRef.current += 1;
+    setPendingGuidedSeed(null);
     setSearchQuery('');
     setSelectedProcessBase(ALL_DISCOVER_VALUE);
     setSelectedProcessStyle(ALL_DISCOVER_VALUE);
@@ -262,7 +260,7 @@ export default function AllBeans() {
     } catch (error) {
       if (requestVersion !== requestVersionRef.current) return;
       setErrorMessage(getErrorMessage(error));
-      Taro.showToast({ title: '加载失败', icon: 'none' });
+      Taro.showToast({ title: LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.loadResultsError, icon: 'none' });
     } finally {
       if (requestVersion === requestVersionRef.current) {
         setLoadingState(false);
@@ -299,7 +297,7 @@ export default function AllBeans() {
     } catch (error) {
       if (requestVersion !== discoverRequestVersionRef.current) return;
       setDiscoverError(getErrorMessage(error));
-      Taro.showToast({ title: '探索加载失败', icon: 'none' });
+      Taro.showToast({ title: LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.loadDiscoverError, icon: 'none' });
     } finally {
       if (requestVersion === discoverRequestVersionRef.current) {
         setDiscoverLoading(false);
@@ -384,6 +382,17 @@ export default function AllBeans() {
     }
   }, [discoverPayload, selectedContinent, selectedCountry, selectedProcessBase, selectedProcessStyle, selectedVariety]);
 
+  useEffect(() => {
+    if (!pendingGuidedSeed) return;
+
+    setSelectedProcessBase(pendingGuidedSeed.processBase ?? ALL_DISCOVER_VALUE);
+    setSelectedProcessStyle(pendingGuidedSeed.processStyle ?? ALL_DISCOVER_VALUE);
+    setSelectedContinent((pendingGuidedSeed.continent as DiscoverContinentKey | null) ?? ALL_DISCOVER_VALUE);
+    setSelectedCountry(pendingGuidedSeed.country ?? ALL_DISCOVER_VALUE);
+    setSelectedVariety(pendingGuidedSeed.variety ?? ALL_DISCOVER_VALUE);
+    setPendingGuidedSeed(null);
+  }, [pendingGuidedSeed]);
+
   useReachBottom(() => {
     if (loadingRef.current || !hasMore || !shouldShowDiscoverResults) return;
     void loadBeanPage(page);
@@ -391,20 +400,32 @@ export default function AllBeans() {
 
   useDidShow(() => {
     const entryIntent = consumeAllBeansEntryIntent();
+    const guidedSeed = consumeAllBeansGuidedSeed();
     const transition = resolveAllBeansDidShowTransition({
       params: router.params,
       entryIntent,
       landingMode,
     });
+    const bootstrap = resolveAllBeansEntryBootstrap({
+      guidedSeed,
+      transition,
+    });
 
     if (!transition.shouldApply) return;
 
-    if (transition.shouldResetPageState) {
+    if (bootstrap.shouldResetPageState) {
       resetEntryPageState();
+    }
+
+    if (bootstrap.nextPendingGuidedSeed) {
+      setPendingGuidedSeed(bootstrap.nextPendingGuidedSeed);
     }
 
     setLandingMode(transition.nextLandingMode);
     setIsGuidedCardExpanded(shouldExpandGuidedDiscoverCard(transition.nextLandingMode));
+    setIsDiscoverPanelExpanded(
+      bootstrap.nextPendingGuidedSeed ? false : shouldExpandDiscoverPanelByDefault(transition.nextLandingMode)
+    );
   });
 
   const handleProcessBaseSelect = (value: string) => {
@@ -486,7 +507,7 @@ export default function AllBeans() {
     if (!discoverPayload || discoverPayload.processBaseOptions.length === 0) return;
     const selection = resolveGuidedProcessSelection(choice, discoverPayload.processBaseOptions);
     if (!selection) {
-      Taro.showToast({ title: '当前没有匹配的基础处理法方向', icon: 'none' });
+      Taro.showToast({ title: LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.noMatchingProcessBase, icon: 'none' });
       return;
     }
     setSelectedProcessBase(selection.id);
@@ -500,7 +521,7 @@ export default function AllBeans() {
     if (!discoverPayload || discoverPayload.processStyleOptions.length === 0) return;
     const selection = resolveGuidedProcessStyleSelection(choice, discoverPayload.processStyleOptions);
     if (!selection) {
-      Taro.showToast({ title: '当前没有匹配的处理风格方向', icon: 'none' });
+      Taro.showToast({ title: LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.noMatchingProcessStyle, icon: 'none' });
       return;
     }
     setSelectedProcessStyle(selection.id);
@@ -513,7 +534,7 @@ export default function AllBeans() {
     if (!discoverPayload || discoverPayload.continentOptions.length === 0) return;
     const selection = resolveGuidedContinentSelection(choice, discoverPayload.continentOptions);
     if (!selection) {
-      Taro.showToast({ title: '当前没有匹配的大洲方向', icon: 'none' });
+      Taro.showToast({ title: LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.noMatchingContinent, icon: 'none' });
       return;
     }
     setSelectedContinent(selection.id as DiscoverContinentId);
@@ -525,145 +546,173 @@ export default function AllBeans() {
     <View className="all-beans">
       <AtlasPageHero subtitle="全部咖啡豆" />
 
-      <SearchBar value={searchQuery} placeholder="按烘焙商、产地、处理法或豆种搜索..." onInput={setSearchQuery} />
+      <SearchBar
+        value={searchQuery}
+        placeholder={LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.searchPlaceholder}
+        onInput={setSearchQuery}
+      />
 
-      <View className="discover-top">
-        <View className="guided-discover-card">
-          <View className="guided-discover-card__header" onClick={() => setIsGuidedCardExpanded((current) => !current)}>
-            <View className="guided-discover-card__header-main">
-              <Text className="guided-discover-card__label">轻问答</Text>
-              <Text className="guided-discover-card__title">
-                {isGuidedCardExpanded ? guidedDiscoverStep.title : collapsedGuidanceCopy.title}
-              </Text>
-              <Text className="guided-discover-card__description">
-                {isGuidedCardExpanded ? guidedDiscoverStep.description : collapsedGuidanceCopy.description}
+      {shouldShowInlineGuidedDiscover ? (
+        <View className="discover-top">
+          <View className="guided-discover-card">
+            <View className="guided-discover-card__header" onClick={() => setIsGuidedCardExpanded((current) => !current)}>
+              <View className="guided-discover-card__header-main">
+                <Text className="guided-discover-card__label">{LIGHT_QUESTION_COPY.miniprogram.guidedCard.label}</Text>
+                <Text className="guided-discover-card__title">
+                  {isGuidedCardExpanded ? guidedDiscoverStep.title : collapsedGuidanceCopy.title}
+                </Text>
+                <Text className="guided-discover-card__description">
+                  {isGuidedCardExpanded ? guidedDiscoverStep.description : collapsedGuidanceCopy.description}
+                </Text>
+              </View>
+              <Text className="guided-discover-card__toggle">
+                {isGuidedCardExpanded
+                  ? LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.toggleCollapse
+                  : LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.toggleExpand}
               </Text>
             </View>
-            <Text className="guided-discover-card__toggle">{isGuidedCardExpanded ? '收起' : '展开'}</Text>
-          </View>
 
-          {isGuidedCardExpanded ? (
-            <>
-              {guidedDiscoverStep.step === 'process_base' ? (
-                discoverPayload && discoverPayload.processBaseOptions.length > 0 ? (
-                  <View className="guided-discover-card__choices">
-                    {GUIDED_PROCESS_CHOICES.map((choice) => (
-                      <View
-                        key={choice.id}
-                        className="guided-discover-card__choice"
-                        onClick={() => handleGuidedProcessAnswer(choice.id)}
-                      >
-                        <Text className="guided-discover-card__choice-title">{choice.title}</Text>
-                        <Text className="guided-discover-card__choice-description">{choice.description}</Text>
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <Text className="guided-discover-card__hint">正在准备基础处理法选项...</Text>
-                )
-              ) : null}
-
-              {guidedDiscoverStep.step === 'process_style' ? (
-                discoverPayload && visibleGuidedProcessStyleChoices.length > 0 ? (
-                  <View className="guided-discover-card__choices">
-                    {visibleGuidedProcessStyleChoices.map((choice) => (
-                      <View
-                        key={choice.id}
-                        className="guided-discover-card__choice"
-                        onClick={() => handleGuidedProcessStyleAnswer(choice.id)}
-                      >
-                        <Text className="guided-discover-card__choice-title">{choice.title}</Text>
-                        <Text className="guided-discover-card__choice-description">{choice.description}</Text>
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <Text className="guided-discover-card__hint">正在准备处理风格选项...</Text>
-                )
-              ) : null}
-
-              {guidedDiscoverStep.step === 'continent' ? (
-                discoverPayload && discoverPayload.continentOptions.length > 0 ? (
-                  <View className="guided-discover-card__choices">
-                    {GUIDED_CONTINENT_CHOICES.map((choice) => (
-                      <View
-                        key={choice.id}
-                        className="guided-discover-card__choice"
-                        onClick={() => handleGuidedContinentAnswer(choice.id)}
-                      >
-                        <Text className="guided-discover-card__choice-title">{choice.title}</Text>
-                        <Text className="guided-discover-card__choice-description">{choice.description}</Text>
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <Text className="guided-discover-card__hint">正在准备大洲选项...</Text>
-                )
-              ) : null}
-
-              {guidedDiscoverStep.step === 'country' ? (
-                discoverPayload ? (
-                  discoverPayload.countryOptions.length > 0 ? (
+            {isGuidedCardExpanded ? (
+              <>
+                {guidedDiscoverStep.step === 'process_base' ? (
+                  discoverPayload && discoverPayload.processBaseOptions.length > 0 ? (
                     <View className="guided-discover-card__choices">
-                      {discoverPayload.countryOptions.map((option) => (
+                      {GUIDED_PROCESS_CHOICES.map((choice) => (
                         <View
-                          key={option.id}
+                          key={choice.id}
                           className="guided-discover-card__choice"
-                          onClick={() => handleCountrySelect(option.label)}
+                          onClick={() => handleGuidedProcessAnswer(choice.id)}
                         >
-                          <Text className="guided-discover-card__choice-title">{option.label}</Text>
-                          <Text className="guided-discover-card__choice-description">{`${option.count} 款可选豆子`}</Text>
+                          <Text className="guided-discover-card__choice-title">{choice.title}</Text>
+                          <Text className="guided-discover-card__choice-description">{choice.description}</Text>
                         </View>
                       ))}
                     </View>
                   ) : (
-                    <Text className="guided-discover-card__hint">这个大洲下暂时没有可继续缩小的国家结果，可以直接往下浏览当前结果。</Text>
+                    <Text className="guided-discover-card__hint">
+                      {LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.loadingProcessBase}
+                    </Text>
                   )
-                ) : (
-                  <Text className="guided-discover-card__hint">正在准备国家选项...</Text>
-                )
-              ) : null}
+                ) : null}
 
-              {guidedDiscoverStep.step === 'variety' ? (
-                discoverPayload ? (
-                  discoverPayload.varietyOptions.length > 0 ? (
-                    <>
+                {guidedDiscoverStep.step === 'process_style' ? (
+                  discoverPayload && visibleGuidedProcessStyleChoices.length > 0 ? (
+                    <View className="guided-discover-card__choices">
+                      {visibleGuidedProcessStyleChoices.map((choice) => (
+                        <View
+                          key={choice.id}
+                          className="guided-discover-card__choice"
+                          onClick={() => handleGuidedProcessStyleAnswer(choice.id)}
+                        >
+                          <Text className="guided-discover-card__choice-title">{choice.title}</Text>
+                          <Text className="guided-discover-card__choice-description">{choice.description}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text className="guided-discover-card__hint">
+                      {LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.loadingProcessStyle}
+                    </Text>
+                  )
+                ) : null}
+
+                {guidedDiscoverStep.step === 'continent' ? (
+                  discoverPayload && discoverPayload.continentOptions.length > 0 ? (
+                    <View className="guided-discover-card__choices">
+                      {GUIDED_CONTINENT_CHOICES.map((choice) => (
+                        <View
+                          key={choice.id}
+                          className="guided-discover-card__choice"
+                          onClick={() => handleGuidedContinentAnswer(choice.id)}
+                        >
+                          <Text className="guided-discover-card__choice-title">{choice.title}</Text>
+                          <Text className="guided-discover-card__choice-description">{choice.description}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text className="guided-discover-card__hint">
+                      {LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.loadingContinent}
+                    </Text>
+                  )
+                ) : null}
+
+                {guidedDiscoverStep.step === 'country' ? (
+                  discoverPayload ? (
+                    discoverPayload.countryOptions.length > 0 ? (
                       <View className="guided-discover-card__choices">
-                        {discoverPayload.varietyOptions.slice(0, 6).map((option) => (
+                        {discoverPayload.countryOptions.map((option) => (
                           <View
                             key={option.id}
                             className="guided-discover-card__choice"
-                            onClick={() => handleVarietySelect(option.label)}
+                            onClick={() => handleCountrySelect(option.label)}
                           >
                             <Text className="guided-discover-card__choice-title">{option.label}</Text>
                             <Text className="guided-discover-card__choice-description">{`${option.count} 款可选豆子`}</Text>
                           </View>
                         ))}
                       </View>
-                      <Text className="guided-discover-card__restart" onClick={() => setSelectedVariety(ALL_DISCOVER_VALUE)}>
-                        跳过
+                    ) : (
+                      <Text className="guided-discover-card__hint">
+                        {LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.noCountryOptions}
                       </Text>
-                    </>
+                    )
                   ) : (
-                    <Text className="guided-discover-card__hint">当前路径下暂时没有可继续细分的豆种，可以直接查看结果。</Text>
+                    <Text className="guided-discover-card__hint">
+                      {LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.loadingCountry}
+                    </Text>
                   )
-                ) : (
-                  <Text className="guided-discover-card__hint">正在准备豆种选项...</Text>
-                )
-              ) : null}
+                ) : null}
 
-              {guidedDiscoverStep.step === 'done' ? (
-                <Text className="guided-discover-card__restart" onClick={() => clearDiscoverPath()}>
-                  重新回答
-                </Text>
-              ) : null}
-            </>
-          ) : (
-            <Text className="guided-discover-card__hint">展开后会按处理法、风格和产地帮你逐步缩小范围。</Text>
-          )}
+                {guidedDiscoverStep.step === 'variety' ? (
+                  discoverPayload ? (
+                    discoverPayload.varietyOptions.length > 0 ? (
+                      <>
+                        <View className="guided-discover-card__choices">
+                          {discoverPayload.varietyOptions.slice(0, 6).map((option) => (
+                            <View
+                              key={option.id}
+                              className="guided-discover-card__choice"
+                              onClick={() => handleVarietySelect(option.label)}
+                            >
+                              <Text className="guided-discover-card__choice-title">{option.label}</Text>
+                              <Text className="guided-discover-card__choice-description">{`${option.count} 款可选豆子`}</Text>
+                            </View>
+                          ))}
+                        </View>
+                        <Text
+                          className="guided-discover-card__restart"
+                          onClick={() => setSelectedVariety(ALL_DISCOVER_VALUE)}
+                        >
+                          {LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.skipVariety}
+                        </Text>
+                      </>
+                    ) : (
+                      <Text className="guided-discover-card__hint">
+                        {LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.noVarietyOptions}
+                      </Text>
+                    )
+                  ) : (
+                    <Text className="guided-discover-card__hint">
+                      {LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.loadingVariety}
+                    </Text>
+                  )
+                ) : null}
+
+                {guidedDiscoverStep.step === 'done' ? (
+                  <Text className="guided-discover-card__restart" onClick={() => clearDiscoverPath()}>
+                    {LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.restartAnswers}
+                  </Text>
+                ) : null}
+              </>
+            ) : (
+              <Text className="guided-discover-card__hint">
+                {LIGHT_QUESTION_COPY.miniprogram.guidedCard.ui.collapsedHint}
+              </Text>
+            )}
+          </View>
         </View>
-
-      </View>
+      ) : null}
 
       {normalizedQuery ? (
         <View className="all-beans__query-bar">
@@ -680,226 +729,255 @@ export default function AllBeans() {
         ) : discoverLoading && !discoverPayload ? (
           <EmptyState message="正在加载探索路径..." />
         ) : discoverPayload ? (
-          <View className="discover-panel">
-            <View className="discover-panel__section">
-              <Text className="discover-panel__eyebrow">第一步 · 基础处理法</Text>
-              <Text className="discover-panel__title">先决定你想从哪种基础处理法切入</Text>
-              <View className="discover-panel__chips">
-                <View
-                  className={`discover-chip ${selectedProcessBase === ALL_DISCOVER_VALUE ? 'discover-chip--active' : ''}`}
-                  onClick={() => handleProcessBaseSelect(ALL_DISCOVER_VALUE)}
-                >
-                  <Text className="discover-chip__text">全部基础处理法</Text>
+          <>
+            <View className={`discover-shell ${isDiscoverPanelExpanded ? 'discover-shell--expanded' : ''}`}>
+              <View className="discover-shell__header" onClick={() => setIsDiscoverPanelExpanded((current) => !current)}>
+                <View className="discover-shell__header-main">
+                  <Text className="discover-shell__eyebrow">筛选容器</Text>
+                  <Text className="discover-shell__title">{discoverPanelTitle}</Text>
+                  <Text className="discover-shell__description">{discoverPanelSummaryText}</Text>
+                  {discoverPathItems.length > 0 ? (
+                    <View className="discover-shell__summary">
+                      {discoverPathItems.map((item) => (
+                        <View key={item.key} className="discover-shell__summary-chip">
+                          <Text className="discover-shell__summary-chip-text">{item.value}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
                 </View>
-                {discoverPayload.processBaseOptions.map((option) => (
-                  <View
-                    key={option.id}
-                    className={`discover-chip ${selectedProcessBase === option.id ? 'discover-chip--active' : ''}`}
-                    onClick={() => handleProcessBaseSelect(option.id)}
-                  >
-                    <Text className="discover-chip__text">{option.label}</Text>
-                    <Text className="discover-chip__count">{option.count}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            <View className="discover-panel__section">
-              <Text className="discover-panel__eyebrow">第二步 · 处理风格</Text>
-              <Text className="discover-panel__title">
-                {selectedProcessBase === ALL_DISCOVER_VALUE
-                  ? '先选基础处理法，处理风格会更有针对性'
-                  : selectedProcessBase === 'other'
-                    ? '其他路径下不展示传统，只保留特殊风格'
-                    : '再决定你更想看传统，还是特殊发酵风格'}
-              </Text>
-              <View className="discover-panel__chips">
-                <View
-                  className={`discover-chip ${selectedProcessStyle === ALL_DISCOVER_VALUE ? 'discover-chip--active' : ''}`}
-                  onClick={() => handleProcessStyleSelect(ALL_DISCOVER_VALUE)}
-                >
-                  <Text className="discover-chip__text">全部处理风格</Text>
+                <View className="discover-shell__toggle">
+                  <Text className="discover-shell__toggle-text">{isDiscoverPanelExpanded ? '收起' : '展开筛选'}</Text>
+                  <Text className={`discover-shell__chevron ${isDiscoverPanelExpanded ? 'discover-shell__chevron--expanded' : ''}`}>
+                    ▾
+                  </Text>
                 </View>
-                {discoverPayload.processStyleOptions.map((option) => (
-                  <View
-                    key={option.id}
-                    className={`discover-chip ${selectedProcessStyle === option.id ? 'discover-chip--active' : ''}`}
-                    onClick={() => handleProcessStyleSelect(option.id)}
-                  >
-                    <Text className="discover-chip__text">{option.label}</Text>
-                    <Text className="discover-chip__count">{option.count}</Text>
-                  </View>
-                ))}
               </View>
-            </View>
 
-            <View className="discover-panel__section">
-              <Text className="discover-panel__eyebrow">第三步 · 大洲</Text>
-              <Text className="discover-panel__title">选风土区域，国家选项会跟着收缩</Text>
-              <View className="continent-strip">
-                {discoverPayload.continentOptions.map((option) => {
-                  const continentMeta = ORIGIN_ATLAS_CONTINENT_MAP.get(option.id as DiscoverContinentId) ?? null;
-                  if (!continentMeta) return null;
-
-                  return (
-                    <View
-                      key={option.id}
-                      className={`continent-card ${selectedContinent === option.id ? 'continent-card--active' : ''}`}
-                      onClick={() => handleContinentSelect(option.id as DiscoverContinentId)}
-                    >
-                      <Image
-                        className="continent-card__map"
-                        src={makeAtlasSvgUri(continentMeta.path, continentMeta.viewBox, continentMeta.color, true)}
-                        mode="aspectFit"
-                        lazyLoad
-                      />
-                      <View className="continent-card__body">
-                        <Text className="continent-card__name">{continentMeta.name}</Text>
-                        <Text className="continent-card__description">{continentMeta.editorialLabel}</Text>
+              <View className={`discover-shell__body ${isDiscoverPanelExpanded ? 'discover-shell__body--expanded' : ''}`}>
+                <View className="discover-shell__body-inner">
+                  <View className="discover-panel">
+                    <View className="discover-panel__section">
+                      <Text className="discover-panel__eyebrow">第一步 · 基础处理法</Text>
+                      <Text className="discover-panel__title">先决定你想从哪种基础处理法切入</Text>
+                      <View className="discover-panel__chips">
+                        <View
+                          className={`discover-chip ${selectedProcessBase === ALL_DISCOVER_VALUE ? 'discover-chip--active' : ''}`}
+                          onClick={() => handleProcessBaseSelect(ALL_DISCOVER_VALUE)}
+                        >
+                          <Text className="discover-chip__text">全部基础处理法</Text>
+                        </View>
+                        {discoverPayload.processBaseOptions.map((option) => (
+                          <View
+                            key={option.id}
+                            className={`discover-chip ${selectedProcessBase === option.id ? 'discover-chip--active' : ''}`}
+                            onClick={() => handleProcessBaseSelect(option.id)}
+                          >
+                            <Text className="discover-chip__text">{option.label}</Text>
+                            <Text className="discover-chip__count">{option.count}</Text>
+                          </View>
+                        ))}
                       </View>
-                      <Text className="continent-card__count">{option.count}</Text>
                     </View>
-                  );
-                })}
-              </View>
-            </View>
 
-            <View className="discover-panel__section">
-              <Text className="discover-panel__eyebrow">第四步 · 国家</Text>
-              <Text className="discover-panel__title">
-                {selectedContinent === ALL_DISCOVER_VALUE ? '先选大洲，再进入国家级别。' : '国家选中后会继续缩小当前结果范围。'}
-              </Text>
-              {selectedContinent === ALL_DISCOVER_VALUE ? (
-                <Text className="discover-panel__description">当前还没有锁定大洲，所以暂不展示国家列表。</Text>
-              ) : discoverPayload.countryOptions.length === 0 ? (
-                <Text className="discover-panel__description">这个路径下暂时没有国家结果，但你仍可以先浏览当前大洲级别的结果。</Text>
-              ) : (
-                <View className="discover-panel__chips">
-                  {discoverPayload.countryOptions.map((option) => (
-                    <View
-                      key={option.id}
-                      className={`discover-chip ${selectedCountry === option.label ? 'discover-chip--active' : ''}`}
-                      onClick={() => handleCountrySelect(option.label)}
-                    >
-                      <Text className="discover-chip__text">{option.label}</Text>
-                      <Text className="discover-chip__count">{option.count}</Text>
+                    <View className="discover-panel__section">
+                      <Text className="discover-panel__eyebrow">第二步 · 处理风格</Text>
+                      <Text className="discover-panel__title">
+                        {selectedProcessBase === ALL_DISCOVER_VALUE
+                          ? '先选基础处理法，处理风格会更有针对性'
+                          : selectedProcessBase === 'other'
+                            ? '其他路径下不展示传统，只保留特殊风格'
+                            : '再决定你更想看传统，还是特殊发酵风格'}
+                      </Text>
+                      <View className="discover-panel__chips">
+                        <View
+                          className={`discover-chip ${selectedProcessStyle === ALL_DISCOVER_VALUE ? 'discover-chip--active' : ''}`}
+                          onClick={() => handleProcessStyleSelect(ALL_DISCOVER_VALUE)}
+                        >
+                          <Text className="discover-chip__text">全部处理风格</Text>
+                        </View>
+                        {discoverPayload.processStyleOptions.map((option) => (
+                          <View
+                            key={option.id}
+                            className={`discover-chip ${selectedProcessStyle === option.id ? 'discover-chip--active' : ''}`}
+                            onClick={() => handleProcessStyleSelect(option.id)}
+                          >
+                            <Text className="discover-chip__text">{option.label}</Text>
+                            <Text className="discover-chip__count">{option.count}</Text>
+                          </View>
+                        ))}
+                      </View>
                     </View>
-                  ))}
-                </View>
-              )}
-            </View>
 
-            <View className="discover-panel__section">
-              <Text className="discover-panel__eyebrow">豆种（可选）</Text>
-              <Text className="discover-panel__title">
-                {selectedCountry === ALL_DISCOVER_VALUE
-                  ? '这一步可以跳过；如果你已经有目标豆种，也可以在这里继续缩小。'
-                  : '国家已经定好了，如果还想更聚焦，可以再按豆种细分。'}
-              </Text>
-              {discoverPayload.varietyOptions.length === 0 ? (
-                <Text className="discover-panel__description">当前路径下暂时没有可用的豆种选项，直接看结果即可。</Text>
-              ) : (
-                <View className="discover-panel__chips">
-                  <View
-                    className={`discover-chip ${selectedVariety === ALL_DISCOVER_VALUE ? 'discover-chip--active' : ''}`}
-                    onClick={() => handleVarietySelect(ALL_DISCOVER_VALUE)}
-                  >
-                    <Text className="discover-chip__text">全部豆种</Text>
+                    <View className="discover-panel__section">
+                      <Text className="discover-panel__eyebrow">第三步 · 大洲</Text>
+                      <Text className="discover-panel__title">选风土区域，国家选项会跟着收缩</Text>
+                      <View className="continent-strip">
+                        {discoverPayload.continentOptions.map((option) => {
+                          const continentMeta = ORIGIN_ATLAS_CONTINENT_MAP.get(option.id as DiscoverContinentId) ?? null;
+                          if (!continentMeta) return null;
+
+                          return (
+                            <View
+                              key={option.id}
+                              className={`continent-card ${selectedContinent === option.id ? 'continent-card--active' : ''}`}
+                              onClick={() => handleContinentSelect(option.id as DiscoverContinentId)}
+                            >
+                              <Image
+                                className="continent-card__map"
+                                src={makeAtlasSvgUri(continentMeta.path, continentMeta.viewBox, continentMeta.color, true)}
+                                mode="aspectFit"
+                                lazyLoad
+                              />
+                              <View className="continent-card__body">
+                                <Text className="continent-card__name">{continentMeta.name}</Text>
+                                <Text className="continent-card__description">{continentMeta.editorialLabel}</Text>
+                              </View>
+                              <Text className="continent-card__count">{option.count}</Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    </View>
+
+                    <View className="discover-panel__section">
+                      <Text className="discover-panel__eyebrow">第四步 · 国家</Text>
+                      <Text className="discover-panel__title">
+                        {selectedContinent === ALL_DISCOVER_VALUE ? '先选大洲，再进入国家级别。' : '国家选中后会继续缩小当前结果范围。'}
+                      </Text>
+                      {selectedContinent === ALL_DISCOVER_VALUE ? (
+                        <Text className="discover-panel__description">当前还没有锁定大洲，所以暂不展示国家列表。</Text>
+                      ) : discoverPayload.countryOptions.length === 0 ? (
+                        <Text className="discover-panel__description">这个路径下暂时没有国家结果，但你仍可以先浏览当前大洲级别的结果。</Text>
+                      ) : (
+                        <View className="discover-panel__chips">
+                          {discoverPayload.countryOptions.map((option) => (
+                            <View
+                              key={option.id}
+                              className={`discover-chip ${selectedCountry === option.label ? 'discover-chip--active' : ''}`}
+                              onClick={() => handleCountrySelect(option.label)}
+                            >
+                              <Text className="discover-chip__text">{option.label}</Text>
+                              <Text className="discover-chip__count">{option.count}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+
+                    <View className="discover-panel__section">
+                      <Text className="discover-panel__eyebrow">豆种（可选）</Text>
+                      <Text className="discover-panel__title">
+                        {selectedCountry === ALL_DISCOVER_VALUE
+                          ? '这一步可以跳过；如果你已经有目标豆种，也可以在这里继续缩小。'
+                          : '国家已经定好了，如果还想更聚焦，可以再按豆种细分。'}
+                      </Text>
+                      {discoverPayload.varietyOptions.length === 0 ? (
+                        <Text className="discover-panel__description">当前路径下暂时没有可用的豆种选项，直接看结果即可。</Text>
+                      ) : (
+                        <View className="discover-panel__chips">
+                          <View
+                            className={`discover-chip ${selectedVariety === ALL_DISCOVER_VALUE ? 'discover-chip--active' : ''}`}
+                            onClick={() => handleVarietySelect(ALL_DISCOVER_VALUE)}
+                          >
+                            <Text className="discover-chip__text">全部豆种</Text>
+                          </View>
+                          {discoverPayload.varietyOptions.map((option) => (
+                            <View
+                              key={option.id}
+                              className={`discover-chip ${selectedVariety === option.label ? 'discover-chip--active' : ''}`}
+                              onClick={() => handleVarietySelect(option.label)}
+                            >
+                              <Text className="discover-chip__text">{option.label}</Text>
+                              <Text className="discover-chip__count">{option.count}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
                   </View>
-                  {discoverPayload.varietyOptions.map((option) => (
-                    <View
-                      key={option.id}
-                      className={`discover-chip ${selectedVariety === option.label ? 'discover-chip--active' : ''}`}
-                      onClick={() => handleVarietySelect(option.label)}
-                    >
-                      <Text className="discover-chip__text">{option.label}</Text>
-                      <Text className="discover-chip__count">{option.count}</Text>
-                    </View>
-                  ))}
                 </View>
-              )}
+              </View>
             </View>
 
             {shouldShowDiscoverResults ? (
-              <View className="discover-panel__section">
-                <View className="discover-results">
-                  <View className="discover-results__heading">
-                    <Text className="discover-panel__eyebrow">第五步 · 结果</Text>
-                    <Text className="discover-panel__title">
-                      {selectedCountry !== ALL_DISCOVER_VALUE
-                        ? `共 ${discoverPayload.resultSummary.total} 款，继续向下浏览完整豆单`
-                        : `当前路径共 ${discoverPayload.resultSummary.total} 款，先看结果再决定是否缩到国家`}
-                    </Text>
-                  </View>
-                  {errorMessage ? (
-                    <EmptyState message={errorMessage} />
-                  ) : loading && beans.length === 0 ? (
-                    <EmptyState message="加载中..." />
-                  ) : beans.length === 0 ? (
-                    <View className="discover-results__empty">
-                      <Text className="discover-results__empty-title">
-                        {selectedCountry !== ALL_DISCOVER_VALUE
-                          ? `${selectedCountry} 暂时没有匹配豆子`
-                          : activeContinentMeta
-                            ? `${activeContinentMeta.name} 暂时没有匹配豆子`
-                            : '当前探索路径下暂无豆子'}
-                      </Text>
-                      <Text className="discover-results__empty-text">
-                        {selectedCountry !== ALL_DISCOVER_VALUE
-                          ? '可以退回当前大洲的全部国家，或者换一个处理法继续探索。'
-                          : activeContinentMeta
-                            ? '可以先切回全部大洲，或者保留搜索词继续换一个处理法。'
-                            : '试试换一个处理法、大洲或国家，让发现页重新给出结果。'}
-                      </Text>
-                      <View className="discover-results__empty-actions">
-                        {selectedVariety !== ALL_DISCOVER_VALUE ? (
-                          <View className="discover-results__empty-action" onClick={() => setSelectedVariety(ALL_DISCOVER_VALUE)}>
-                            <Text className="discover-results__empty-action-text">回到全部豆种</Text>
-                          </View>
-                        ) : null}
-                        {selectedCountry !== ALL_DISCOVER_VALUE ? (
-                          <View className="discover-results__empty-action" onClick={() => setSelectedCountry(ALL_DISCOVER_VALUE)}>
-                            <Text className="discover-results__empty-action-text">回到全部国家</Text>
-                          </View>
-                        ) : null}
-                        {selectedContinent !== ALL_DISCOVER_VALUE ? (
-                          <View
-                            className="discover-results__empty-action"
-                            onClick={() => {
-                              setSelectedContinent(ALL_DISCOVER_VALUE);
-                              setSelectedCountry(ALL_DISCOVER_VALUE);
-                            }}
-                          >
-                            <Text className="discover-results__empty-action-text">查看全部大洲</Text>
-                          </View>
-                        ) : null}
-                        {selectedProcessBase !== ALL_DISCOVER_VALUE || selectedProcessStyle !== ALL_DISCOVER_VALUE ? (
-                          <View
-                            className="discover-results__empty-action discover-results__empty-action--ghost"
-                            onClick={() => handleProcessBaseSelect(ALL_DISCOVER_VALUE)}
-                          >
-                            <Text className="discover-results__empty-action-text discover-results__empty-action-text--ghost">清除处理法</Text>
-                          </View>
-                        ) : null}
-                      </View>
-                    </View>
-                  ) : (
-                    beans.map((bean, index) => <BeanCard key={bean.id} bean={bean} index={index} />)
-                  )}
-                  {loading && beans.length > 0 ? (
-                    <View className="all-beans__loading">
-                      <Text className="all-beans__loading-text">加载中...</Text>
-                    </View>
-                  ) : null}
-                  {!hasMore && beans.length > 0 ? (
-                    <View className="all-beans__end">
-                      <Text className="all-beans__end-text">— 已加载全部 —</Text>
-                    </View>
-                  ) : null}
+              <View className="discover-results">
+                <View className="discover-results__heading">
+                  <Text className="discover-results__eyebrow">当前豆单</Text>
+                  <Text className="discover-results__title">
+                    {selectedCountry !== ALL_DISCOVER_VALUE
+                      ? `共 ${discoverResultCount} 款，已经缩小到 ${selectedCountry}`
+                      : `当前路径共 ${discoverResultCount} 款，先看结果再决定是否继续细分`}
+                  </Text>
                 </View>
+                {errorMessage ? (
+                  <EmptyState message={errorMessage} />
+                ) : loading && beans.length === 0 ? (
+                  <EmptyState message="加载中..." />
+                ) : beans.length === 0 ? (
+                  <View className="discover-results__empty">
+                    <Text className="discover-results__empty-title">
+                      {selectedCountry !== ALL_DISCOVER_VALUE
+                        ? `${selectedCountry} 暂时没有匹配豆子`
+                        : activeContinentMeta
+                          ? `${activeContinentMeta.name} 暂时没有匹配豆子`
+                          : '当前探索路径下暂无豆子'}
+                    </Text>
+                    <Text className="discover-results__empty-text">
+                      {selectedCountry !== ALL_DISCOVER_VALUE
+                        ? '可以退回当前大洲的全部国家，或者换一个处理法继续探索。'
+                        : activeContinentMeta
+                          ? '可以先切回全部大洲，或者保留搜索词继续换一个处理法。'
+                          : '试试换一个处理法、大洲或国家，让发现页重新给出结果。'}
+                    </Text>
+                    <View className="discover-results__empty-actions">
+                      {selectedVariety !== ALL_DISCOVER_VALUE ? (
+                        <View className="discover-results__empty-action" onClick={() => setSelectedVariety(ALL_DISCOVER_VALUE)}>
+                          <Text className="discover-results__empty-action-text">回到全部豆种</Text>
+                        </View>
+                      ) : null}
+                      {selectedCountry !== ALL_DISCOVER_VALUE ? (
+                        <View className="discover-results__empty-action" onClick={() => setSelectedCountry(ALL_DISCOVER_VALUE)}>
+                          <Text className="discover-results__empty-action-text">回到全部国家</Text>
+                        </View>
+                      ) : null}
+                      {selectedContinent !== ALL_DISCOVER_VALUE ? (
+                        <View
+                          className="discover-results__empty-action"
+                          onClick={() => {
+                            setSelectedContinent(ALL_DISCOVER_VALUE);
+                            setSelectedCountry(ALL_DISCOVER_VALUE);
+                          }}
+                        >
+                          <Text className="discover-results__empty-action-text">查看全部大洲</Text>
+                        </View>
+                      ) : null}
+                      {selectedProcessBase !== ALL_DISCOVER_VALUE || selectedProcessStyle !== ALL_DISCOVER_VALUE ? (
+                        <View
+                          className="discover-results__empty-action discover-results__empty-action--ghost"
+                          onClick={() => handleProcessBaseSelect(ALL_DISCOVER_VALUE)}
+                        >
+                          <Text className="discover-results__empty-action-text discover-results__empty-action-text--ghost">清除处理法</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  </View>
+                ) : (
+                  beans.map((bean, index) => <BeanCard key={bean.id} bean={bean} index={index} />)
+                )}
+                {loading && beans.length > 0 ? (
+                  <View className="all-beans__loading">
+                    <Text className="all-beans__loading-text">加载中...</Text>
+                  </View>
+                ) : null}
+                {!hasMore && beans.length > 0 ? (
+                  <View className="all-beans__end">
+                    <Text className="all-beans__end-text">— 已加载全部 —</Text>
+                  </View>
+                ) : null}
               </View>
             ) : null}
-          </View>
+          </>
         ) : (
           <EmptyState message="暂无探索内容" />
         )}

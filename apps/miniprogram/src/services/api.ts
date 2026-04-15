@@ -7,19 +7,17 @@ import type {
   ApiHealthStatus,
   BeanDetail,
   BeanDiscoverPayload,
-  BeanSort,
+  BeanDiscoverQueryParams,
+  BeansQueryParams,
   CoffeeBean,
   CurrentUserProfile,
-  DiscoverContinentId,
   LoginResponse,
   NewArrivalFiltersPayload,
   NewArrivalFiltersRequest,
   PaginatedResult,
-  ProcessBaseId,
-  ProcessStyleId,
-  RoasterFeature,
   RoasterDetail,
   RoasterSummary,
+  RoastersQueryParams,
   UserFavorite,
   V1Response,
 } from '../types/index.ts';
@@ -90,33 +88,11 @@ async function request<T>(
 }
 
 // 咖啡豆
-export async function getBeans(params?: {
-  pageSize?: number;
-  page?: number;
-  q?: string;
-  roasterId?: string;
-  originCountry?: string;
-  variety?: string;
-  process?: string;
-  processBase?: ProcessBaseId;
-  processStyle?: ProcessStyleId;
-  roastLevel?: string;
-  sort?: BeanSort;
-  isNewArrival?: boolean;
-  continent?: DiscoverContinentId;
-  country?: string;
-}): Promise<PaginatedResult<CoffeeBean>> {
+export async function getBeans(params?: BeansQueryParams): Promise<PaginatedResult<CoffeeBean>> {
   return listBeansWithSupabase(requireSupabaseCatalogRead(hasSupabaseEnv, requireSupabaseClient), params);
 }
 
-export async function getBeanDiscover(params?: {
-  q?: string;
-  processBase?: ProcessBaseId;
-  processStyle?: ProcessStyleId;
-  continent?: DiscoverContinentId;
-  country?: string;
-  variety?: string;
-}): Promise<BeanDiscoverPayload> {
+export async function getBeanDiscover(params?: BeanDiscoverQueryParams): Promise<BeanDiscoverPayload> {
   return getBeanDiscoverWithSupabase(requireSupabaseCatalogRead(hasSupabaseEnv, requireSupabaseClient), params);
 }
 
@@ -129,18 +105,23 @@ export async function getBeanById(id: string): Promise<BeanDetail> {
 }
 
 // 烘焙商
-export async function getRoasters(params?: {
-  pageSize?: number;
-  page?: number;
-  q?: string;
-  city?: string;
-  feature?: RoasterFeature;
-}): Promise<PaginatedResult<RoasterSummary>> {
+export async function getRoasters(params?: RoastersQueryParams): Promise<PaginatedResult<RoasterSummary>> {
   return listRoastersWithSupabase(requireSupabaseCatalogRead(hasSupabaseEnv, requireSupabaseClient), params);
 }
 
 export async function getRoasterById(id: string): Promise<RoasterDetail> {
   return getRoasterDetailWithSupabase(requireSupabaseCatalogRead(hasSupabaseEnv, requireSupabaseClient), id);
+}
+
+export async function getBadgeProgress(): Promise<{ badgeIds: string[] }> {
+  return request<{ badgeIds: string[] }>('/api/v1/me/badges');
+}
+
+export async function syncBadgeProgress(badgeIds: string[]): Promise<{ synced: number }> {
+  return request<{ synced: number }>('/api/v1/me/badges/sync', {
+    method: 'POST',
+    data: { badgeIds },
+  });
 }
 
 export async function getApiHealth(): Promise<ApiHealthStatus> {

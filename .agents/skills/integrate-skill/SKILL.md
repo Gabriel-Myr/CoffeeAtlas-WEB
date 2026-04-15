@@ -18,7 +18,7 @@ Adapt and integrate a Claude global skill into your project's development guidel
 
 **Examples**:
 ```
-/trellis:integrate-skill frontend-design
+/trellis:integrate-skill design
 /trellis:integrate-skill mcp-builder
 ```
 
@@ -51,7 +51,7 @@ Based on skill type, determine which guidelines to update:
 
 | Skill Category | Integration Target |
 |----------------|-------------------|
-| UI/Frontend (`frontend-design`, `web-artifacts-builder`) | `.trellis/spec/<package>/frontend/` |
+| UI/Frontend (`design`, `web-artifacts-builder`) | `.trellis/spec/<package>/frontend/` |
 | Backend/API (`mcp-builder`) | `.trellis/spec/<package>/backend/` |
 | Documentation (`doc-coauthoring`, `docx`, `pdf`) | `.trellis/` or create dedicated guidelines |
 | Testing (`webapp-testing`) | `.trellis/spec/<package>/frontend/` or `.trellis/spec/unit-test/` |
@@ -184,7 +184,7 @@ If this skill is frequently used, create a shortcut command:
 
 | Skill | Integration Target | Examples Directory |
 |-------|-------------------|-------------------|
-| `frontend-design` | `frontend` or `miniprogram/frontend` | `examples/skills/frontend-design/` |
+| `design` | `frontend` or `miniprogram/frontend` | `examples/skills/design/` |
 | `mcp-builder` | `api/backend` | `examples/skills/mcp-builder/` |
 | `webapp-testing` | `frontend` or `unit-test` | `examples/skills/webapp-testing/` |
 | `doc-coauthoring` | `.trellis/` | N/A (documentation workflow only) |

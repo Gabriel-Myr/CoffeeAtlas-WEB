@@ -66,9 +66,8 @@ def get_check_context(repo_root: Path) -> list[dict]:
     adapter = get_cli_adapter_auto(repo_root)
 
     entries = [
-        {"file": adapter.get_trellis_command_path("finish-work"), "reason": "FinishWork"},
-        {"file": adapter.get_trellis_command_path("check-cross-layer"), "reason": "CrossLayer"},
-        {"file": adapter.get_trellis_command_path("check"), "reason": "CodeQuality"},
+        {"file": adapter.get_trellis_command_path("finish-work"), "reason": "Finish work checklist"},
+        {"file": adapter.get_trellis_command_path("check"), "reason": "Code quality check spec"},
     ]
 
     return entries
@@ -79,8 +78,7 @@ def get_debug_context(repo_root: Path) -> list[dict]:
     adapter = get_cli_adapter_auto(repo_root)
 
     entries: list[dict] = [
-        {"file": adapter.get_trellis_command_path("check-cross-layer"), "reason": "CrossLayer"},
-        {"file": adapter.get_trellis_command_path("check"), "reason": "CodeQuality"},
+        {"file": adapter.get_trellis_command_path("check"), "reason": "Code quality check spec"},
     ]
 
     return entries

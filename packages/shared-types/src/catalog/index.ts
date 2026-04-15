@@ -20,6 +20,7 @@ export interface CatalogBeanCard {
   currency: string;
   salesCount: number;
   imageUrl: string | null;
+  productUrl?: string | null;
   isInStock: boolean;
   originRegion?: string;
   farm?: string;

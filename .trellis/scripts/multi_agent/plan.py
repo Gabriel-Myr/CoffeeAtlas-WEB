@@ -163,7 +163,6 @@ def main() -> int:
         skip_permissions=True,
         verbose=True,
         json_output=True,
-        project_root=project_root,
     )
 
     with log_file.open("w") as log_f:

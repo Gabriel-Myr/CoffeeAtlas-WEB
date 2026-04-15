@@ -1,0 +1,202 @@
+export const GENERATED_LIGHT_QUESTION_COPY = {
+  "miniprogram": {
+    "guidedCard": {
+      "label": "轻问答",
+      "collapsed": {
+        "default": {
+          "title": "没有头绪时，帮你按喜好逐步选豆",
+          "description": "处理法-风味-产地，轻松筛选；\n已经有目标了？直接使用下方筛选吧。"
+        },
+        "guided": {
+          "title": "已经为你打开轻问答，可以继续按问题缩小范围",
+          "description": "你也可以先收起引导，直接用下方筛选自己找豆子。"
+        },
+        "direct": {
+          "title": "需要我帮你缩小范围吗？",
+          "description": "展开后会先问处理法，再逐步缩到大洲和国家；不展开也可以直接筛选。"
+        }
+      },
+      "steps": {
+        "process_base": {
+          "title": "先告诉我你想从哪种基础处理法开始",
+          "description": "我会先帮你定一个基础处理法方向，再继续收窄到处理风格和产地区域。"
+        },
+        "process_style": {
+          "title": "第二步，再选一个处理风格",
+          "description": "基础处理法已经定好了，现在继续缩小到更具体的处理风格。"
+        },
+        "continent": {
+          "title": "下一步，选一个更接近你期待风味的区域",
+          "description": "处理风格已经定好了，现在再用大洲和国家把结果继续缩小。"
+        },
+        "country": {
+          "title": "最后一步，再缩小到具体国家",
+          "description": "大洲已经定好了，再选一个国家，就能直接看到更聚焦的豆单。"
+        },
+        "variety": {
+          "title": "如果你已经有目标豆种，可以继续细分",
+          "description": "这一步是可选的，不选也可以直接看结果。"
+        },
+        "done": {
+          "title": "已经帮你缩小到一条可直接浏览的路径",
+          "description": "你可以直接往下看推荐和豆单，也可以重新回答一次，换一条路线。"
+        }
+      },
+      "processChoices": [
+        {
+          "id": "clean",
+          "title": "清爽干净",
+          "description": "水洗处理：干净明亮，酸质清稀。"
+        },
+        {
+          "id": "fruity",
+          "title": "果香馥郁",
+          "description": "日晒处理：具有果汁感和发酵甜感。"
+        },
+        {
+          "id": "sweet",
+          "title": "酸甜圆润",
+          "description": "蜜处理：甜感和酸质共存。"
+        }
+      ],
+      "processStyleChoices": [
+        {
+          "id": "classic",
+          "title": "传统一点",
+          "description": "先看传统风格，更容易建立稳定印象。"
+        },
+        {
+          "id": "anaerobic",
+          "title": "想试厌氧",
+          "description": "直接把结果缩到厌氧路线，风味会更跳一点。"
+        },
+        {
+          "id": "experimental",
+          "title": "更特别一点",
+          "description": "把酵母、热冲击等特殊处理一起纳入选择。"
+        }
+      ],
+      "continentChoices": [
+        {
+          "id": "floral",
+          "title": "偏花香细腻",
+          "description": "先从非洲方向继续收窄。"
+        },
+        {
+          "id": "balanced",
+          "title": "偏平衡甜感",
+          "description": "先从美洲方向继续收窄。"
+        },
+        {
+          "id": "bold",
+          "title": "偏醇厚香料感",
+          "description": "先从亚洲方向继续收窄。"
+        }
+      ],
+      "ui": {
+        "searchPlaceholder": "按烘焙商、产地、处理法或豆种搜索...",
+        "toggleExpand": "展开",
+        "toggleCollapse": "收起",
+        "collapsedHint": "展开后会按处理法、风格和产地帮你逐步缩小范围。",
+        "loadingProcessBase": "正在准备基础处理法选项...",
+        "loadingProcessStyle": "正在准备处理风格选项...",
+        "loadingContinent": "正在准备大洲选项...",
+        "loadingCountry": "正在准备国家选项...",
+        "loadingVariety": "正在准备豆种选项...",
+        "noCountryOptions": "这个大洲下暂时没有可继续缩小的国家结果，可以直接往下浏览当前结果。",
+        "noVarietyOptions": "当前路径下暂时没有可继续细分的豆种，可以直接查看结果。",
+        "skipVariety": "跳过",
+        "restartAnswers": "重新回答",
+        "noMatchingProcessBase": "当前没有匹配的基础处理法方向",
+        "noMatchingProcessStyle": "当前没有匹配的处理风格方向",
+        "noMatchingContinent": "当前没有匹配的大洲方向",
+        "loadResultsError": "加载失败",
+        "loadDiscoverError": "探索加载失败"
+      }
+    },
+    "discoverEditorial": {
+      "templates": {
+        "default": {
+          "title": "智能推荐起点",
+          "subtitle": "先看几支更容易建立风味印象的豆款，再继续向下筛选。"
+        },
+        "processBase": {
+          "titleTemplate": "{processBase} 风味路径",
+          "subtitle": "按处理法先看一轮代表样本，更容易建立风味差异的第一印象。"
+        },
+        "continent": {
+          "titleTemplate": "{continent} 探索路径",
+          "subtitleTemplate": "{continentEditorialLabel}"
+        },
+        "country": {
+          "titleTemplate": "{country} 代表样本",
+          "subtitle": "先从这一国家的代表豆款进入，再决定是否继续扩大范围。"
+        },
+        "variety": {
+          "titleTemplate": "{variety} 豆种路径",
+          "subtitle": "先看这一豆种下的代表豆款，再决定要不要放宽回更大的结果范围。"
+        }
+      },
+      "reasons": {
+        "variety": "{variety} 这条豆种路径下的代表样本，更适合继续往下比较。",
+        "country": "更能代表 {country} 当前路径的典型风味轮廓。",
+        "processBase": "{processLabel} 轮廓更清晰，适合作为当前路径的起点。",
+        "continent": "更能体现 {continent} 这条路径的风土差异。",
+        "newArrival": "最近更新，适合拿来快速感受当前目录的新风味方向。",
+        "default": "销量和信息完整度都更稳定，适合作为第一支参考样本。"
+      }
+    }
+  },
+  "api": {
+    "editorialConfigs": [
+      {
+        "id": "default",
+        "match": {},
+        "title": "编辑推荐",
+        "subtitle": "从这些高辨识度豆款开始，最快建立对当前目录的第一印象。"
+      },
+      {
+        "id": "washed-africa",
+        "match": {
+          "process": "水洗",
+          "continent": "africa"
+        },
+        "title": "东非水洗切面",
+        "subtitle": "优先看花香、柑橘和明亮酸质都更清晰的代表性样本。"
+      },
+      {
+        "id": "natural-americas",
+        "match": {
+          "process": "日晒",
+          "continent": "americas"
+        },
+        "title": "美洲日晒精选",
+        "subtitle": "从更甜、更熟果、更饱满的轮廓开始理解日晒在美洲的表现。"
+      },
+      {
+        "id": "ethiopia-focus",
+        "match": {
+          "country": "埃塞俄比亚"
+        },
+        "title": "埃塞俄比亚精选",
+        "subtitle": "先从最具辨识度的花香与柑橘调性切入，再慢慢比较不同处理法。"
+      },
+      {
+        "id": "colombia-focus",
+        "match": {
+          "country": "哥伦比亚"
+        },
+        "title": "哥伦比亚精选",
+        "subtitle": "以平衡、甜感和清晰结构为主线，适合做国家风味的入门样本。"
+      }
+    ],
+    "editorialReasons": {
+      "country": "代表 {country} 当前路径的典型杯型，适合先建立国家风味印象。",
+      "processBase": "{processLabel} 轮廓更清晰，适合拿来比较处理法差异。",
+      "continent": "更能体现 {continent} 这条路径的风土和风味方向。",
+      "newArrival": "最近更新，适合第一时间尝鲜，看看目录里最新的风味走向。",
+      "sales": "销量更稳定，是这条路径里更容易形成共识的一支代表样本。",
+      "fallback": "风味辨识度和稳定性都不错，适合作为当前探索路径的起点。"
+    }
+  }
+} as const;

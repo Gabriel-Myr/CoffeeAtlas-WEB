@@ -11,8 +11,9 @@ alter table public.ingestion_events enable row level security;
 alter table public.change_requests enable row level security;
 alter table public.app_users enable row level security;
 alter table public.user_favorites enable row level security;
--- app_users / user_favorites intentionally do not expose anon/authenticated
--- policies. These tables are server-only and must be accessed via service_role.
+alter table public.user_badge_progress enable row level security;
+-- app_users / user_favorites / user_badge_progress intentionally do not expose
+-- anon/authenticated policies. These tables are server-only and must be accessed via service_role.
 
 -- Custom role check from JWT app metadata.
 create or replace function public.has_platform_role(required_roles text[])

@@ -163,8 +163,8 @@ python3 ./.trellis/scripts/task.py archive 00-bootstrap-guidelines
 After completing this task:
 
 1. AI will write code that matches your project style
-2. `/trellis:before-dev` will inject real context
-3. `/trellis:check` will validate against your actual standards
+2. Relevant `/trellis:before-*-dev` commands will inject real context
+3. `/trellis:check-*` commands will validate against your actual standards
 4. Future developers (human or AI) will onboard faster
 """
 

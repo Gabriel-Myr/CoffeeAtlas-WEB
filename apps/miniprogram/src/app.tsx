@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react'
 import { Text, View } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import { getSystemInfoSync, reLaunch } from '@tarojs/taro'
 
 import { restartOnboarding } from './utils/restart-onboarding'
 import { clearOnboardingProfile } from './utils/storage'
@@ -11,12 +11,12 @@ function App({ children }: PropsWithChildren) {
     restartOnboarding({
       clearProfile: clearOnboardingProfile,
       relaunch: (url) => {
-        Taro.reLaunch({ url })
+        reLaunch({ url })
       },
     })
   }
 
-  const statusBarHeight = Taro.getSystemInfoSync().statusBarHeight ?? 0
+  const statusBarHeight = getSystemInfoSync().statusBarHeight ?? 0
 
   return (
     <View className="app-shell">

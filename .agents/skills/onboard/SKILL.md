@@ -1,375 +1,187 @@
 ---
 name: onboard
-description: Onboard a developer to this project's Trellis workflow, commands, concepts, and guideline-customization process.
+description: Onboard a developer to this project's current Trellis workflow, with emphasis on the simplified final-skill model, task flow, and spec maintenance.
 ---
 
 This is the Codex entry for the Trellis `onboard` workflow in this repository.
-Follow the instructions below as the project-specific operating procedure.
+Use it as the current onboarding guide, not a generic training lecture.
 
-You are a senior developer onboarding a new team member to this project's AI-assisted workflow system.
+# Onboard
 
-YOUR ROLE: Be a mentor and teacher. Don't just list steps - EXPLAIN the underlying principles, why each command exists, what problem it solves at a fundamental level.
+目标：让新成员快速理解这套 Trellis 现在怎么用，尤其是它已经改成了更精简的最终 skill 模型。
 
-## CRITICAL INSTRUCTION - YOU MUST COMPLETE ALL SECTIONS
+## 1. 先讲清核心思路
 
-This onboarding has THREE equally important parts:
+这套流程现在的默认路径是：
 
-**PART 1: Core Concepts** (Sections: CORE PHILOSOPHY, SYSTEM STRUCTURE, COMMAND DEEP DIVE)
-- Explain WHY this workflow exists
-- Explain WHAT each command does and WHY
+1. `/trellis:start` 读当前上下文
+2. `/trellis:before-dev` 读最小必要 spec
+3. 如果不清楚，先做短 `think`
+4. 直接实现
+5. `/trellis:check` 做验证
+6. `/trellis:finish-work` 做最终交接
+7. `/trellis:record-session` 记录结果
 
-**PART 2: Real-World Examples** (Section: REAL-WORLD WORKFLOW EXAMPLES)
-- Walk through ALL 5 examples in detail
-- For EACH step in EACH example, explain:
-  - PRINCIPLE: Why this step exists
-  - WHAT HAPPENS: What the command actually does
-  - IF SKIPPED: What goes wrong without it
+但要额外讲清楚一个前提：
 
-**PART 3: Customize Your Development Guidelines** (Section: CUSTOMIZE YOUR DEVELOPMENT GUIDELINES)
-- Check if project guidelines are still empty templates
-- If empty, guide the developer to fill them with project-specific content
-- Explain the customization workflow
+- `record-session` 只在**人类已经测试并提交代码之后**才执行
+- 它不是“刚改完代码马上顺手跑”的一步
 
-DO NOT skip any part. All three parts are essential:
-- Part 1 teaches the concepts
-- Part 2 shows how concepts work in practice
-- Part 3 ensures the project has proper guidelines for AI to follow
+重点说明三件事：
 
-After completing ALL THREE parts, ask the developer about their first task.
+- Trellis 不是为了制造复杂流程，而是为了让 AI 每次都读到对的上下文
+- `brainstorm` 现在不是默认入口，只在需求真的不清楚时才用
+- `check` 和 `finish-work` 不是一回事，前者做验证，后者做交接
 
----
+还要补第四件事：
 
-## CORE PHILOSOPHY: Why This Workflow Exists
+- 通用能力型 skill 默认复用用户当前 Codex 全局 skill；本仓库 Trellis skill 只补项目流程
 
-AI-assisted development has three fundamental challenges:
+## 2. 解释目录结构
 
-### Challenge 1: AI Has No Memory
+至少要讲清这些目录：
 
-Every AI session starts with a blank slate. Unlike human engineers who accumulate project knowledge over weeks/months, AI forgets everything when a session ends.
+- `.trellis/workspace/`：会话记录，给后续会话补上下文
+- `.trellis/tasks/`：任务目录，放 `task.json`、`prd.md`、`*.jsonl`
+- `.trellis/spec/`：项目规范，告诉 AI 这个仓库真正怎么写
+- `.trellis/scripts/`：流程脚本
 
-**The Problem**: Without memory, AI asks the same questions repeatedly, makes the same mistakes, and can't build on previous work.
+需要强调：
 
-**The Solution**: The `.trellis/workspace/` system captures what happened in each session - what was done, what was learned, what problems were solved. The `/trellis:start` command reads this history at session start, giving AI "artificial memory."
+- `miniprogram/frontend/` 是当前默认入口
+- `api/backend/` 和 `shared-types/*` 只有在任务涉及它们时再进入
+- `guides/` 是补充思考，不是每次都强制全读
 
-### Challenge 2: AI Has Generic Knowledge, Not Project-Specific Knowledge
+## 3. 解释关键命令
 
-AI models are trained on millions of codebases - they know general patterns for React, TypeScript, databases, etc. But they don't know YOUR project's conventions.
+### `/trellis:start`
 
-**The Problem**: AI writes code that "works" but doesn't match your project's style. It uses patterns that conflict with existing code. It makes decisions that violate unwritten team rules.
+作用：
 
-**The Solution**: The `.trellis/spec/` directory contains project-specific guidelines. The `/trellis:before-dev` command reads the relevant package and layer specs before coding starts, so AI gets project-specific context instead of generic defaults.
+- 读取当前仓库状态
+- 找回正在进行的 task
+- 让 AI 先知道当前上下文再动手
 
-### Challenge 3: AI Context Window Is Limited
+### `/trellis:before-dev`
 
-Even after injecting guidelines, AI has limited context window. As conversation grows, earlier context (including guidelines) gets pushed out or becomes less influential.
+作用：
 
-**The Problem**: AI starts following guidelines, but as the session progresses and context fills up, it "forgets" the rules and reverts to generic patterns.
+- 读取当前任务最相关的 spec
+- 防止 AI 直接按通用经验写代码
 
-**The Solution**: The `/trellis:check` command re-verifies code against guidelines AFTER writing, catching drift that occurred during development. The `/trellis:finish-work` command does a final holistic review.
+### `/trellis:check`
 
----
+作用：
 
-## SYSTEM STRUCTURE
+- 补充这个仓库自己的验证命令和 package 规则
+- 看是否漏改、漏测、漏同步 spec
+- 它不是为了替代用户全局的通用 `check`
 
-```
-.trellis/
-|-- .developer              # Your identity (gitignored)
-|-- workflow.md             # Complete workflow documentation
-|-- workspace/              # "AI Memory" - session history
-|   |-- index.md            # All developers' progress
-|   +-- {developer}/        # Per-developer directory
-|       |-- index.md        # Personal progress index
-|       +-- journal-N.md    # Session records (max 2000 lines)
-|-- tasks/                  # Task tracking (unified)
-|   +-- {MM}-{DD}-{slug}/   # Task directory
-|       |-- task.json       # Task metadata
-|       +-- prd.md          # Requirements doc
-|-- spec/                   # "AI Training Data" - project knowledge
-|   |-- miniprogram/
-|   |   +-- frontend/       # 默认小程序规范入口
-|   |-- api/
-|   |   +-- backend/
-|   |-- shared-types/
-|   |   |-- frontend/
-|   |   +-- backend/
-|   +-- guides/             # Thinking patterns
-+-- scripts/                # Automation tools
-```
+### `/trellis:check-cross-layer`
 
-### Understanding spec/ subdirectories
+作用：
 
-**miniprogram/frontend/** - 当前默认的小程序前端知识：
-- 页面、组件、分页、入口状态、storage、联调约束
+- 只在跨层、共享契约、复用/配置敏感时补跑
+- 不是每个任务都要跑
 
-**api/backend/** - 单层后端知识：
-- API design patterns (REST? GraphQL? tRPC?)
-- Database conventions (query patterns, migrations)
-- Error handling standards
-- Logging and monitoring rules
+### `/trellis:finish-work`
 
-**shared-types/** - 跨端契约知识：
-- API DTO
-- 共享 query 参数与返回 envelope
-- 类型边界和命名约束
+作用：
 
-**guides/** - Cross-layer thinking guides:
-- Code reuse thinking guide
-- Cross-layer thinking guide
-- Pre-implementation checklists
+- 做最后的完成度确认
+- 说明哪些验证已跑、哪些没跑
+- 交代 spec 是否需要同步
 
----
+### `/trellis:record-session`
 
-## COMMAND DEEP DIVE
+作用：
 
-### /trellis:start - Restore AI Memory
+- 把这次做了什么、学到了什么记下来
+- 方便下次会话继续
+- 前提是：代码已经由人类测试并提交
 
-**WHY IT EXISTS**:
-When a human engineer joins a project, they spend days/weeks learning: What is this project? What's been built? What's in progress? What's the current state?
+## 3.5 讲清全局 skill 与仓库 skill 的分工
 
-AI needs the same onboarding - but compressed into seconds at session start.
+当前仓库默认兼容用户现有的 `Waza` 风格全局 skill。
 
-**WHAT IT ACTUALLY DOES**:
-1. Reads developer identity (who am I in this project?)
-2. Checks git status (what branch? uncommitted changes?)
-3. Reads recent session history from `workspace/` (what happened before?)
-4. Identifies active features (what's in progress?)
-5. Understands current project state before making any changes
+分工是：
 
-**WHY THIS MATTERS**:
-- Without /trellis:start: AI is blind. It might work on wrong branch, conflict with others' work, or redo already-completed work.
-- With /trellis:start: AI knows project context, can continue where previous session left off, avoids conflicts.
+- **全局通用能力 skill**：`think`、`hunt`、`design`、`read`、`write`、`health`
+- **仓库流程 skill**：`start`、`before-dev`、`check`、`check-cross-layer`、`finish-work`、`record-session`
 
----
+要明确告诉新成员：
 
-### /trellis:before-dev - Inject Specialized Knowledge
+- 不要在仓库里再重复造一套同名通用能力 skill
+- `think`、`hunt` 这类动作，默认走全局 skill
+- Trellis 负责 task、PRD、spec、交接、记录
+- 如果同时用了全局 `check` 和仓库 `check`，仓库 `check` 负责项目补充验证
 
-**WHY IT EXISTS**:
-AI models have "pre-trained knowledge" - general patterns from millions of codebases. But YOUR project has specific conventions that differ from generic patterns.
+## 4. 用真实工作流举例
 
-**WHAT IT ACTUALLY DOES**:
-1. Runs `get_context.py --mode packages` to see which package is `default`
-2. Reads `.trellis/spec/<package>/<layer>/index.md` based on the package and type of work
-2. Loads project-specific patterns into AI's working context:
-   - Component naming conventions
-   - State management patterns
-   - Database query patterns
-   - Error handling standards
+### 小改动
 
-**WHY THIS MATTERS**:
-- Without `/trellis:before-dev`: AI writes generic code that doesn't match project style.
-- With `/trellis:before-dev`: AI writes code that looks like the rest of the codebase.
+1. `/trellis:start`
+2. `/trellis:before-dev`
+3. 直接修改
+4. `/trellis:check`
+5. `/trellis:finish-work`
 
----
+### 需求明确的正常开发
 
-### /trellis:check - Combat Context Drift
+1. `/trellis:start`
+2. 建 task，写短 `prd.md`
+3. `/trellis:before-dev`
+4. 实现
+5. `/trellis:check`
+6. `/trellis:finish-work`
+7. 人类测试并提交
+8. `/trellis:record-session`
 
-**WHY IT EXISTS**:
-AI context window has limited capacity. As conversation progresses, guidelines injected at session start become less influential. This causes "context drift."
+### 需求不清楚
 
-**WHAT IT ACTUALLY DOES**:
-1. Re-reads the guidelines that were injected earlier
-2. Compares written code against those guidelines
-3. Runs type checker and linter
-4. Identifies violations and suggests fixes
+1. `/trellis:start`
+2. 先做一次短 `think`
+3. 如果还是不清楚，再进入 `brainstorm`
+4. 明确后按正常开发流程继续
 
-**WHY THIS MATTERS**:
-- Without `/trellis:check`: Context drift goes unnoticed, code quality degrades.
-- With `/trellis:check`: Drift is caught and corrected before commit.
+### 排错
 
----
+1. `/trellis:start`
+2. `/trellis:before-dev`
+3. 先定位原因，不要直接补丁
+4. 改完后 `/trellis:check`
+5. 需要时 `/trellis:finish-work`
 
-### /trellis:check-cross-layer - Multi-Dimension Verification
+## 5. 强调几条规则
 
-**WHY IT EXISTS**:
-Most bugs don't come from lack of technical skill - they come from "didn't think of it":
-- Changed a constant in one place, missed 5 other places
-- Modified database schema, forgot to update the API layer
-- Created a utility function, but similar one already exists
+必须讲清楚：
 
-**WHAT IT ACTUALLY DOES**:
-1. Identifies which dimensions your change involves
-2. For each dimension, runs targeted checks:
-   - Cross-layer data flow
-   - Code reuse analysis
-   - Import path validation
-   - Consistency checks
+1. 先读 spec，再改代码
+2. 默认走轻量流程，不默认走大流程
+3. `brainstorm` 是可选深度流程，不是默认入口
+4. `check` 是质量闸门
+5. `finish-work` 是最终交接
+6. 学到新规则时要同步 `.trellis/spec/`
+7. 通用能力默认复用全局 `Waza` 风格 skill，仓库内只保留项目流程补充
 
----
+## 6. 检查 spec 是否还是空模板
 
-### /trellis:finish-work - Holistic Pre-Commit Review
-
-**WHY IT EXISTS**:
-The `/trellis:check` command focuses on guideline compliance. But real changes often have cross-cutting concerns.
-
-**WHAT IT ACTUALLY DOES**:
-1. Reviews all changes holistically
-2. Checks cross-layer consistency
-3. Identifies broader impacts
-4. Checks if new patterns should be documented
-
----
-
-### /trellis:record-session - Persist Memory for Future
-
-**WHY IT EXISTS**:
-All the context AI built during this session will be lost when session ends. The next session's `/trellis:start` needs this information.
-
-**WHAT IT ACTUALLY DOES**:
-1. Records session summary to `workspace/{developer}/journal-N.md`
-2. Captures what was done, learned, and what's remaining
-3. Updates index files for quick lookup
-
----
-
-## REAL-WORLD WORKFLOW EXAMPLES
-
-### Example 1: Bug Fix Session
-
-**[1/8] /trellis:start** - AI needs project context before touching code
-**[2/8] python3 ./.trellis/scripts/task.py create "Fix bug" --slug fix-bug** - Track work for future reference
-**[3/8] /trellis:before-dev** - 先读当前默认 package 的 spec；如果联动 shared-types / API 再补读其他 package
-**[4/8] Investigate and fix the bug** - Actual development work
-**[5/8] /trellis:check** - Re-verify code against guidelines
-**[6/8] /trellis:finish-work** - Holistic cross-layer review
-**[7/8] Human tests and commits** - Human validates before code enters repo
-**[8/8] /trellis:record-session** - Persist memory for future sessions
-
-### Example 2: Planning Session (No Code)
-
-**[1/4] /trellis:start** - Context needed even for non-coding work
-**[2/4] python3 ./.trellis/scripts/task.py create "Planning task" --slug planning-task** - Planning is valuable work
-**[3/4] Review docs, create subtask list** - Actual planning work
-**[4/4] /trellis:record-session (with --summary)** - Planning decisions must be recorded
-
-### Example 3: Code Review Fixes
-
-**[1/6] /trellis:start** - Resume context from previous session
-**[2/6] /trellis:before-dev** - 重新读当前任务 package 的 spec；如果这次 fix 牵涉 API/契约，再补读 shared-types / api backend
-**[3/6] Fix each CR issue** - Address feedback with guidelines in context
-**[4/6] /trellis:check** - Verify fixes didn't introduce new issues
-**[5/6] /trellis:finish-work** - Document lessons from CR
-**[6/6] Human commits, then /trellis:record-session** - Preserve CR lessons
-
-### Example 4: Large Refactoring
-
-**[1/5] /trellis:start** - Clear baseline before major changes
-**[2/5] Plan phases** - Break into verifiable chunks
-**[3/5] Execute phase by phase with /trellis:check after each** - Incremental verification
-**[4/5] /trellis:finish-work** - Check if new patterns should be documented
-**[5/5] Record with multiple commit hashes** - Link all commits to one feature
-
-### Example 5: Debug Session
-
-**[1/6] /trellis:start** - See if this bug was investigated before
-**[2/6] /trellis:before-dev** - 相关 package 的 spec 里可能已经记了已知坑点
-**[3/6] Investigation** - Actual debugging work
-**[4/6] /trellis:check** - Verify debug changes don't break other things
-**[5/6] /trellis:finish-work** - Debug findings might need documentation
-**[6/6] Human commits, then /trellis:record-session** - Debug knowledge is valuable
-
----
-
-## KEY RULES TO EMPHASIZE
-
-1. **AI NEVER commits** - Human tests and approves. AI prepares, human validates.
-2. **Guidelines before code** - `/trellis:before-dev` injects project knowledge.
-3. **Check after code** - `/trellis:check` catches context drift.
-4. **Record everything** - /trellis:record-session persists memory.
-
----
-
-# PART 3: Customize Your Development Guidelines
-
-After explaining Part 1 and Part 2, check if the project's development guidelines need customization.
-
-## Step 1: Check Current Guidelines Status
-
-Check whether the spec files relevant to the current package still contain empty templates:
+先运行：
 
 ```bash
-# Check if any spec files are still empty templates
 rg -l "To be filled by the team" .trellis/spec
 ```
 
-## Step 2: Determine Situation
+如果当前任务相关 spec 还是空模板，就直接告诉对方：
 
-**Situation A: Relevant package still mostly template**
+- 这套 Trellis 还没完全准备好
+- 应该先把当前 package 的规范补起来
+- 先从正在改的那一层开始，不要一次补全全仓库
 
-If the specs for the package you are about to work on are still template-heavy (contain "To be filled by the team"), that package is not ready for reliable AI guidance yet.
+如果当前任务相关 spec 已经有真实内容，就说明这套流程已经可用，并建议先熟悉当前 package 的 index 和关键规范文件。
 
-Explain to the developer:
+## 7. 结束方式
 
-"I see that the development guidelines relevant to this task are still mostly empty templates. This can happen in a new Trellis setup or in a partially migrated monorepo.
+完成 onboarding 后，最后只问一个问题：
 
-The templates contain placeholder text that needs to be replaced with YOUR project's actual conventions. Without this, `/trellis:before-dev` won't provide useful guidance.
-
-**Your first task should be to fill in these guidelines:**
-
-1. Look at your existing codebase
-2. Identify the patterns and conventions already in use
-3. Document them in the guideline files
-
-For example, if you're currently only working in miniprogram, start from `.trellis/spec/miniprogram/frontend/`:
-- 页面状态和 storage 现在怎么管？
-- API 调用集中在哪里？
-- entry intent、分页、discover 流程有什么现成模式？
-
-If the task also touches API or contracts, then continue into `.trellis/spec/api/backend/` or `.trellis/spec/shared-types/`.
-
-Would you like me to help you analyze your codebase and fill in these guidelines?"
-
-**Situation B: Core packages already customized**
-
-If the relevant specs have real content, but some secondary package trees still contain placeholders, treat this as a partially migrated but usable setup.
-
-Explain to the developer:
-
-"Great! The specs relevant to this task already have real project content. You can start using `/trellis:before-dev` right away.
-
-I recommend reading through the relevant package-scoped docs in `.trellis/spec/` to familiarize yourself with the team's coding standards."
-
-## Step 3: Help Fill Guidelines (If Empty)
-
-If the developer wants help filling guidelines, create a feature to track this:
-
-```bash
-python3 ./.trellis/scripts/task.py create "Fill spec guidelines" --slug fill-spec-guidelines
-```
-
-Then systematically analyze the codebase and fill each guideline file:
-
-1. **Analyze the codebase** - Look at existing code patterns
-2. **Document conventions** - Write what you observe, not ideals
-3. **Include examples** - Reference actual files in the project
-4. **List forbidden patterns** - Document anti-patterns the team avoids
-
-Work through one file at a time:
-- Start with the package you're actually touching now.
-- If this repo's current work is miniprogram-first, begin with:
-  - `miniprogram/frontend/index.md`
-  - `miniprogram/frontend/component-guidelines.md`
-  - `miniprogram/frontend/hook-guidelines.md`
-  - `miniprogram/frontend/state-management.md`
-  - `miniprogram/frontend/quality-guidelines.md`
-  - `miniprogram/frontend/type-safety.md`
-- Only after that, expand to:
-  - `api/backend/*.md`
-  - `shared-types/*.md`
-
----
-
-## Completing the Onboard Session
-
-After covering all three parts, summarize:
-
-"You're now onboarded to the Trellis workflow system! Here's what we covered:
-- Part 1: Core concepts (why this workflow exists)
-- Part 2: Real-world examples (how to apply the workflow)
-- Part 3: Guidelines status (empty templates need filling / already customized)
-
-**Next steps** (tell user):
-1. Run `/trellis:record-session` to record this onboard session
-2. [If guidelines empty] Start filling in `.trellis/spec/` guidelines
-3. [If guidelines ready] Start your first development task
-
-What would you like to do first?"
+`你现在要处理的第一个任务是什么？`

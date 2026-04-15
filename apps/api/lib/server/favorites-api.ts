@@ -1,8 +1,9 @@
-import type { CatalogBeanCard, RoasterSummary, UserFavorite } from '@coffee-atlas/shared-types';
+import type { UserFavorite } from '@coffee-atlas/shared-types';
 
-import type { CoffeeBean, Roaster } from '@/lib/catalog';
 import { getCatalogBeansByIds, getRoastersByIds } from '@/lib/catalog';
 import { requireSupabaseServiceRoleServer } from '@/lib/supabase';
+import { mapBeanCard } from './public-beans.ts';
+import { mapRoasterSummary } from './public-api.ts';
 
 export interface AppUser {
   id: string;
@@ -21,47 +22,6 @@ interface UserFavoriteRow {
   target_type: 'bean' | 'roaster';
   target_id: string;
   created_at: string;
-}
-
-function mapBeanCard(bean: CoffeeBean): CatalogBeanCard {
-  return {
-    id: bean.id,
-    name: bean.name,
-    roasterId: bean.roasterId,
-    roasterName: bean.roasterName,
-    city: bean.city,
-    originCountry: bean.originCountry,
-    process: bean.process,
-    processBase: bean.processBase,
-    processStyle: bean.processStyle,
-    processRaw: bean.processRaw,
-    roastLevel: bean.roastLevel,
-    price: bean.price,
-    currency: bean.currency,
-    salesCount: bean.salesCount,
-    imageUrl: bean.imageUrl,
-    isInStock: bean.isInStock,
-    originRegion: bean.originRegion,
-    farm: bean.farm,
-    variety: bean.variety,
-    discountedPrice: bean.discountedPrice,
-    tastingNotes: bean.tastingNotes,
-    isNewArrival: bean.isNewArrival,
-  };
-}
-
-function mapRoasterSummary(roaster: Roaster): RoasterSummary {
-  return {
-    id: roaster.id,
-    name: roaster.name,
-    city: roaster.city,
-    beanCount: roaster.beanCount,
-    description: roaster.description,
-    logoUrl: roaster.logoUrl,
-    coverImageUrl: roaster.coverImageUrl,
-    taobaoUrl: roaster.taobaoUrl,
-    xiaohongshuUrl: roaster.xiaohongshuUrl,
-  };
 }
 
 async function hydrateFavorites(rows: UserFavoriteRow[]): Promise<UserFavorite[]> {

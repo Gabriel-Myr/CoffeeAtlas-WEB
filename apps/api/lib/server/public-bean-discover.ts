@@ -24,7 +24,8 @@ import {
 import { hasSupabaseServerEnv, requireSupabaseServer } from '../supabase.ts';
 
 import { normalizeString, sanitizeSearchTerm } from './api-primitives.ts';
-import { BEAN_DISCOVER_EDITORIAL_CONFIGS } from './bean-discover-config.ts';
+import { BEAN_DISCOVER_EDITORIAL_CONFIGS, getBeanDiscoverEditorialConfigs } from './bean-discover-config.ts';
+import { formatLightQuestionTemplate, readLightQuestionCopyConfig } from './light-question-copy.ts';
 import type { BeanListFilters } from './public-beans.ts';
 import {
   buildOriginConditions,
@@ -40,6 +41,7 @@ import {
 interface CatalogViewDiscoverRow {
   roaster_bean_id: string;
   origin_country: string | null;
+  variety: string | null;
   process_method: string | null;
   process_base?: string | null;
   process_style?: string | null;
@@ -80,7 +82,7 @@ async function queryDiscoverRows({
   const supabaseServer = requireSupabaseServer();
   let query = supabaseServer
     .from('v_catalog_active')
-    .select('roaster_bean_id, origin_country, process_method, process_base, process_style')
+    .select('roaster_bean_id, origin_country, variety, process_method, process_base, process_style')
     .order('updated_at', { ascending: false });
 
   if (q) query = query.or(buildSearchConditions(q));
@@ -99,6 +101,7 @@ function mapDiscoverRowsFromBeans(beans: CoffeeBean[]): CatalogViewDiscoverRow[]
   return beans.map((bean) => ({
     roaster_bean_id: bean.id,
     origin_country: bean.originCountry,
+    variety: bean.variety,
     process_method: bean.processRaw ?? bean.process,
     process_base: bean.processBase,
     process_style: bean.processStyle,
@@ -201,9 +204,27 @@ export function buildCountryOptions(rows: CatalogViewDiscoverRow[]): BeanDiscove
     }));
 }
 
-function getEditorialConfig(filters: Pick<BeanListFilters, 'processBase' | 'continent' | 'country'>) {
+export function buildVarietyOptions(rows: CatalogViewDiscoverRow[]): BeanDiscoverOption[] {
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const variety = normalizeString(row.variety);
+    if (!variety) continue;
+    counts.set(variety, (counts.get(variety) ?? 0) + 1);
+  }
+
+  return [...counts.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], 'zh-Hans-CN'))
+    .map(([label, count]) => ({
+      id: label,
+      label,
+      count,
+    }));
+}
+
+async function getEditorialConfig(filters: Pick<BeanListFilters, 'processBase' | 'continent' | 'country'>) {
+  const editorialConfigs = await getBeanDiscoverEditorialConfigs();
   const normalizedProcessBaseLabel = filters.processBase ? getProcessBaseLabel(filters.processBase) : undefined;
-  const matchedConfigs = BEAN_DISCOVER_EDITORIAL_CONFIGS.filter((config) => {
+  const matchedConfigs = editorialConfigs.filter((config) => {
     if (config.match.process && normalizeString(config.match.process) !== normalizedProcessBaseLabel) return false;
     if (config.match.continent && config.match.continent !== filters.continent) return false;
     if (config.match.country && config.match.country !== filters.country) return false;
@@ -214,7 +235,7 @@ function getEditorialConfig(filters: Pick<BeanListFilters, 'processBase' | 'cont
     const leftSpecificity = Object.values(left.match).filter(Boolean).length;
     const rightSpecificity = Object.values(right.match).filter(Boolean).length;
     return rightSpecificity - leftSpecificity;
-  })[0] ?? BEAN_DISCOVER_EDITORIAL_CONFIGS[0];
+  })[0] ?? editorialConfigs[0] ?? BEAN_DISCOVER_EDITORIAL_CONFIGS[0];
 }
 
 function scoreEditorialPick(
@@ -235,38 +256,45 @@ function scoreEditorialPick(
 
 export function buildEditorialReason(
   bean: CoffeeBean,
-  filters: Pick<BeanListFilters, 'processBase' | 'processStyle' | 'continent' | 'country'>
+  filters: Pick<BeanListFilters, 'processBase' | 'processStyle' | 'continent' | 'country'>,
+  copyOverrides?: Awaited<ReturnType<typeof readLightQuestionCopyConfig>>['api']['editorialReasons']
 ): string {
   const matchedCountry = matchAtlasCountry(bean.originCountry) ?? matchAtlasCountry(bean.name);
   const normalizedProcess = normalizeBeanProcess(bean);
   if (filters.country && matchedCountry?.name === filters.country) {
-    return `代表 ${filters.country} 当前路径的典型杯型，适合先建立国家风味印象。`;
+    return copyOverrides
+      ? formatLightQuestionTemplate(copyOverrides.country, { country: filters.country })
+      : `代表 ${filters.country} 当前路径的典型杯型，适合先建立国家风味印象。`;
   }
   if (filters.processBase && normalizedProcess.base === filters.processBase) {
     const processLabel =
       filters.processStyle && normalizedProcess.style === filters.processStyle
         ? normalizedProcess.label
         : getProcessBaseLabel(filters.processBase);
-    return `${processLabel} 轮廓更清晰，适合拿来比较处理法差异。`;
+    return copyOverrides
+      ? formatLightQuestionTemplate(copyOverrides.processBase, { processLabel })
+      : `${processLabel} 轮廓更清晰，适合拿来比较处理法差异。`;
   }
   if (filters.continent) {
     const continent = ORIGIN_ATLAS_CONTINENT_MAP.get(filters.continent);
     if (continent) {
-      return `更能体现 ${continent.name} 这条路径的风土和风味方向。`;
+      return copyOverrides
+        ? formatLightQuestionTemplate(copyOverrides.continent, { continent: continent.name })
+        : `更能体现 ${continent.name} 这条路径的风土和风味方向。`;
     }
   }
   if (bean.isNewArrival) {
-    return '最近更新，适合第一时间尝鲜，看看目录里最新的风味走向。';
+    return copyOverrides?.newArrival ?? '最近更新，适合第一时间尝鲜，看看目录里最新的风味走向。';
   }
   if (bean.salesCount > 0) {
-    return '销量更稳定，是这条路径里更容易形成共识的一支代表样本。';
+    return copyOverrides?.sales ?? '销量更稳定，是这条路径里更容易形成共识的一支代表样本。';
   }
-  return '风味辨识度和稳定性都不错，适合作为当前探索路径的起点。';
+  return copyOverrides?.fallback ?? '风味辨识度和稳定性都不错，适合作为当前探索路径的起点。';
 }
 
 async function buildEditorialPicks(filters: BeanListFilters): Promise<BeanDiscoverPayload['editorPicks']> {
   const { getCatalogBeansByIds } = await import('../catalog.ts');
-  const config = getEditorialConfig(filters);
+  const [config, copyConfig] = await Promise.all([getEditorialConfig(filters), readLightQuestionCopyConfig()]);
   const limit = filters.country ? 3 : 4;
   const selectedBeans: CoffeeBean[] = [];
 
@@ -308,16 +336,19 @@ async function buildEditorialPicks(filters: BeanListFilters): Promise<BeanDiscov
 
   return selectedBeans.slice(0, limit).map((bean) => ({
     bean: mapBeanCard(bean),
-    reason: buildEditorialReason(bean, filters),
+    reason: buildEditorialReason(bean, filters, copyConfig.api.editorialReasons),
   }));
 }
 
 async function buildEditorialPicksFallback(filters: BeanListFilters): Promise<BeanDiscoverPayload['editorPicks']> {
   const limit = filters.country ? 3 : 4;
-  const fallbackCandidates = await loadLocalBeans({
-    ...filters,
-    sort: 'sales_desc',
-  });
+  const [fallbackCandidates, copyConfig] = await Promise.all([
+    loadLocalBeans({
+      ...filters,
+      sort: 'sales_desc',
+    }),
+    readLightQuestionCopyConfig(),
+  ]);
 
   return fallbackCandidates
     .filter((bean) => matchesBeanFilters(bean, filters))
@@ -325,7 +356,7 @@ async function buildEditorialPicksFallback(filters: BeanListFilters): Promise<Be
     .slice(0, limit)
     .map((bean) => ({
       bean: mapBeanCard(bean),
-      reason: buildEditorialReason(bean, filters),
+      reason: buildEditorialReason(bean, filters, copyConfig.api.editorialReasons),
     }));
 }
 
@@ -353,13 +384,14 @@ async function buildDiscoverFallbackPayload({
     buildEditorialPicksFallback(currentFilters),
   ]);
 
-  const editorialConfig = getEditorialConfig(currentFilters);
+  const editorialConfig = await getEditorialConfig(currentFilters);
 
   return {
     processBaseOptions: buildProcessBaseOptions(mapDiscoverRowsFromBeans(baseBeans)),
     processStyleOptions: buildProcessStyleOptions(mapDiscoverRowsFromBeans(styleBeans), processBase),
     continentOptions: buildContinentOptions(mapDiscoverRowsFromBeans(continentBeans)),
     countryOptions: buildCountryOptions(mapDiscoverRowsFromBeans(countryBeans)),
+    varietyOptions: buildVarietyOptions(mapDiscoverRowsFromBeans(totalBeans)),
     editorial: {
       title: editorialConfig.title,
       subtitle: editorialConfig.subtitle,
@@ -398,14 +430,16 @@ export async function buildDiscoverPrimaryPayload(
   let processStyleRows: CatalogViewDiscoverRow[];
   let continentRows: CatalogViewDiscoverRow[];
   let countryRows: CatalogViewDiscoverRow[];
+  let varietyRows: CatalogViewDiscoverRow[];
   let total: number;
 
   if (hasSupabaseEnv) {
-    [processBaseRows, processStyleRows, continentRows, countryRows, total] = await Promise.all([
+    [processBaseRows, processStyleRows, continentRows, countryRows, varietyRows, total] = await Promise.all([
       queryDiscoverRowsFn({ q }),
       queryDiscoverRowsFn({ q, processBase }),
       queryDiscoverRowsFn({ q, processBase }),
       queryDiscoverRowsFn({ q, processBase, continent }),
+      queryDiscoverRowsFn(currentFilters),
       countBeanIdsFn(currentFilters),
     ]);
   } else {
@@ -420,16 +454,21 @@ export async function buildDiscoverPrimaryPayload(
       if (!continent) return true;
       return matchAtlasCountry(row.origin_country)?.continentId === continent;
     });
+    varietyRows = countryRows.filter((row) => {
+      if (!country) return true;
+      return matchAtlasCountry(row.origin_country)?.name === country;
+    });
     total = (await loadLocalBeansFn(currentFilters)).length;
   }
 
-  const editorialConfig = getEditorialConfig(currentFilters);
+  const editorialConfig = await getEditorialConfig(currentFilters);
 
   return {
     processBaseOptions: buildProcessBaseOptions(processBaseRows),
     processStyleOptions: buildProcessStyleOptions(processStyleRows, processBase),
     continentOptions: buildContinentOptions(continentRows),
     countryOptions: buildCountryOptions(countryRows),
+    varietyOptions: buildVarietyOptions(varietyRows),
     editorial: {
       title: editorialConfig.title,
       subtitle: editorialConfig.subtitle,

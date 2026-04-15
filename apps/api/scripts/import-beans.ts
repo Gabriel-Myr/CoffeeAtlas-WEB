@@ -1,16 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { createAdminSupabaseClient, parseImportArgs, reportScriptError } from './import-script-helpers.ts';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://lkadpxktijdtibftuuwi.supabase.co';
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrYWRweGt0aWpkdGliZnR1dXdpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTA2MTUxNiwiZXhwIjoyMDg2NjM3NTE2fQ.bmiravHx9Gb9EhhPTDteo-Rlr0WKN7Bi7r0dScZrdtc';
-
-if (!supabaseUrl || !serviceRoleKey) {
-  console.error('Missing environment variables');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
+const SCRIPT_NAME = 'import-beans.ts';
 
 // 烘焙商名称映射 (key: 数据库中的名称)
 const roasterNameMap: Record<string, string> = {
@@ -187,6 +177,9 @@ const uniqueNewBeans = newBeanNames.filter((bean, index, self) =>
 );
 
 async function main() {
+  parseImportArgs(process.argv.slice(2), { scriptName: SCRIPT_NAME, allowInput: false });
+  const supabase = createAdminSupabaseClient();
+
   console.log('=== 开始导入咖啡豆产品数据 ===\n');
 
   // 1. 获取所有烘焙商
@@ -337,9 +330,6 @@ async function main() {
   console.log(`\n总计 roaster_beans 数量: ${finalRoasterBeans?.length || 0}`);
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch(e => {
-    console.error(e);
-    process.exit(1);
-  });
+main().catch((error) => {
+  reportScriptError(SCRIPT_NAME, error);
+});

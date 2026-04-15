@@ -15,6 +15,7 @@ You are the Multi-Agent Pipeline Orchestrator Agent, running in the main reposit
 - **You are in the main repository**, not in a worktree
 - **You don't write code directly** - code work is done by agents in worktrees
 - **You are responsible for planning and dispatching**: discuss requirements, create plans, configure context, start worktree agents
+- **Keep the process lean**: use a short planning pass first, then dispatch
 - **Delegate complex analysis to research agent**: finding specs, analyzing code structure
 
 ---
@@ -53,13 +54,13 @@ python3 ./.trellis/scripts/get_context.py --mode packages
 cat .trellis/spec/guides/index.md    # Thinking guides
 ```
 
-### Step 4: Ask User for Requirements
+### Step 4: Confirm the Minimum Requirement
 
-Ask the user:
+Only confirm what is actually needed to start:
 
-1. What feature to develop?
-2. Which modules are involved?
-3. Development type? (backend / frontend / fullstack)
+1. Goal
+2. Scope
+3. Development type (backend / frontend / fullstack)
 
 ---
 
@@ -67,7 +68,7 @@ Ask the user:
 
 Based on requirement complexity, choose one of these approaches:
 
-### Option A: Plan Agent (Recommended for complex features) `[AI]`
+### Option A: Plan Agent (Recommended for unclear or cross-layer work) `[AI]`
 
 Use when:
 - Requirements need analysis and validation
@@ -85,7 +86,7 @@ Plan Agent will:
 1. Evaluate requirement validity (may reject if unclear/too large)
 2. Call research agent to analyze codebase
 3. Create and configure task directory
-4. Write prd.md with acceptance criteria
+4. Write a short, concrete prd.md with acceptance criteria
 5. Output ready-to-use task directory
 
 After plan.py completes, start the worktree agent:
@@ -128,17 +129,13 @@ python3 ./.trellis/scripts/task.py add-context "$TASK_DIR" check "<path>" "<reas
 
 #### Step 4: Create prd.md
 
-```bash
-cat > "$TASK_DIR/prd.md" << 'EOF'
-# Feature: <name>
+Write a short PRD with:
 
-## Requirements
-- ...
-
-## Acceptance Criteria
-- ...
-EOF
-```
+- Goal
+- Requirements
+- Acceptance Criteria
+- Out of Scope
+- Technical Notes
 
 #### Step 5: Validate and Start
 
@@ -164,7 +161,7 @@ The following slash commands are for users (not AI):
 | `/trellis:parallel` | Start Multi-Agent Pipeline (this command) |
 | `/trellis:start` | Start normal development mode (single process) |
 | `/trellis:record-session` | Record session progress |
-| `/trellis:finish-work` | Pre-completion checklist |
+| `/trellis:finish-work` | Final handoff and completion pass |
 
 ---
 
@@ -187,7 +184,7 @@ The dispatch agent in worktree will automatically execute:
 
 1. implement → Implement feature
 2. check → Check code quality
-3. finish → Final verification
+3. finish → Final handoff pass
 4. create-pr → Create PR
 
 ---
@@ -197,4 +194,5 @@ The dispatch agent in worktree will automatically execute:
 - **Don't write code directly** - delegate to agents in worktree
 - **Don't execute git commit** - agent does it via create-pr action
 - **Delegate complex analysis to research** - finding specs, analyzing code structure
+- **Do not default to a long brainstorm workflow** - if a short planning pass is enough, dispatch
 - **All sub agents use opus model** - ensure output quality

@@ -7,9 +7,11 @@ import type {
   BeanDiscoverEditorialPick,
   BeanDiscoverOption,
   BeanDiscoverPayload,
+  BeanDiscoverQueryParams,
   BeanDiscoverSummary,
   BeanFavoriteRecord,
   BeanSort,
+  BeansQueryParams,
   CatalogBeanCard,
   CatalogBeanDetail,
   LocalFavoriteBeanPreference,
@@ -26,6 +28,7 @@ import type {
   RoasterFeature,
   RoasterFavoriteRecord,
   RoasterSummary,
+  RoastersQueryParams,
   UserFavorite,
 } from '@coffee-atlas/shared-types';
 
@@ -43,8 +46,10 @@ export type {
   BeanDiscoverEditorialPick,
   BeanDiscoverOption,
   BeanDiscoverPayload,
+  BeanDiscoverQueryParams,
   BeanDiscoverSummary,
   BeanSort,
+  BeansQueryParams,
   LocalFavoriteBeanPreference,
   LocalFavoriteRoasterPreference,
   NewArrivalFilterOption,
@@ -58,6 +63,7 @@ export type {
   RoasterDetail,
   RoasterFeature,
   RoasterSummary,
+  RoastersQueryParams,
   UserFavorite,
 };
 

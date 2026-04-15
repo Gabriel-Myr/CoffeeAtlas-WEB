@@ -19,6 +19,12 @@ Keep this managed block so 'trellis update' can refresh the instructions.
 
 Codex note: Trellis command equivalents are available as local skills under `.agents/skills/` (for example `start`, `before-dev`, `check`, `finish-work`, `record-session`). 在 Codex 里更接近官方用法的入口是 `$start`；本仓库文档里写的 `/trellis:start` 表示同一类“开始会话”流程。
 
+另外，本仓库默认兼容用户当前 Codex 全局 skill（按 `Waza` 风格使用）：
+
+- 通用能力型 skill，如 `think`、`hunt`、`design`、`read`、`write`、`health`，默认复用全局 skill
+- 仓库内 `.agents/skills/` 主要负责 Trellis 流程和项目特有约束，不重复定义一套同名通用能力
+- `check` 在本仓库里默认表示“项目补充检查规则”；如果同时用了全局 `check`，应分别说明各自做了什么
+
 ## Codex 补充角色说明
 
 以下内容是本仓库给 Codex 的补充规则，不替换上面的 Trellis managed block。
@@ -43,6 +49,7 @@ Codex note: Trellis command equivalents are available as local skills under `.ag
 - 简单任务可以直接做，但也要先完成最小必要的上下文检查，不要盲改。
 - 复杂任务先写一份简版 PRD，再进入实现；PRD 至少要写清目标、现状、方案、影响范围、验证方式、风险与默认假设。
 - 遇到跨前端、后端、数据库、共享类型的联动修改，或新功能、契约变更、需要分步骤实施的任务，要主动参考 `.trellis/` 里的相关规范来规划。
+- 需要通用方案推演、排错、UI 设计、网页阅读、文案润色、环境审计时，优先直接复用全局 `Waza` 风格 skill，不要在仓库里重复造一套同名能力。
 - 默认直接推进，能自己判断的就不要反复确认；只有在真正阻塞时才提一个明确问题。
 - 先给结果，再说明改了哪里、为什么这样改；解释尽量用用户能听懂的话。
 - 如果任务同时涉及前端、后端、数据库或脚本，按“用户体验 + 数据正确性 + 可维护性”一起考虑。

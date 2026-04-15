@@ -1,11 +1,30 @@
 type ProfileBadgeIconName = 'coffee' | 'user' | 'globe' | 'map-pin' | 'heart' | 'heart-filled' | 'share';
-type BadgeMetricKey = 'loggedIn' | 'beanFavorites' | 'roasterFavorites' | 'historyCount';
+type BadgeMetricKey =
+  | 'loggedIn'
+  | 'beanFavorites'
+  | 'roasterFavorites'
+  | 'historyCount'
+  | 'uniqueCountries'
+  | 'continentsCovered'
+  | 'uniqueProcesses'
+  | 'uniqueVarieties'
+  | 'purchaseClicks'
+  | 'uniqueRoasterPurchaseClicks'
+  | 'shareCount';
 
 export interface BadgeMetricSnapshot {
   loggedIn: boolean;
   beanFavorites: number;
   roasterFavorites: number;
   historyCount: number;
+  uniqueCountries?: number;
+  continentsCovered?: number;
+  uniqueProcesses?: number;
+  uniqueVarieties?: number;
+  purchaseClicks?: number;
+  uniqueRoasterPurchaseClicks?: number;
+  shareCount?: number;
+  externallyUnlockedBadgeIds?: string[];
 }
 
 export interface ProfileBadgeDefinition {
@@ -82,6 +101,78 @@ const PROFILE_BADGE_DEFINITIONS: ProfileBadgeDefinition[] = [
     threshold: 10,
     unlockedDescription: '你的探索已经形成连续记录，属于这张地图上的常客。',
   },
+  {
+    id: 'origin-scout',
+    title: '产地侦察兵',
+    subtitle: '探索 3 个不同产地',
+    icon: 'map-pin',
+    metricKey: 'uniqueCountries',
+    threshold: 3,
+    unlockedDescription: '你的咖啡护照已盖了 3 个章。',
+  },
+  {
+    id: 'origin-atlas',
+    title: '风味地图师',
+    subtitle: '足迹覆盖 3 个大洲',
+    icon: 'globe',
+    metricKey: 'continentsCovered',
+    threshold: 3,
+    unlockedDescription: '亚非拉美洲，你的味蕾比联合国还忙。',
+  },
+  {
+    id: 'process-nerd',
+    title: '处理法极客',
+    subtitle: '尝试 4 种不同处理法',
+    icon: 'coffee',
+    metricKey: 'uniqueProcesses',
+    threshold: 4,
+    unlockedDescription: '水洗日晒蜜处理厌氧，四大天王已集齐。',
+  },
+  {
+    id: 'variety-hunter',
+    title: '品种猎人',
+    subtitle: '接触 3 种不同品种',
+    icon: 'heart-filled',
+    metricKey: 'uniqueVarieties',
+    threshold: 3,
+    unlockedDescription: '在咖啡基因库里翻箱倒柜的人。',
+  },
+  {
+    id: 'first-click',
+    title: '剁手初体验',
+    subtitle: '首次点击购买链接',
+    icon: 'share',
+    metricKey: 'purchaseClicks',
+    threshold: 1,
+    unlockedDescription: '钱包已就位，就差付款了。',
+  },
+  {
+    id: 'multi-roaster',
+    title: '不忠实消费者',
+    subtitle: '查看 3 家不同烘焙师的购买链接',
+    icon: 'heart',
+    metricKey: 'uniqueRoasterPurchaseClicks',
+    threshold: 3,
+    unlockedDescription: '货比三家的精明买手，烘焙师们都慌了。',
+  },
+  {
+    id: 'first-share',
+    title: '安利达人',
+    subtitle: '首次把豆子分享给好友',
+    icon: 'share',
+    metricKey: 'shareCount',
+    threshold: 1,
+    unlockedDescription: '你朋友圈终于有了咖啡味。',
+  },
+  {
+    id: 'serial-sharer',
+    title: '种草机器',
+    subtitle: '累计分享 5 次',
+    icon: 'share',
+    metricKey: 'shareCount',
+    threshold: 5,
+    unlockedDescription: '非官方咖啡推广大使，请领工牌。',
+  },
 ];
 
 function getMetricValue(metrics: BadgeMetricSnapshot, key: BadgeMetricKey): number {
@@ -94,6 +185,20 @@ function getMetricValue(metrics: BadgeMetricSnapshot, key: BadgeMetricKey): numb
       return metrics.roasterFavorites;
     case 'historyCount':
       return metrics.historyCount;
+    case 'uniqueCountries':
+      return metrics.uniqueCountries ?? 0;
+    case 'continentsCovered':
+      return metrics.continentsCovered ?? 0;
+    case 'uniqueProcesses':
+      return metrics.uniqueProcesses ?? 0;
+    case 'uniqueVarieties':
+      return metrics.uniqueVarieties ?? 0;
+    case 'purchaseClicks':
+      return metrics.purchaseClicks ?? 0;
+    case 'uniqueRoasterPurchaseClicks':
+      return metrics.uniqueRoasterPurchaseClicks ?? 0;
+    case 'shareCount':
+      return metrics.shareCount ?? 0;
     default:
       return 0;
   }
@@ -109,6 +214,20 @@ function getLockedDetail(definition: ProfileBadgeDefinition, remainingValue: num
       return `再收藏 ${remainingValue} 个烘焙商可解锁。`;
     case 'historyCount':
       return `再浏览 ${remainingValue} 条记录可解锁。`;
+    case 'uniqueCountries':
+      return `再探索 ${remainingValue} 个不同产地可解锁。`;
+    case 'continentsCovered':
+      return `再覆盖 ${remainingValue} 个大洲可解锁。`;
+    case 'uniqueProcesses':
+      return `再尝试 ${remainingValue} 种不同处理法可解锁。`;
+    case 'uniqueVarieties':
+      return `再接触 ${remainingValue} 种不同品种可解锁。`;
+    case 'purchaseClicks':
+      return `再点击 ${remainingValue} 次购买链接可解锁。`;
+    case 'uniqueRoasterPurchaseClicks':
+      return `再查看 ${remainingValue} 家不同烘焙商的购买链接可解锁。`;
+    case 'shareCount':
+      return `再分享 ${remainingValue} 次可解锁。`;
     default:
       return '继续探索可解锁。';
   }
@@ -123,10 +242,12 @@ function getProgressLabel(unlocked: boolean, currentValue: number, targetValue: 
 }
 
 export function getProfileBadges(metrics: BadgeMetricSnapshot): ProfileBadgeProgress[] {
+  const externallyUnlockedBadgeIds = new Set(metrics.externallyUnlockedBadgeIds ?? []);
+
   return PROFILE_BADGE_DEFINITIONS.map((definition) => {
     const currentValue = getMetricValue(metrics, definition.metricKey);
     const targetValue = definition.threshold;
-    const unlocked = currentValue >= targetValue;
+    const unlocked = currentValue >= targetValue || externallyUnlockedBadgeIds.has(definition.id);
     const remainingValue = unlocked ? 0 : targetValue - currentValue;
 
     return {

@@ -1,10 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, Image, Button } from '@tarojs/components';
 import Taro, { useDidShow } from '@tarojs/taro';
 import { toBeanFavoriteSnapshot, toRoasterFavoriteSnapshot } from '@coffee-atlas/domain';
 
 import Icon from '../../components/Icon';
-import { getFavorites as getCloudFavorites, removeFavorite as removeCloudFavorite } from '../../services/api';
+import {
+  getBadgeProgress,
+  getFavorites as getCloudFavorites,
+  removeFavorite as removeCloudFavorite,
+  syncBadgeProgress,
+} from '../../services/api';
 import type {
   AuthUser,
   BeanFavorite,
@@ -12,14 +17,25 @@ import type {
   UserFavorite,
 } from '../../types';
 import { isLoggedIn, login, logout } from '../../utils/auth';
+import { matchAtlasCountry } from '../../utils/origin-atlas';
 import {
+  getExplorationSet,
   getBeanFavorites,
   getHistory,
+  getPurchaseClickLog,
   getRoasterFavorites,
+  getShareEventLog,
   getStoredUser,
   toggleBeanFavorite,
 } from '../../utils/storage';
-import type { BeanSnapshot, HistoryItem, RoasterSnapshot } from '../../utils/storage';
+import type {
+  BeanSnapshot,
+  ExplorationSet,
+  HistoryItem,
+  PurchaseClickLogEntry,
+  RoasterSnapshot,
+  ShareEventLogEntry,
+} from '../../utils/storage';
 import { getBadgeRecordCopy } from './badge-record';
 import { getProfileBadges, type ProfileBadgeProgress } from './profile-badges';
 import './index.scss';
@@ -40,6 +56,66 @@ interface BeanFavoriteEntry {
 interface RoasterFavoriteEntry {
   roaster: RoasterSnapshot;
   favorite?: RoasterFavorite;
+}
+
+type BadgeGroupId = 'basics' | 'exploration' | 'knowledge' | 'purchase' | 'social';
+
+interface BadgeGroupDefinition {
+  id: BadgeGroupId;
+  title: string;
+  badgeIds: string[];
+}
+
+const BADGE_GROUPS: BadgeGroupDefinition[] = [
+  {
+    id: 'basics',
+    title: '入馆基础',
+    badgeIds: ['visitor', 'bean-starter', 'bean-collector'],
+  },
+  {
+    id: 'exploration',
+    title: '探索足迹',
+    badgeIds: ['roaster-radar', 'history-explorer', 'history-regular'],
+  },
+  {
+    id: 'knowledge',
+    title: '咖啡知识',
+    badgeIds: ['origin-scout', 'origin-atlas', 'process-nerd', 'variety-hunter'],
+  },
+  {
+    id: 'purchase',
+    title: '购买行为',
+    badgeIds: ['first-click', 'multi-roaster'],
+  },
+  {
+    id: 'social',
+    title: '社交分享',
+    badgeIds: ['first-share', 'serial-sharer'],
+  },
+];
+
+const BADGE_UNLOCK_SEEN_KEY = 'badge_unlock_seen';
+
+function normalizeBadgeIdList(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      value
+        .map((item) => (typeof item === 'string' ? item.trim() : ''))
+        .filter((item) => item.length > 0)
+    )
+  );
+}
+
+function getSeenBadgeIds(): string[] {
+  return normalizeBadgeIdList(Taro.getStorageSync(BADGE_UNLOCK_SEEN_KEY));
+}
+
+function setSeenBadgeIds(badgeIds: string[]): void {
+  Taro.setStorageSync(BADGE_UNLOCK_SEEN_KEY, normalizeBadgeIdList(badgeIds));
 }
 
 function formatHistoryTime(viewedAt: number): string {
@@ -130,6 +206,15 @@ export default function Profile() {
   const [localRoasterFavorites, setLocalRoasterFavorites] = useState<RoasterSnapshot[]>([]);
   const [cloudFavorites, setCloudFavorites] = useState<UserFavorite[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [explorationSet, setExplorationSet] = useState<ExplorationSet>({
+    countries: [],
+    processes: [],
+    varieties: [],
+  });
+  const [purchaseClickLog, setPurchaseClickLog] = useState<PurchaseClickLogEntry[]>([]);
+  const [shareEventLog, setShareEventLog] = useState<ShareEventLogEntry[]>([]);
+  const [serverBadgeIds, setServerBadgeIds] = useState<string[]>([]);
+  const [unlockQueue, setUnlockQueue] = useState<string[]>([]);
   const [loginLoading, setLoginLoading] = useState(false);
 
   useDidShow(() => {
@@ -139,11 +224,16 @@ export default function Profile() {
     setLocalBeanFavorites(getBeanFavorites());
     setLocalRoasterFavorites(getRoasterFavorites());
     setHistory(getHistory());
+    setExplorationSet(getExplorationSet());
+    setPurchaseClickLog(getPurchaseClickLog());
+    setShareEventLog(getShareEventLog());
 
     if (authed) {
       void loadCloudFavorites();
+      void loadServerBadges();
     } else {
       setCloudFavorites([]);
+      setServerBadgeIds([]);
     }
   });
 
@@ -153,6 +243,15 @@ export default function Profile() {
       setCloudFavorites(favorites);
     } catch {
       // 静默失败，保留页面可读性
+    }
+  };
+
+  const loadServerBadges = async () => {
+    try {
+      const payload = await getBadgeProgress();
+      setServerBadgeIds(payload.badgeIds);
+    } catch {
+      setServerBadgeIds([]);
     }
   };
 
@@ -184,7 +283,7 @@ export default function Profile() {
       const authUser = await login();
       setUser(authUser);
       setLoggedIn(true);
-      await loadCloudFavorites();
+      await Promise.all([loadCloudFavorites(), loadServerBadges()]);
       Taro.showToast({ title: '登录成功', icon: 'success' });
     } catch (error) {
       Taro.showToast({ title: error instanceof Error ? error.message : '登录失败', icon: 'none' });
@@ -198,6 +297,8 @@ export default function Profile() {
     setLoggedIn(false);
     setUser(null);
     setCloudFavorites([]);
+    setServerBadgeIds([]);
+    setUnlockQueue([]);
     setLocalBeanFavorites(getBeanFavorites());
     setLocalRoasterFavorites(getRoasterFavorites());
   };
@@ -220,6 +321,16 @@ export default function Profile() {
   const summaryLabel = loggedIn ? '已同步至云端' : '本地收藏，登录后自动同步';
   const heroName = user?.nickname || (loggedIn ? '咖啡爱好者' : '你的咖啡私藏');
   const heroInitial = heroName.charAt(0).toUpperCase();
+  const continentsCovered = useMemo(() => {
+    const continentIds = new Set<string>();
+    explorationSet.countries.forEach((country) => {
+      const atlasCountry = matchAtlasCountry(country);
+      if (atlasCountry?.continentId) {
+        continentIds.add(atlasCountry.continentId);
+      }
+    });
+    return continentIds.size;
+  }, [explorationSet.countries]);
   const badges = useMemo(
     () =>
       getProfileBadges({
@@ -227,25 +338,111 @@ export default function Profile() {
         beanFavorites: beanFavorites.length,
         roasterFavorites: roasterFavorites.length,
         historyCount: history.length,
+        uniqueCountries: explorationSet.countries.length,
+        continentsCovered,
+        uniqueProcesses: explorationSet.processes.length,
+        uniqueVarieties: explorationSet.varieties.length,
+        purchaseClicks: purchaseClickLog.length,
+        uniqueRoasterPurchaseClicks: new Set(purchaseClickLog.map((entry) => entry.roasterId)).size,
+        shareCount: shareEventLog.length,
+        externallyUnlockedBadgeIds: serverBadgeIds,
       }),
-    [beanFavorites.length, history.length, loggedIn, roasterFavorites.length],
+    [
+      beanFavorites.length,
+      continentsCovered,
+      explorationSet.countries.length,
+      explorationSet.processes.length,
+      explorationSet.varieties.length,
+      history.length,
+      loggedIn,
+      purchaseClickLog,
+      roasterFavorites.length,
+      serverBadgeIds,
+      shareEventLog.length,
+    ],
   );
   const unlockedBadgeCount = badges.filter((badge) => badge.unlocked).length;
+  const unlockedBadgeIds = badges.filter((badge) => badge.unlocked).map((badge) => badge.id);
+  const unlockedBadgeSignature = unlockedBadgeIds.join('|');
+  const serverBadgeSignature = serverBadgeIds.join('|');
   const nextBadge = badges.find((badge) => !badge.unlocked);
-  const selectedBadge = badges.find((badge) => badge.id === selectedBadgeId) ?? null;
+  const activeBadgeId = selectedBadgeId ?? unlockQueue[0] ?? null;
+  const selectedBadge = badges.find((badge) => badge.id === activeBadgeId) ?? null;
+  const isUnlockCelebration = Boolean(!selectedBadgeId && unlockQueue[0] && selectedBadge?.id === unlockQueue[0]);
   const badgeRecordCopy = getBadgeRecordCopy({
     loggedIn,
     unlockedCount: unlockedBadgeCount,
     totalCount: badges.length,
     nextBadge: nextBadge ? { title: nextBadge.title, detail: nextBadge.detail } : undefined,
   });
+  const groupedBadges = BADGE_GROUPS.map((group) => {
+    const items = group.badgeIds
+      .map((badgeId) => badges.find((badge) => badge.id === badgeId) ?? null)
+      .filter((badge): badge is ProfileBadgeProgress => Boolean(badge));
+
+    return {
+      ...group,
+      badges: items,
+      unlockedCount: items.filter((badge) => badge.unlocked).length,
+    };
+  }).filter((group) => group.badges.length > 0);
+
+  useEffect(() => {
+    if (unlockedBadgeIds.length === 0) {
+      return;
+    }
+
+    const seenBadgeIds = getSeenBadgeIds();
+    const newBadgeIds = unlockedBadgeIds.filter((badgeId) => !seenBadgeIds.includes(badgeId));
+
+    if (newBadgeIds.length === 0) {
+      return;
+    }
+
+    setSeenBadgeIds([...seenBadgeIds, ...newBadgeIds]);
+    setUnlockQueue((current) => Array.from(new Set([...current, ...newBadgeIds])));
+  }, [unlockedBadgeSignature]);
+
+  useEffect(() => {
+    if (!loggedIn || unlockedBadgeIds.length === 0) {
+      return;
+    }
+
+    const missingBadgeIds = unlockedBadgeIds.filter((badgeId) => !serverBadgeIds.includes(badgeId));
+    if (missingBadgeIds.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    syncBadgeProgress(missingBadgeIds)
+      .then(() => {
+        if (!cancelled) {
+          setServerBadgeIds((current) => Array.from(new Set([...current, ...missingBadgeIds])));
+        }
+      })
+      .catch(() => {
+        // 静默失败，避免影响 Profile 主流程
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loggedIn, serverBadgeSignature, unlockedBadgeSignature]);
 
   const handleOpenBadge = (badge: ProfileBadgeProgress) => {
     setSelectedBadgeId(badge.id);
   };
 
   const handleCloseBadge = () => {
-    setSelectedBadgeId(null);
+    if (selectedBadgeId) {
+      setSelectedBadgeId(null);
+      return;
+    }
+
+    if (unlockQueue.length > 0) {
+      setUnlockQueue((current) => current.slice(1));
+    }
   };
 
   return (
@@ -315,39 +512,54 @@ export default function Profile() {
           </Text>
         </View>
 
-        <View className="profile__badge-record-grid">
-          {badges.map((badge, index) => (
-            <View
-              key={badge.id}
-              className={`profile__badge-card ${badge.unlocked ? 'profile__badge-card--unlocked' : 'profile__badge-card--locked'}`}
-              onClick={() => handleOpenBadge(badge)}
-            >
-              <View className="profile__badge-card-top">
-                <Text className="profile__badge-card-index">{String(index + 1).padStart(2, '0')}</Text>
-                <Text className={`profile__badge-card-status ${badge.unlocked ? 'profile__badge-card-status--unlocked' : ''}`}>
-                  {badge.unlocked ? '已入藏' : badge.progressLabel}
-                </Text>
+        <View className="profile__badge-groups">
+          {groupedBadges.map((group) => (
+            <View key={group.id} className="profile__badge-group">
+              <View className="profile__badge-group-head">
+                <Text className="profile__badge-group-title">{group.title}</Text>
+                <Text className="profile__badge-group-summary">{`${group.unlockedCount}/${group.badges.length}`}</Text>
               </View>
 
-              <View className="profile__badge-card-frame">
-                <View className="profile__badge-card-ring">
-                  <Icon
-                    name={badge.icon}
-                    size={20}
-                    color={badge.unlocked ? '#ffffff' : 'rgba(107, 83, 68, 0.62)'}
-                  />
-                </View>
-                <Text className="profile__badge-card-plate">{badge.unlocked ? 'ARCHIVED' : 'PENDING'}</Text>
-              </View>
+              <View className="profile__badge-record-grid">
+                {group.badges.map((badge) => {
+                  const badgeIndex = badges.findIndex((item) => item.id === badge.id);
 
-              <View className="profile__badge-card-copy">
-                <Text className="profile__badge-card-title">{badge.title}</Text>
-                <Text className="profile__badge-card-subtitle">{badge.subtitle}</Text>
-              </View>
+                  return (
+                    <View
+                      key={badge.id}
+                      className={`profile__badge-card ${badge.unlocked ? 'profile__badge-card--unlocked' : 'profile__badge-card--locked'}`}
+                      onClick={() => handleOpenBadge(badge)}
+                    >
+                      <View className="profile__badge-card-top">
+                        <Text className="profile__badge-card-index">{String(badgeIndex + 1).padStart(2, '0')}</Text>
+                        <Text className={`profile__badge-card-status ${badge.unlocked ? 'profile__badge-card-status--unlocked' : ''}`}>
+                          {badge.unlocked ? '已入藏' : badge.progressLabel}
+                        </Text>
+                      </View>
 
-              <View className="profile__badge-card-footer">
-                <Text className="profile__badge-card-rule">{badge.unlocked ? '馆藏说明' : '解锁条件'}</Text>
-                <Text className="profile__badge-card-detail">{badge.unlocked ? '点击查看徽章说明' : badge.detail}</Text>
+                      <View className="profile__badge-card-frame">
+                        <View className="profile__badge-card-ring">
+                          <Icon
+                            name={badge.icon}
+                            size={20}
+                            color={badge.unlocked ? '#ffffff' : 'rgba(107, 83, 68, 0.62)'}
+                          />
+                        </View>
+                        <Text className="profile__badge-card-plate">{badge.unlocked ? 'ARCHIVED' : 'PENDING'}</Text>
+                      </View>
+
+                      <View className="profile__badge-card-copy">
+                        <Text className="profile__badge-card-title">{badge.title}</Text>
+                        <Text className="profile__badge-card-subtitle">{badge.subtitle}</Text>
+                      </View>
+
+                      <View className="profile__badge-card-footer">
+                        <Text className="profile__badge-card-rule">{badge.unlocked ? '馆藏说明' : '解锁条件'}</Text>
+                        <Text className="profile__badge-card-detail">{badge.unlocked ? '点击查看徽章说明' : badge.detail}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
             </View>
           ))}
@@ -367,7 +579,9 @@ export default function Profile() {
             <View className="profile__badge-modal-handle" />
 
             <View className="profile__badge-modal-meta">
-              <Text className="profile__badge-modal-eyebrow">BADGE ARCHIVE</Text>
+              <Text className="profile__badge-modal-eyebrow">
+                {isUnlockCelebration ? 'NEW BADGE UNLOCKED' : 'BADGE ARCHIVE'}
+              </Text>
               <Text className="profile__badge-modal-code">{selectedBadge.id.toUpperCase()}</Text>
             </View>
 
@@ -384,6 +598,9 @@ export default function Profile() {
               </Text>
             </View>
 
+            {isUnlockCelebration ? (
+              <Text className="profile__badge-modal-unlock-title">恭喜解锁新徽章！</Text>
+            ) : null}
             <Text className="profile__badge-modal-title">{selectedBadge.title}</Text>
             <Text className="profile__badge-modal-subtitle">{selectedBadge.subtitle}</Text>
             <Text className="profile__badge-modal-description">{selectedBadge.detail}</Text>
@@ -398,7 +615,7 @@ export default function Profile() {
                 </Text>
               </View>
               <View className="profile__badge-modal-progress-block">
-                <Text className="profile__badge-modal-progress-label">收藏门槛</Text>
+                <Text className="profile__badge-modal-progress-label">解锁门槛</Text>
                 <Text className="profile__badge-modal-progress-value">{selectedBadge.targetValue}</Text>
               </View>
             </View>

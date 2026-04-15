@@ -14,7 +14,7 @@ import { mapBeanCard } from './public-beans.ts';
 export { getBeanDetailV1, listBeansV1 } from './public-beans.ts';
 export { getBeanDiscoverV1 } from './public-bean-discover.ts';
 
-function mapRoasterSummary(roaster: Roaster): RoasterSummary {
+export function mapRoasterSummary(roaster: Roaster): RoasterSummary {
   return {
     id: roaster.id,
     name: roaster.name,

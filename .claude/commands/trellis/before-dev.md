@@ -8,15 +8,8 @@ Execute these steps:
    ```
 
 2. **Identify which specs apply** to your task based on:
-   - Which package you're modifying (for this repo usually `apps/miniprogram`, `apps/web`, or `packages/shared-types`)
+   - Which package you're modifying (e.g., `cli/`, `docs-site/`)
    - What type of work (backend, frontend, unit-test, docs, etc.)
-
-   In this repo, `get_context.py --mode packages` marks the current default package.
-   If it shows `miniprogram (default)` and your task is only in `apps/miniprogram`, start from:
-
-   ```bash
-   cat .trellis/spec/miniprogram/frontend/index.md
-   ```
 
 3. **Read the spec index** for each relevant module:
    ```bash

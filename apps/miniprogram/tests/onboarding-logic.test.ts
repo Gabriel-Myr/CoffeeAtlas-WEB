@@ -15,7 +15,7 @@ test('onboarding load redirects when profile exists', () => {
   assert.equal(flow.getRedirectUrl(), '/pages/index/index');
 });
 
-test('completing onboarding writes profile and routes beginner to guided entry', () => {
+test('completing onboarding writes profile and routes beginner to the guided onboarding page', () => {
   let storedProfile: { experienceLevel: string; completedAt: number } | null = null;
   const flow = createOnboardingFlow(
     {
@@ -33,8 +33,8 @@ test('completing onboarding writes profile and routes beginner to guided entry',
     experienceLevel: 'beginner',
     completedAt: 1711111111,
   });
-  assert.equal(result.url, '/pages/all-beans/index?entry=guided');
-  assert.equal(result.entryIntent, 'guided');
+  assert.equal(result.url, '/pages/onboarding-guided/index');
+  assert.equal(result.entryIntent, null);
 });
 
 test('completing onboarding routes intermediate to direct all-beans entry', () => {

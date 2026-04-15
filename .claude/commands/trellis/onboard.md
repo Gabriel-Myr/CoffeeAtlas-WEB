@@ -49,7 +49,7 @@ AI models are trained on millions of codebases - they know general patterns for 
 
 **The Problem**: AI writes code that "works" but doesn't match your project's style. It uses patterns that conflict with existing code. It makes decisions that violate unwritten team rules.
 
-**The Solution**: The `.trellis/spec/` directory contains project-specific guidelines. The `/trellis:before-dev` command reads the relevant package and layer specs before coding starts, so AI gets project-specific context instead of generic defaults.
+**The Solution**: The `.trellis/spec/` directory contains project-specific guidelines. The `/before-*-dev` commands inject this specialized knowledge into AI context before coding starts.
 
 ### Challenge 3: AI Context Window Is Limited
 
@@ -57,7 +57,7 @@ Even after injecting guidelines, AI has limited context window. As conversation 
 
 **The Problem**: AI starts following guidelines, but as the session progresses and context fills up, it "forgets" the rules and reverts to generic patterns.
 
-**The Solution**: The `/trellis:check` command re-verifies code against guidelines AFTER writing, catching drift that occurred during development. The `/trellis:finish-work` command does a final holistic review.
+**The Solution**: The `/check-*` commands re-verify code against guidelines AFTER writing, catching drift that occurred during development. The `/trellis:finish-work` command does a final holistic review.
 
 ---
 
@@ -77,40 +77,25 @@ Even after injecting guidelines, AI has limited context window. As conversation 
 |       |-- task.json       # Task metadata
 |       +-- prd.md          # Requirements doc
 |-- spec/                   # "AI Training Data" - project knowledge
-|   |-- miniprogram/
-|   |   +-- frontend/       # Default mini-program entry
-|   |-- web/
-|   |   |-- frontend/
-|   |   +-- backend/
-|   |-- shared-types/
-|   |   |-- frontend/
-|   |   +-- backend/
+|   |-- frontend/           # Frontend conventions
+|   |-- backend/            # Backend conventions
 |   +-- guides/             # Thinking patterns
 +-- scripts/                # Automation tools
 ```
 
 ### Understanding spec/ subdirectories
 
-**miniprogram/frontend/** - Current default mini-program knowledge:
-- page/component patterns
-- pagination, entry state, storage, API integration rules
-
-**web/frontend/** - Single-layer frontend knowledge:
+**frontend/** - Single-layer frontend knowledge:
 - Component patterns (how to write components in THIS project)
 - State management rules (Redux? Zustand? Context?)
 - Styling conventions (CSS modules? Tailwind? Styled-components?)
 - Hook patterns (custom hooks, data fetching)
 
-**web/backend/** - Single-layer backend knowledge:
+**backend/** - Single-layer backend knowledge:
 - API design patterns (REST? GraphQL? tRPC?)
 - Database conventions (query patterns, migrations)
 - Error handling standards
 - Logging and monitoring rules
-
-**shared-types/** - Cross-package contract knowledge:
-- API DTO
-- shared query params and response envelopes
-- boundary naming rules
 
 **guides/** - Cross-layer thinking guides:
 - Code reuse thinking guide
@@ -172,8 +157,8 @@ AI context window has limited capacity. As conversation progresses, guidelines i
 4. Identifies violations and suggests fixes
 
 **WHY THIS MATTERS**:
-- Without `/trellis:check`: Context drift goes unnoticed, code quality degrades.
-- With `/trellis:check`: Drift is caught and corrected before commit.
+- Without check-*: Context drift goes unnoticed, code quality degrades.
+- With check-*: Drift is caught and corrected before commit.
 
 ---
 
@@ -198,7 +183,7 @@ Most bugs don't come from lack of technical skill - they come from "didn't think
 ### /trellis:finish-work - Holistic Pre-Commit Review
 
 **WHY IT EXISTS**:
-The `/trellis:check` command focuses on guideline compliance. But real changes often have cross-cutting concerns.
+The `/check-*` commands focus on code quality within a single layer. But real changes often have cross-cutting concerns.
 
 **WHAT IT ACTUALLY DOES**:
 1. Reviews all changes holistically
@@ -226,7 +211,7 @@ All the context AI built during this session will be lost when session ends. The
 
 **[1/8] /trellis:start** - AI needs project context before touching code
 **[2/8] python3 ./.trellis/scripts/task.py create "Fix bug" --slug fix-bug** - Track work for future reference
-**[3/8] /trellis:before-dev** - Read the default package first; only add shared-types / API specs if the task truly spans them
+**[3/8] /trellis:before-dev** - Inject project-specific development guidelines
 **[4/8] Investigate and fix the bug** - Actual development work
 **[5/8] /trellis:check** - Re-verify code against guidelines
 **[6/8] /trellis:finish-work** - Holistic cross-layer review
@@ -243,7 +228,7 @@ All the context AI built during this session will be lost when session ends. The
 ### Example 3: Code Review Fixes
 
 **[1/6] /trellis:start** - Resume context from previous session
-**[2/6] /trellis:before-dev** - Re-read the current task package spec; add shared-types / web backend only if the fix touches those layers
+**[2/6] /trellis:before-dev** - Re-inject guidelines before fixes
 **[3/6] Fix each CR issue** - Address feedback with guidelines in context
 **[4/6] /trellis:check** - Verify fixes did not introduce new issues
 **[5/6] /trellis:finish-work** - Document lessons from CR
@@ -260,7 +245,7 @@ All the context AI built during this session will be lost when session ends. The
 ### Example 5: Debug Session
 
 **[1/6] /trellis:start** - See if this bug was investigated before
-**[2/6] /trellis:before-dev** - Relevant package docs might already contain the gotcha
+**[2/6] /trellis:before-dev** - Guidelines might document known gotchas
 **[3/6] Investigation** - Actual debugging work
 **[4/6] /trellis:check** - Verify debug changes do not break other things
 **[5/6] /trellis:finish-work** - Debug findings might need documentation
@@ -272,7 +257,7 @@ All the context AI built during this session will be lost when session ends. The
 
 1. **AI NEVER commits** - Human tests and approves. AI prepares, human validates.
 2. **Guidelines before code** - /before-dev command injects project knowledge.
-3. **Check after code** - `/trellis:check` catches context drift.
+3. **Check after code** - /check-* commands catch context drift.
 4. **Record everything** - /trellis:record-session persists memory.
 
 ---
@@ -283,24 +268,25 @@ After explaining Part 1 and Part 2, check if the project's development guideline
 
 ## Step 1: Check Current Guidelines Status
 
-Check whether the spec files relevant to the current package still contain empty templates:
+Check if `.trellis/spec/` contains empty templates or customized guidelines:
 
 ```bash
-# Check if any spec files are still empty templates
-rg -l "To be filled by the team" .trellis/spec
+# Check if files are still empty templates (look for placeholder text)
+grep -l "To be filled by the team" .trellis/spec/backend/*.md 2>/dev/null | wc -l
+grep -l "To be filled by the team" .trellis/spec/frontend/*.md 2>/dev/null | wc -l
 ```
 
 ## Step 2: Determine Situation
 
-**Situation A: Relevant package still mostly template**
+**Situation A: First-time setup (empty templates)**
 
-If the specs for the package you are about to work on are still template-heavy (contain "To be filled by the team"), that package is not ready for reliable AI guidance yet.
+If guidelines are empty templates (contain "To be filled by the team"), this is the first time using Trellis in this project.
 
 Explain to the developer:
 
-"I see that the development guidelines relevant to this task are still mostly empty templates. This can happen in a new Trellis setup or in a partially migrated monorepo.
+"I see that the development guidelines in `.trellis/spec/` are still empty templates. This is normal for a new Trellis setup!
 
-The templates contain placeholder text that needs to be replaced with YOUR project's actual conventions. Without this, `/trellis:before-dev` won't provide useful guidance.
+The templates contain placeholder text that needs to be replaced with YOUR project's actual conventions. Without this, `/before-*-dev` commands won't provide useful guidance.
 
 **Your first task should be to fill in these guidelines:**
 
@@ -308,24 +294,22 @@ The templates contain placeholder text that needs to be replaced with YOUR proje
 2. Identify the patterns and conventions already in use
 3. Document them in the guideline files
 
-For example, if you're currently only working in miniprogram, start from `.trellis/spec/miniprogram/frontend/`:
-- How is page state managed today?
-- Where are API calls centralized?
-- What existing patterns do entry intent, pagination, and discover flows follow?
-
-If the task also touches API or contracts, then continue into `.trellis/spec/web/backend/` or `.trellis/spec/shared-types/`.
+For example, for `.trellis/spec/backend/database-guidelines.md`:
+- What ORM/query library does your project use?
+- How are migrations managed?
+- What naming conventions for tables/columns?
 
 Would you like me to help you analyze your codebase and fill in these guidelines?"
 
-**Situation B: Core packages already customized**
+**Situation B: Guidelines already customized**
 
-If the relevant specs have real content, but some secondary package trees still contain placeholders, treat this as a partially migrated but usable setup.
+If guidelines have real content (no "To be filled" placeholders), this is an existing setup.
 
 Explain to the developer:
 
-"Great! The specs relevant to this task already have real project content. You can start using `/trellis:before-dev` right away.
+"Great! Your team has already customized the development guidelines. You can start using `/before-*-dev` commands right away.
 
-I recommend reading through the relevant package-scoped docs in `.trellis/spec/` to familiarize yourself with the team's coding standards."
+I recommend reading through `.trellis/spec/` to familiarize yourself with the team's coding standards."
 
 ## Step 3: Help Fill Guidelines (If Empty)
 
@@ -343,18 +327,17 @@ Then systematically analyze the codebase and fill each guideline file:
 4. **List forbidden patterns** - Document anti-patterns the team avoids
 
 Work through one file at a time:
-- Start with the package you are actually touching now.
-- If the repo's current focus is miniprogram-first, begin with:
-  - `miniprogram/frontend/index.md`
-  - `miniprogram/frontend/component-guidelines.md`
-  - `miniprogram/frontend/hook-guidelines.md`
-  - `miniprogram/frontend/state-management.md`
-  - `miniprogram/frontend/quality-guidelines.md`
-  - `miniprogram/frontend/type-safety.md`
-- Only after that, expand to:
-  - `web/backend/*.md`
-  - `web/frontend/*.md`
-  - `shared-types/*.md`
+- `backend/directory-structure.md`
+- `backend/database-guidelines.md`
+- `backend/error-handling.md`
+- `backend/quality-guidelines.md`
+- `backend/logging-guidelines.md`
+- `frontend/directory-structure.md`
+- `frontend/component-guidelines.md`
+- `frontend/hook-guidelines.md`
+- `frontend/state-management.md`
+- `frontend/quality-guidelines.md`
+- `frontend/type-safety.md`
 
 ---
 

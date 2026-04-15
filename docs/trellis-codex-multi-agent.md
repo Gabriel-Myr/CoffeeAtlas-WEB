@@ -25,6 +25,12 @@
 
 把里面的角色说明注入到 `codex exec` 的 prompt 里。原因很简单：当前 Codex CLI 顶层没有像 Claude 那样的 `--agent` 参数，所以这里做的是“项目内 prompt 注入适配”。
 
+现在这套说明已经按更精简的思路调整过：
+
+- `plan` 更接近一个轻量 `think`
+- `dispatch` 负责按阶段直接推进，不额外制造复杂流程
+- `check` 和 `finish` 分工明确：前者验证质量，后者做最终交接
+
 ## 什么时候适合用
 
 适合：
@@ -38,6 +44,8 @@
 - 很小的一次性改动
 - 只是问问题，不需要真的开工
 - 需求还很模糊，连 `done` 长什么样都没想清楚
+
+如果需求还不清楚，先用 `plan` 把 `prd.md` 压实；不要直接 `start`。
 
 ## 最常用的启动方式
 
@@ -57,6 +65,7 @@ pnpm trellis:parallel:plan -- \
 - `--requirement`: 需求说明，尽量写清楚
 
 执行后会在 `.trellis/tasks/` 下创建任务目录，并生成 `.plan-log`。
+这一步的目标不是写长文档，而是产出一个可执行的 `prd.md` 和上下文文件。
 
 ### 2. 启动 worktree 里的调度 agent
 
@@ -123,6 +132,12 @@ pnpm trellis:parallel:status -- --list
 
 所以如果你后面改这两个 `.toml`，等于是在改这个仓库自己的多 agent 行为。
 
+当前推荐的行为是：
+
+- `plan`: 轻量明确范围、约束、验收标准
+- `dispatch`: 直接执行 `implement -> check -> finish -> create-pr`
+- 不把大型 brainstorm 流程当默认入口
+
 ### 3. `worktree.yaml` 现在没有自动装依赖
 
 当前 `.trellis/worktree.yaml` 里 `post_create` 还是空的。  
@@ -135,6 +150,8 @@ pnpm trellis:parallel:status -- --list
 3. 再用 `start` 进 worktree 流程
 4. 跑的过程中主要看 `status`
 5. 结束后再 `cleanup`
+
+如果任务只是一个小改动，通常不需要整套多 agent 流程。
 
 ## 这次改动涉及的关键文件
 

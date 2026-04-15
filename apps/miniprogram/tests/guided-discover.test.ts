@@ -7,6 +7,7 @@ import {
   resolveGuidedProcessSelection,
   resolveGuidedProcessStyleSelection,
   shouldExpandGuidedDiscoverCard,
+  shouldShowGuidedDiscoverCard,
   type GuidedContinentChoiceId,
   type GuidedProcessChoiceId,
   type GuidedProcessStyleChoiceId,
@@ -230,8 +231,8 @@ test('buildGuidedDiscoverStep finishes once variety is selected', () => {
   );
 });
 
-test('shouldExpandGuidedDiscoverCard expands guided entry by default', () => {
-  assert.equal(shouldExpandGuidedDiscoverCard('guided'), true);
+test('shouldExpandGuidedDiscoverCard keeps guided entry collapsed for now', () => {
+  assert.equal(shouldExpandGuidedDiscoverCard('guided'), false);
 });
 
 test('shouldExpandGuidedDiscoverCard keeps direct entry collapsed by default', () => {
@@ -240,4 +241,16 @@ test('shouldExpandGuidedDiscoverCard keeps direct entry collapsed by default', (
 
 test('shouldExpandGuidedDiscoverCard keeps default entry collapsed by default', () => {
   assert.equal(shouldExpandGuidedDiscoverCard('default'), false);
+});
+
+test('shouldShowGuidedDiscoverCard hides guided entry card for now', () => {
+  assert.equal(shouldShowGuidedDiscoverCard('guided'), false);
+});
+
+test('shouldShowGuidedDiscoverCard hides direct entry card for now', () => {
+  assert.equal(shouldShowGuidedDiscoverCard('direct'), false);
+});
+
+test('shouldShowGuidedDiscoverCard hides default entry card for now', () => {
+  assert.equal(shouldShowGuidedDiscoverCard('default'), false);
 });

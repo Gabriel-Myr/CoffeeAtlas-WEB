@@ -1,426 +1,134 @@
 ---
 name: start
-description: Initialize a Trellis session in this project: read workflow, load current context, review spec indexes, and prepare to begin work.
+description: Initialize a Trellis session in this project with the minimum context needed to begin work: read workflow, load current context, inspect relevant spec indexes, then either answer, plan briefly, or implement.
 ---
 
 This is the Codex entry for the Trellis `start` workflow in this repository.
-Follow the instructions below as the project-specific operating procedure.
+Use it as the project-specific default operating procedure.
 
 # Start Session
 
-Initialize your AI development session and begin working on tasks.
+目标：先读最少但足够的上下文，再决定是直接回答、做一个轻量 `think`，还是直接进入任务执行。
 
----
+默认分工：
 
-## Operation Types
+- 通用能力型 skill，如 `think`、`hunt`、`design`、`read`、`write`、`health`，优先复用你当前 Codex 全局 skill（本仓库按 `Waza` 风格兼容）
+- 本仓库 Trellis skill 只负责项目流程和项目特有约束，如 `start`、`before-dev`、`check`、`finish-work`、`record-session`
+- 如果要做通用方案推演或排错，不需要在仓库里再找一套同名 skill
 
-| Marker | Meaning | Executor |
-|--------|---------|----------|
-| `[AI]` | Bash scripts or Task calls executed by AI | You (AI) |
-| `[USER]` | Slash commands executed by user | User |
+## 1. Session Init
 
----
-
-## Initialization `[AI]`
-
-### Step 1: Understand Development Workflow
-
-First, read the workflow guide to understand the development process:
+先读工作流和当前上下文：
 
 ```bash
 cat .trellis/workflow.md
-```
-
-**Follow the instructions in workflow.md** - it contains:
-- Core principles (Read Before Write, Follow Standards, etc.)
-- File system structure
-- Development process
-- Best practices
-
-### Step 2: Get Current Context
-
-```bash
 python3 ./.trellis/scripts/get_context.py
-```
-
-This shows: developer identity, git status, current task (if any), active tasks, and recent session memory from `.trellis/workspace/<developer>/journal-N.md`.
-
-### Step 3: Read Guidelines Index
-
-```bash
 python3 ./.trellis/scripts/get_context.py --mode packages
-cat .trellis/spec/guides/index.md    # Thinking guides
-cat .trellis/spec/unit-test/index.md # Testing guidelines
+cat .trellis/spec/guides/index.md
+cat .trellis/spec/unit-test/index.md
 ```
 
-Then read the package-specific indexes that match the task.
+然后只读和当前任务真正相关的 package index。
 
-In this repo, `get_context.py --mode packages` marks the current default package.
-Right now that usually means `miniprogram`, so if the task is only in `apps/miniprogram`, read this first:
+如果这轮只改小程序，先读：
 
 ```bash
 cat .trellis/spec/miniprogram/frontend/index.md
 ```
 
-如果这轮主要是微信小程序联调，同时建议开一个独立终端运行：
+如果主要是微信小程序联调，建议另开终端运行：
 
 ```bash
 pnpm dev:miniprogram:auto
 ```
 
-这样在改动 `apps/miniprogram` 和相关共享包后，会自动重启 `dev:weapp`，减少手动重推。
-
-Only add other package indexes when the task truly spans them, for example:
+只有在任务确实跨层时，才补读：
 
 ```bash
 cat .trellis/spec/api/backend/index.md
 cat .trellis/spec/shared-types/backend/index.md
+cat .trellis/spec/shared-types/frontend/index.md
 ```
 
-> **Important**: The index files are navigation — they list the actual guideline files (e.g., `error-handling.md`, `conventions.md`, `mock-strategies.md`).
-> At this step, just read the indexes to understand what's available.
-> When you start actual development, you MUST go back and read the specific guideline files relevant to your task, as listed in the index's Pre-Development Checklist.
+注意：`index.md` 只是导航。真正开始写代码前，还要回到 index 里列出的具体规范文件。
 
-### Step 4: Report and Ask
+## 2. Decide The Path
 
-Report what you learned and ask: "What would you like to work on?"
+按下面的简单规则处理：
 
----
+- 用户只是提问：直接回答，必要时引用代码或 spec
+- 改动非常小：直接改
+- 目标清楚、范围可控：做一个简短确认，然后直接建 task 并执行
+- 目标不清楚、方案分歧明显、跨层风险高：先用全局 `think` 做一次轻量规划
 
-## Task Classification
+不要把大型 `brainstorm` 当默认入口。
+只有在需求还在持续变化、确实需要多轮澄清时，才进入 `brainstorm`。
 
-When user describes a task, classify it:
+## 3. Default Build Path
 
-| Type | Criteria | Workflow |
-|------|----------|----------|
-| **Question** | User asks about code, architecture, or how something works | Answer directly |
-| **Trivial Fix** | Typo fix, comment update, single-line change | Direct Edit |
-| **Simple Task** | Clear goal, 1-2 files, well-defined scope | Quick confirm → Implement |
-| **Complex Task** | Vague goal, multiple files, architectural decisions | **Brainstorm → Task Workflow** |
+对大多数开发任务，使用这条短路径：
 
-### Classification Signals
+1. 明确目标和范围
+2. 创建 task 目录
+3. 写一个短而具体的 `prd.md`
+4. 研究最小必要代码和 spec
+5. 初始化 context
+6. 开始实现
+7. 跑 `check`
+8. 用 `finish-work` 做收尾
 
-**Trivial/Simple indicators:**
-- User specifies exact file and change
-- "Fix the typo in X"
-- "Add field Y to component Z"
-- Clear acceptance criteria already stated
-
-**Complex indicators:**
-- "I want to add a feature for..."
-- "Can you help me improve..."
-- Mentions multiple areas or systems
-- No clear implementation path
-- User seems unsure about approach
-
-### Decision Rule
-
-> **If in doubt, use Brainstorm + Task Workflow.**
->
-> Task Workflow ensures code-spec context is injected to agents, resulting in higher quality code.
-> The overhead is minimal, but the benefit is significant.
-
----
-
-## Question / Trivial Fix
-
-For questions or trivial fixes, work directly:
-
-1. Answer question or make the fix
-2. If code was changed, remind user to run `/trellis:finish-work`
-
----
-
-## Simple Task
-
-For simple, well-defined tasks:
-
-1. Quick confirm: "I understand you want to [goal]. Shall I proceed?"
-2. If no, clarify and confirm again
-3. **If yes: execute ALL steps below without stopping. Do NOT ask for additional confirmation between steps.**
-   - Create task directory (Phase 1 Path B, Step 2)
-   - Write PRD (Step 3)
-   - Research codebase (Phase 2, Step 5)
-   - Configure context (Step 6)
-   - Activate task (Step 7)
-   - Implement (Phase 3, Step 8)
-   - Check quality (Step 9)
-   - Complete (Step 10)
-
----
-
-## Complex Task - Brainstorm First
-
-For complex or vague tasks, **automatically start the brainstorm process** — do NOT skip directly to implementation.
-
-See `/trellis:brainstorm` for the full process. Summary:
-
-1. **Acknowledge and classify** - State your understanding
-2. **Create task directory** - Track evolving requirements in `prd.md`
-3. **Ask questions one at a time** - Update PRD after each answer
-4. **Propose approaches** - For architectural decisions
-5. **Confirm final requirements** - Get explicit approval
-6. **Proceed to Task Workflow** - With clear requirements in PRD
-
-> **Subtask Decomposition**: If brainstorm reveals multiple independent work items,
-> consider creating subtasks using `--parent` flag or `add-subtask` command.
-> See `/trellis:brainstorm` Step 8 for details.
-
-### Key Brainstorm Principles
-
-| Principle | Description |
-|-----------|-------------|
-| **One question at a time** | Never overwhelm with multiple questions |
-| **Update PRD immediately** | After each answer, update the document |
-| **Prefer multiple choice** | Easier for users to answer |
-| **YAGNI** | Challenge unnecessary complexity |
-
----
-
-## Task Workflow (Development Tasks)
-
-**Why this workflow?**
-- Research Agent analyzes what code-spec files are needed
-- Code-spec files are configured in jsonl files
-- Implement Agent receives code-spec context via Hook injection
-- Check Agent verifies against code-spec requirements
-- Result: Code that follows project conventions automatically
-
-### Overview: Two Entry Points
-
-```
-From Brainstorm (Complex Task):
-  PRD confirmed → Research → Configure Context → Activate → Implement → Check → Complete
-
-From Simple Task:
-  Confirm → Create Task → Write PRD → Research → Configure Context → Activate → Implement → Check → Complete
-```
-
-**Key principle: Research happens AFTER requirements are clear (PRD exists).**
-
----
-
-### Phase 1: Establish Requirements
-
-#### Path A: From Brainstorm (skip to Phase 2)
-
-PRD and task directory already exist from brainstorm. Skip directly to Phase 2.
-
-#### Path B: From Simple Task
-
-**Step 1: Confirm Understanding** `[AI]`
-
-Quick confirm:
-- What is the goal?
-- What type of development? (frontend / backend / fullstack)
-- Any specific requirements or constraints?
-
-**Step 2: Create Task Directory** `[AI]`
+创建 task：
 
 ```bash
 TASK_DIR=$(python3 ./.trellis/scripts/task.py create "<title>" --slug <name>)
 ```
 
-**Step 3: Write PRD** `[AI]`
+初始化 context：
 
-Create `prd.md` in the task directory with:
+```bash
+python3 ./.trellis/scripts/task.py init-context "$TASK_DIR" <frontend|backend|fullstack|test|docs> --package <api|miniprogram|shared-types|api-client|domain>
+python3 ./.trellis/scripts/task.py start "$TASK_DIR"
+```
+
+## 4. PRD Minimum Shape
+
+`prd.md` 至少写清楚这些内容：
 
 ```markdown
 # <Task Title>
 
 ## Goal
-<What we're trying to achieve>
+<要解决什么问题>
 
 ## Requirements
-- <Requirement 1>
-- <Requirement 2>
+- <必须满足的点>
 
 ## Acceptance Criteria
-- [ ] <Criterion 1>
-- [ ] <Criterion 2>
+- [ ] <可验证的结果>
+
+## Out of Scope
+- <这次不做什么>
 
 ## Technical Notes
-<Any technical decisions or constraints>
+<约束、风险、关键文件>
 ```
 
----
+## 5. Decision Rules
 
-### Phase 2: Prepare for Implementation (shared)
+- 先读，再改
+- 只读必要上下文，不做泛化研究
+- 不清楚就先短规划，默认复用全局 `think`，不默认开复杂流程
+- 改完立刻验证，不要把 `check` 放到最后才想起来
+- 如果改动涉及真实约束或新规则，记得同步 `.trellis/spec/`
 
-> Both paths converge here. PRD and task directory must exist before proceeding.
+## 6. Continue Existing Work
 
-**Step 4: Code-Spec Depth Check** `[AI]`
+如果当前已经有 task：
 
-If the task touches infra or cross-layer contracts, do not start implementation until code-spec depth is defined.
+1. 读这个 task 的 `prd.md`
+2. 看 `task.json` 里的状态和阶段
+3. 根据当前阶段继续做，不要重复开新流程
 
-Trigger this requirement when the change includes any of:
-- New or changed command/API signatures
-- Database schema or migration changes
-- Infra integrations (storage, queue, cache, secrets, env contracts)
-- Cross-layer payload transformations
+核心原则：
 
-Must-have before proceeding:
-- [ ] Target code-spec files to update are identified
-- [ ] Concrete contract is defined (signature, fields, env keys)
-- [ ] Validation and error matrix is defined
-- [ ] At least one Good/Base/Bad case is defined
-
-**Step 5: Research the Codebase** `[AI]`
-
-Based on the confirmed PRD, call Research Agent to find relevant specs and patterns:
-
-```
-Task(
-  subagent_type: "research",
-  prompt: "Analyze the codebase for this task:
-
-  Task: <goal from PRD>
-  Type: <frontend/backend/fullstack>
-
-  Please find:
-  1. Relevant code-spec files in .trellis/spec/
-  2. Existing code patterns to follow (find 2-3 examples)
-  3. Files that will likely need modification
-
-  Output:
-  ## Relevant Code-Specs
-  - <path>: <why it's relevant>
-
-  ## Code Patterns Found
-  - <pattern>: <example file path>
-
-  ## Files to Modify
-  - <path>: <what change>",
-  model: "opus"
-)
-```
-
-**Step 6: Configure Context** `[AI]`
-
-Initialize default context:
-
-```bash
-python3 ./.trellis/scripts/task.py init-context "$TASK_DIR" <type>
-# type: backend | frontend | fullstack
-```
-
-If you need to override the repo default package, pass it explicitly:
-
-```bash
-python3 ./.trellis/scripts/task.py init-context "$TASK_DIR" <type> --package <miniprogram|web|shared-types|api-client|domain>
-```
-
-Add code-spec files found by Research Agent:
-
-```bash
-# For each relevant code-spec and code pattern:
-python3 ./.trellis/scripts/task.py add-context "$TASK_DIR" implement "<path>" "<reason>"
-python3 ./.trellis/scripts/task.py add-context "$TASK_DIR" check "<path>" "<reason>"
-```
-
-**Step 7: Activate Task** `[AI]`
-
-```bash
-python3 ./.trellis/scripts/task.py start "$TASK_DIR"
-```
-
-This sets `.current-task` so hooks can inject context.
-
----
-
-### Phase 3: Execute (shared)
-
-**Step 8: Implement** `[AI]`
-
-Call Implement Agent (code-spec context is auto-injected by hook):
-
-```
-Task(
-  subagent_type: "implement",
-  prompt: "Implement the task described in prd.md.
-
-  Follow all code-spec files that have been injected into your context.
-  Run lint and typecheck before finishing.",
-  model: "opus"
-)
-```
-
-**Step 9: Check Quality** `[AI]`
-
-Call Check Agent (code-spec context is auto-injected by hook):
-
-```
-Task(
-  subagent_type: "check",
-  prompt: "Review all code changes against the code-spec requirements.
-
-  Fix any issues you find directly.
-  Ensure lint and typecheck pass.",
-  model: "opus"
-)
-```
-
-**Step 10: Complete** `[AI]`
-
-1. Verify lint and typecheck pass
-2. Report what was implemented
-3. Remind user to:
-   - Test the changes
-   - Commit when ready
-   - Run `/trellis:record-session` to record this session
-
----
-
-## Continuing Existing Task
-
-If `get_context.py` shows a current task:
-
-1. Read the task's `prd.md` to understand the goal
-2. Check `task.json` for current status and phase
-3. Ask user: "Continue working on <task-name>?"
-
-If yes, resume from the appropriate step (usually Step 7 or 8).
-
----
-
-## Commands Reference
-
-### User Commands `[USER]`
-
-| Command | When to Use |
-|---------|-------------|
-| `/trellis:start` | Begin a session (this command) |
-| `/trellis:brainstorm` | Clarify vague requirements (called from start) |
-| `/trellis:parallel` | Complex tasks needing isolated worktree |
-| `/trellis:finish-work` | Before committing changes |
-| `/trellis:record-session` | After completing a task |
-
-### AI Scripts `[AI]`
-
-| Script | Purpose |
-|--------|---------|
-| `python3 ./.trellis/scripts/get_context.py` | Get session context |
-| `python3 ./.trellis/scripts/task.py create` | Create task directory |
-| `python3 ./.trellis/scripts/task.py init-context` | Initialize jsonl files |
-| `python3 ./.trellis/scripts/task.py add-context` | Add code-spec/context file to jsonl |
-| `python3 ./.trellis/scripts/task.py start` | Set current task |
-| `python3 ./.trellis/scripts/task.py finish` | Clear current task |
-| `python3 ./.trellis/scripts/task.py archive` | Archive completed task |
-
-### Sub Agents `[AI]`
-
-| Agent | Purpose | Hook Injection |
-|-------|---------|----------------|
-| research | Analyze codebase | No (reads directly) |
-| implement | Write code | Yes (implement.jsonl) |
-| check | Review & fix | Yes (check.jsonl) |
-| debug | Fix specific issues | Yes (debug.jsonl) |
-
----
-
-## Key Principle
-
-> **Code-spec context is injected, not remembered.**
->
-> The Task Workflow ensures agents receive relevant code-spec context automatically.
-> This is more reliable than hoping the AI "remembers" conventions.
+> Trellis 默认是轻量、直接、可执行的工作流，不是层层前置的复杂流程。

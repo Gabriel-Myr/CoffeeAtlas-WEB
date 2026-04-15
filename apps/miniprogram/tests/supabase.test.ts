@@ -82,7 +82,8 @@ test('getSupabaseConfig trims build env and reports configured state', async () 
   });
   assert.equal(supabase.hasSupabaseEnv, true);
   assert.equal(typeof supabase.supabaseClient.from, 'function');
-  assert.equal(supabase.supabaseClient, supabase.requireSupabaseClient());
+  assert.equal(typeof supabase.requireSupabaseClient().from, 'function');
+  assert.equal(supabase.getSupabaseClient(), supabase.requireSupabaseClient());
 });
 
 test('requireSupabaseClient gives a clear error when env is missing', async () => {
@@ -155,4 +156,47 @@ test('createMiniProgramSupabaseClient uses postgrest client without realtime set
 
   assert.equal(typeof client.requireSupabaseClient().from, 'function');
   assert.equal(typeof client.requireSupabaseClient().channel, 'undefined');
+});
+
+test('configured supabase module does not touch Taro.request until client access time', async () => {
+  const runtimeEnv = globalThis as Record<string, unknown>;
+  const previousUrl = runtimeEnv.__TARO_APP_SUPABASE_URL__;
+  const previousAnonKey = runtimeEnv.__TARO_APP_SUPABASE_ANON_KEY__;
+
+  runtimeEnv.__TARO_APP_SUPABASE_URL__ = 'https://demo.supabase.co';
+  runtimeEnv.__TARO_APP_SUPABASE_ANON_KEY__ = 'demo-anon-key';
+
+  const require = createRequire(import.meta.url);
+  const taroPath = require.resolve('@tarojs/taro');
+
+  require.cache[taroPath] = {
+    id: taroPath,
+    filename: taroPath,
+    loaded: true,
+    exports: {},
+    children: [],
+    path: taroPath,
+    paths: [],
+  };
+
+  importId += 1;
+
+  try {
+    const supabase = await import(`../src/utils/supabase.ts?case=${importId}`);
+    assert.equal(supabase.hasSupabaseEnv, true);
+    assert.equal(typeof supabase.getSupabaseClient, 'function');
+    assert.equal(typeof supabase.requireSupabaseClient().from, 'function');
+  } finally {
+    if (typeof previousUrl === 'string') {
+      runtimeEnv.__TARO_APP_SUPABASE_URL__ = previousUrl;
+    } else {
+      delete runtimeEnv.__TARO_APP_SUPABASE_URL__;
+    }
+
+    if (typeof previousAnonKey === 'string') {
+      runtimeEnv.__TARO_APP_SUPABASE_ANON_KEY__ = previousAnonKey;
+    } else {
+      delete runtimeEnv.__TARO_APP_SUPABASE_ANON_KEY__;
+    }
+  }
 });

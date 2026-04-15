@@ -1,130 +1,73 @@
 ---
 name: finish-work
-description: Run the Trellis pre-commit completion checklist for this project, including quality, spec sync, test, and cross-layer review items.
+description: Final Trellis completion pass before handoff or commit. Confirm checks are done, spec/doc sync is handled, and the change is easy for a human to review.
 ---
 
-This is the Codex entry for the Trellis `finish-work` workflow in this repository.
-Follow the instructions below as the project-specific operating procedure.
+把 `finish-work` 当成最终收尾，而不是重复一遍 `check`。
 
-# Finish Work - Pre-Commit Checklist
+说明：
 
-Before submitting or committing, use this checklist to ensure work completeness.
+- `finish-work` 只负责 Trellis 最终交接
+- 它不替代全局通用 `check`
+- 这里至少要确认本仓库项目 `check` 已经完成；如果这次也用了全局 `check`，最后要一起交代结果
 
-**Timing**: After code is written and tested, before commit
+# Finish Work
 
----
+使用时机：
 
-## Checklist
+- 代码已经基本完成
+- 主要验证已经跑过
+- 准备交给人测试、审查或提交
 
-### 1. Code Quality
+## 1. 先确认 `check` 已完成
 
-Run the commands that match the files you changed:
+你应该已经知道这些信息，而不是到这里才第一次去跑：
 
-```bash
-pnpm lint
-pnpm typecheck
-pnpm --filter @coffeeatlas/miniprogram typecheck
-```
+- 哪些文件改了
+- 跑了哪些命令
+- 哪些结果通过，哪些没跑
+- 有没有跨层风险
 
-Additional checks when relevant:
+如果这些还不清楚，先回到项目 `check`；如果这次还用了全局 `check`，也要把对应结果补齐。
 
-```bash
-pnpm --filter @coffeeatlas/api test
-cd apps/api && API_BASE_URL=http://127.0.0.1:3000 pnpm smoke:api
-```
+## 2. 做最后一轮完成度确认
 
-- [ ] `pnpm lint` passes?
-- [ ] `pnpm typecheck` passes?
-- [ ] API backend/helper changes -> `pnpm --filter @coffeeatlas/api test` passes?
-- [ ] Miniprogram changes -> `pnpm --filter @coffeeatlas/miniprogram typecheck` passes?
-- [ ] API changes -> smoke/manual verification done?
-- [ ] No leftover debug logging?
-- [ ] No unnecessary non-null assertions (`x!`) or `any` types?
+### 代码和测试
 
-### 1.5. Test Coverage
+- 改动匹配的 lint / typecheck / test 已跑
+- 是否需要新增或更新测试，已经有结论
+- 没有明显的调试残留、无意义 `any`、不必要的非空断言
 
-Check if your change needs new or updated tests (see `.trellis/spec/unit-test/conventions.md`):
+### Spec 和文档
 
-- [ ] New pure function -> unit test added?
-- [ ] Bug fix in parser/normalizer/helper -> regression test added?
-- [ ] API contract change -> helper test and smoke/manual check updated?
-- [ ] No logic change (copy/style only) -> no new test needed?
+- 如果改了真实契约、约束、易错点，`.trellis/spec/` 已同步
+- 如果只是实现细节变化，没有新知识，也要明确说明不更新 spec 的原因
 
-### 2. Code-Spec Sync
+### 跨层与人工验证
 
-- [ ] Does the relevant `.trellis/spec/<package>/<layer>/` doc need updates?
-- [ ] If the change spans api / miniprogram / shared-types, did each affected package spec stay in sync?
-- [ ] Does `.trellis/spec/unit-test/` need updates?
-- [ ] Does `.trellis/spec/guides/` need updates?
+- 如果任务跨层，`check-cross-layer` 已跑或已明确说明不需要
+- 需要手工验证的路径已经说明清楚
 
-Key question:
-> If I changed a real contract, uncovered a trap, or confirmed a repo-specific rule, did I write it down in Trellis?
+### 工作树可交接
 
-### 2.5. Code-Spec Hard Block (Infra/Cross-Layer)
+- `git status` 可读
+- 主要改动点能一句话说清
+- 人类接手后知道怎么验
 
-If the change touches infra or cross-layer contracts:
+## 3. 最终输出
 
-- [ ] Spec content is executable, not abstract only
-- [ ] File paths / API names / payload fields are documented
-- [ ] Validation and error behavior are documented
-- [ ] Good/base/bad cases are documented when useful
-- [ ] Required verification steps are documented
+至少总结这四项：
 
-### 3. API Changes
+1. 完成了什么
+2. 跑了哪些验证
+3. 是否更新了 `.trellis/spec/`
+4. 还剩什么风险或人工验证项
 
-If you modified API endpoints:
+如果本轮同时用了全局 `check` 和项目 `check`，最终总结里要区分写清：
 
-- [ ] Request params/body contract updated?
-- [ ] Response envelope and fields updated?
-- [ ] Consumer code updated (`apps/miniprogram`, `packages/shared-types`, etc.)?
-- [ ] Legacy compatibility considered if touching `/api/beans` or `/api/roasters`?
+- 哪些结论来自全局通用审查
+- 哪些结论来自 CoffeeAtlas 项目补充验证
 
-### 4. Database Changes
+核心原则：
 
-If you modified database schema or queries:
-
-- [ ] Migration or SQL update added in the right place?
-- [ ] Related query helpers updated?
-- [ ] Fallback behavior still correct?
-- [ ] Sensitive env usage still server-only?
-
-### 5. Cross-Layer Verification
-
-If the change spans multiple layers:
-
-- [ ] Types are consistent across route/helper/client layers?
-- [ ] `packages/shared-types`、`apps/miniprogram/src/types`、实际 API 响应保持一致?
-- [ ] Error handling is consistent across boundaries?
-- [ ] Pagination/search/filter params stay aligned?
-- [ ] Entry intent / route params / page state stay aligned?
-- [ ] Required manual path was exercised?
-
-### 6. Manual Testing
-
-- [ ] Feature works in browser / mini-program / script runtime?
-- [ ] Error states tested?
-- [ ] Empty/loading states checked if UI changed?
-- [ ] Works after refresh or re-entry?
-- [ ] 如果改了 discover / new arrivals / onboarding / favorites，已验证 storage 与回流路径?
-
----
-
-## Quick Check Flow
-
-```bash
-pnpm lint && pnpm typecheck
-pnpm --filter @coffeeatlas/miniprogram typecheck
-
-git status
-git diff --name-only
-```
-
-Then run the extra package-specific commands that match the changed files.
-
-Only add `pnpm --filter @coffeeatlas/api test` and `smoke:api` when the change actually touches API layers.
-
----
-
-## Core Principle
-
-> Complete work = Code + Verification + Updated Trellis knowledge.
+> 完成工作 = 代码可读 + 验证明确 + Trellis 知识同步到位。

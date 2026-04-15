@@ -67,6 +67,7 @@ pnpm dev:miniprogram:auto
 - 如果改了 `/api/v1/*` 相关流程，要验证 API 基地址未配置时有明确提示
 - 如果改了目录页或目录数据读取，要验证 Supabase 环境缺失时有明确提示
 - 如果改了首页入口或 all-beans 路径，要验证入口意图、tab 落点和筛选状态
+- 如果改了 onboarding、轻问答、引导流程页面，要额外核对这次是否误改已有引导文字；若无用户明确要求，默认应保持原文案不变
 - 如果改了登录/收藏/onboarding/API override，要验证 storage 状态是否正确更新
 - 如果改了本地守护脚本或共享包依赖，至少跑一次 `pnpm --filter @coffeeatlas/miniprogram test`
 

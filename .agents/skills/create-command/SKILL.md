@@ -33,8 +33,10 @@ Extract from user input:
 
 Determine command type based on description:
 - **Initialization**: Read docs, establish context
-- **Pre-development**: Read guidelines, check dependencies
+- **Pre-development**: Read the minimum relevant guidelines before work
+- **Planning**: Clarify scope or write a short task plan
 - **Code check**: Validate code quality and guideline compliance
+- **Final handoff**: Summarize completion, verification, and remaining risks
 - **Recording**: Record progress, questions, structure changes
 - **Generation**: Generate docs, code templates
 
@@ -110,7 +112,9 @@ Description:
 |--------------|--------|---------|
 | Session Start | `start` | `start` |
 | Pre-development | `before-` | `before-dev` |
+| Planning | Verb-first | `think-task` |
 | Check | `check-` | `check` |
+| Final handoff | Verb-first | `finish-work` |
 | Record | `record-` | `record-session` |
 | Generate | `generate-` | `generate-api-doc` |
 | Update | `update-` | `update-changelog` |

@@ -34,6 +34,7 @@ test('toBeanFavoriteSnapshot keeps only lightweight favorite fields', () => {
       imageUrl: 'https://example.com/bean.jpg',
       originCountry: '埃塞俄比亚',
       process: '水洗',
+      variety: '74110',
       price: 128,
     }
   );
